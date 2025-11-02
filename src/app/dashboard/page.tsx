@@ -24,11 +24,12 @@ export default function DashboardPage() {
   );
   const { data: facilities } = useCollection<Facility>(facilitiesCollectionRef);
 
-  const usersCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'users'),
-    [firestore]
-  );
-  const { data: users } = useCollection<AppUser>(usersCollectionRef);
+  // const usersCollectionRef = useMemoFirebase(
+  //   () => collection(firestore, 'users'),
+  //   [firestore]
+  // );
+  // const { data: users } = useCollection<AppUser>(usersCollectionRef);
+  const users: AppUser[] = []; // Temporary fix to avoid permission error
 
   // Note: This fetches ALL reservations. For a large app, this would need to be optimized.
   // For this dashboard, we'll assume it's acceptable.
