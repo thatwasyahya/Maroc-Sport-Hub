@@ -11,16 +11,10 @@ import {
 } from "@/components/ui/sidebar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import dynamic from 'next/dynamic';
 import Header from "@/components/header";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-const MapView = dynamic(() => import('@/components/map-container'), {
-  ssr: false,
-  loading: () => <div className="bg-muted w-full h-full flex items-center justify-center"><p>Loading Map...</p></div>,
-});
+import HomeMap from "@/components/home-map";
 
 const sports = [...new Set(facilities.flatMap(f => f.sports))];
 const regions = [...new Set(facilities.map(f => f.region))];
@@ -85,7 +79,7 @@ export default function Home() {
             </ScrollArea>
           </Sidebar>
           <SidebarInset className="p-0 overflow-hidden">
-            <MapView facilities={facilities} />
+            <HomeMap facilities={facilities} />
           </SidebarInset>
         </SidebarProvider>
       </div>
