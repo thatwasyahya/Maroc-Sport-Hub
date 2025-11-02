@@ -8,6 +8,6 @@ const MapView = dynamic(() => import('@/components/map-container'), {
   loading: () => <div className="bg-muted w-full h-full flex items-center justify-center"><p>Loading Map...</p></div>,
 });
 
-export default function HomeMapContainer({ facilities }: { facilities: Facility[] }) {
-  return <MapView facilities={facilities} />;
+export default function HomeMapContainer({ facilities, center, zoom }: { facilities: Facility[], center: [number, number], zoom: number }) {
+  return <MapView facilities={facilities} center={center} zoom={zoom} />;
 }
