@@ -40,7 +40,6 @@ export default function Home() {
   // Set facilities on client side to avoid hydration mismatch from faker data
   useEffect(() => {
     setFacilities(allFacilities);
-    setFilteredFacilities(allFacilities);
   }, []);
 
   const allSports = useMemo(() => [...new Set(facilities.flatMap(f => f.sports))].sort(), [facilities]);
@@ -123,11 +122,12 @@ export default function Home() {
       <Header />
       <div className="flex-1 overflow-hidden relative">
         <SidebarProvider>
-          <Sidebar collapsible="icon" variant="floating" className="w-64 z-10 max-h-[80vh] top-16">
+          <Sidebar collapsible="icon" variant="floating" className="w-80 z-10 max-h-[80vh] top-16">
             <SidebarHeader className="flex items-center justify-between">
               <h2 className="text-xl font-bold font-headline">Filtres</h2>
-              <Button onClick={handleLocateMe} variant="ghost" size="icon" title="Me localiser">
+              <Button onClick={handleLocateMe} variant="ghost" size="sm">
                 <LocateFixed className="h-5 w-5" />
+                <span>Me localiser</span>
               </Button>
             </SidebarHeader>
             
