@@ -160,7 +160,7 @@ export default function Home() {
         </section>
 
         <section ref={mapRef} id="map-section" className="py-12 md:py-20 bg-muted/50">
-          <div className="container mx-auto px-4">
+          <div className="w-[90vw] mx-auto">
             <div className="relative h-[85vh] rounded-lg overflow-hidden shadow-lg">
                 <SidebarProvider>
                     <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card border shadow-lg rounded-lg">
