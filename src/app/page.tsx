@@ -160,7 +160,7 @@ export default function Home() {
         </section>
 
         <section ref={mapRef} id="map-section" className="relative py-12 md:py-20 bg-muted/50">
-            <div className="container mx-auto relative h-[90vh]">
+            <div className="relative h-[90vh]">
                 <SidebarProvider>
                     <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[80vh] bg-card border shadow-lg rounded-lg">
                         <SidebarHeader className="flex items-center justify-between">
@@ -247,7 +247,7 @@ export default function Home() {
                         </SidebarFooter>
                     </Sidebar>
                     
-                    <div className="absolute inset-0 z-10 w-full h-full rounded-lg overflow-hidden shadow-lg border">
+                    <div className="absolute inset-0 z-10 w-full h-full">
                         <HomeMapContainer 
                             facilities={filteredFacilities} 
                             center={mapCenter} 
@@ -313,3 +313,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
