@@ -1,7 +1,7 @@
 "use client";
 
+import { Facility } from "@/lib/types";
 import dynamic from 'next/dynamic';
-import type { Facility } from '@/lib/types';
 
 const MapView = dynamic(() => import('@/components/map-container'), {
   ssr: false,
@@ -9,5 +9,5 @@ const MapView = dynamic(() => import('@/components/map-container'), {
 });
 
 export default function HomeMapContainer({ facilities }: { facilities: Facility[] }) {
-    return <MapView facilities={facilities} />;
+  return <MapView facilities={facilities} />;
 }

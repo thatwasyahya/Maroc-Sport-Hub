@@ -1,3 +1,5 @@
+"use client";
+
 import { facilities } from "@/lib/data";
 import {
   SidebarProvider,
@@ -17,8 +19,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import HomeMapContainer from "@/components/home-map-container";
 
 
-const sports = [...new Set(facilities.flatMap(f => f.sports))];
-const regions = [...new Set(facilities.map(f => f.region))];
+const sports = [...new Set(facilities.flatMap(f => f.sports))].sort();
+const regions = [...new Set(facilities.map(f => f.region))].sort();
 
 export default function Home() {
   // In a real app, filters would be managed with state and would filter the `facilities` prop passed to MapView
@@ -80,7 +82,7 @@ export default function Home() {
             </ScrollArea>
           </Sidebar>
           <SidebarInset className="p-0 overflow-hidden">
-            <HomeMapContainer facilities={facilities} />
+             <HomeMapContainer facilities={facilities} />
           </SidebarInset>
         </SidebarProvider>
       </div>
