@@ -1,9 +1,9 @@
-import { Dumbbell, Activity, Bike, Cloudy, Goal, PersonStanding, Pin, Waves, Wind, Zap, Football, TennisBall, Volleyball, Weight } from 'lucide-react';
+import { Dumbbell, Activity, Bike, Goal, PersonStanding, Pin, Waves, Volleyball, Weight } from 'lucide-react';
 
 export const sportsIconsMap: Record<string, React.ElementType> = {
-    "Football": Football,
+    "Football": Goal,
     "Basketball": Activity,
-    "Tennis": TennisBall,
+    "Tennis": Activity,
     "Handball": Activity,
     "Volleyball": Volleyball,
     "Natation": Waves,
@@ -11,7 +11,7 @@ export const sportsIconsMap: Record<string, React.ElementType> = {
     "Yoga": PersonStanding,
     "Musculation": Dumbbell,
     "CrossFit": Activity,
-    "Padel": TennisBall,
+    "Padel": Activity,
 };
 
 export const equipmentIconsMap: Record<string, React.ElementType> = {
@@ -22,7 +22,7 @@ export const equipmentIconsMap: Record<string, React.ElementType> = {
     "Filets de volley-ball": Volleyball,
     "Paniers de basket": Activity,
     "Buts de football": Goal,
-    "Raquettes de tennis": TennisBall,
+    "Raquettes de tennis": Activity,
     "Kettlebells": Weight,
     "Cages à squat": Dumbbell,
     "Bancs de musculation": Dumbbell,
