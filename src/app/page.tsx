@@ -41,14 +41,17 @@ export default function Home() {
 
   const mapRef = useRef<HTMLDivElement>(null);
 
-  // Set facilities on client side to avoid hydration mismatch from faker data
   useEffect(() => {
     setFacilities(allFacilities);
   }, []);
 
-  const allSports = useMemo(() => [...new Set(facilities.flatMap(f => f.sports))].sort(), [facilities]);
-  const allRegions = useMemo(() => [...new Set(facilities.map(f => f.region))].sort(), [facilities]);
-  const allEquipments = useMemo(() => [...new Set(facilities.flatMap(f => f.equipments.map(e => e.name)))].sort(), [facilities]);
+  const { allSports, allRegions, allEquipments } = useMemo(() => {
+    const sports = [...new Set(facilities.flatMap(f => f.sports))].sort();
+    const regions = [...new Set(facilities.map(f => f.region))].sort();
+    const equipments = [...new Set(facilities.flatMap(f => f.equipments.map(e => e.name)))].sort();
+    return { allSports: sports, allRegions: regions, allEquipments: equipments };
+  }, [facilities]);
+
 
   useEffect(() => {
     let newFilteredFacilities = facilities;
@@ -155,104 +158,104 @@ export default function Home() {
             </div>
         </section>
 
-        <section ref={mapRef} id="map-section" className="relative h-[90vh] w-full bg-muted">
-            <SidebarProvider>
-            <Sidebar collapsible="icon" variant="floating" className="w-80 z-10 max-h-[80vh] top-20">
-                <SidebarHeader className="flex items-center justify-between">
-                <h2 className="text-xl font-bold font-headline">Filtres</h2>
-                <Button onClick={handleLocateMe} variant="ghost" size="sm">
-                    <LocateFixed className="h-5 w-5" />
-                    <span>Me localiser</span>
-                </Button>
-                </SidebarHeader>
-                
-                <ScrollArea className="h-full">
-                <SidebarContent>
-                    <Accordion type="multiple" defaultValue={['sport', 'region']} className="w-full">
-                    
-                    <AccordionItem value="sport">
-                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Sport</AccordionTrigger>
-                        <AccordionContent className="px-4">
-                        {allSports.map(sport => {
-                            const Icon = sportsIconsMap[sport];
-                            return (
-                            <div key={sport} className="flex items-center space-x-3 my-2">
-                                <Checkbox id={`sport-${sport}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedSports, sport, !!checked)} />
-                                <Label htmlFor={`sport-${sport}`} className="font-normal flex items-center gap-2">
-                                {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
-                                {sport}
-                                </Label>
-                            </div>
-                            )
-                        })}
-                        </AccordionContent>
-                    </AccordionItem>
-                    
-                    <AccordionItem value="region">
-                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Région</AccordionTrigger>
-                        <AccordionContent className="px-4">
-                        {allRegions.map(region => (
-                            <div key={region} className="flex items-center space-x-3 my-2">
-                            <Checkbox id={`region-${region}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedRegions, region, !!checked)} />
-                            <Label htmlFor={`region-${region}`} className="font-normal">{region}</Label>
-                            </div>
-                        ))}
-                        </AccordionContent>
-                    </AccordionItem>
+        <section ref={mapRef} id="map-section" className="relative py-12 md:py-20 bg-muted/50">
+            <div className="container mx-auto relative h-[90vh]">
+                <SidebarProvider>
+                    <Sidebar collapsible="icon" variant="sidebar" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card border shadow-lg rounded-lg">
+                        <SidebarHeader className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold font-headline">Filtres</h2>
+                            <Button onClick={handleLocateMe} variant="ghost" size="sm">
+                                <LocateFixed className="h-5 w-5" />
+                                <span>Me localiser</span>
+                            </Button>
+                        </SidebarHeader>
+                        
+                        <ScrollArea className="h-full">
+                            <SidebarContent>
+                                <Accordion type="multiple" defaultValue={['sport', 'region']} className="w-full">
+                                    <AccordionItem value="sport">
+                                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Sport</AccordionTrigger>
+                                        <AccordionContent className="px-4">
+                                        {allSports.map(sport => {
+                                            const Icon = sportsIconsMap[sport];
+                                            return (
+                                            <div key={sport} className="flex items-center space-x-3 my-2">
+                                                <Checkbox id={`sport-${sport}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedSports, sport, !!checked)} />
+                                                <Label htmlFor={`sport-${sport}`} className="font-normal flex items-center gap-2">
+                                                {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+                                                {sport}
+                                                </Label>
+                                            </div>
+                                            )
+                                        })}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                    
+                                    <AccordionItem value="region">
+                                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Région</AccordionTrigger>
+                                        <AccordionContent className="px-4">
+                                        {allRegions.map(region => (
+                                            <div key={region} className="flex items-center space-x-3 my-2">
+                                            <Checkbox id={`region-${region}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedRegions, region, !!checked)} />
+                                            <Label htmlFor={`region-${region}`} className="font-normal">{region}</Label>
+                                            </div>
+                                        ))}
+                                        </AccordionContent>
+                                    </AccordionItem>
 
-                    <AccordionItem value="equipment">
-                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Équipement</AccordionTrigger>
-                        <AccordionContent className="px-4">
-                        {allEquipments.map(equip => {
-                            const Icon = equipmentIconsMap[equip];
-                            return (
-                            <div key={equip} className="flex items-center space-x-3 my-2">
-                                <Checkbox id={`equip-${equip}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedEquipment, equip, !!checked)} />
-                                <Label htmlFor={`equip-${equip}`} className="font-normal flex items-center gap-2">
-                                {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
-                                {equip}
-                                </Label>
-                            </div>
-                            )
-                        })}
-                        </AccordionContent>
-                    </AccordionItem>
+                                    <AccordionItem value="equipment">
+                                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Équipement</AccordionTrigger>
+                                        <AccordionContent className="px-4">
+                                        {allEquipments.map(equip => {
+                                            const Icon = equipmentIconsMap[equip];
+                                            return (
+                                            <div key={equip} className="flex items-center space-x-3 my-2">
+                                                <Checkbox id={`equip-${equip}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedEquipment, equip, !!checked)} />
+                                                <Label htmlFor={`equip-${equip}`} className="font-normal flex items-center gap-2">
+                                                {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+                                                {equip}
+                                                </Label>
+                                            </div>
+                                            )
+                                        })}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                    
+                                    <AccordionItem value="other">
+                                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Autres</AccordionTrigger>
+                                        <AccordionContent className="px-4">
+                                        <div className="flex items-center space-x-3 my-2">
+                                            <Checkbox id="type-indoor" checked={isIndoor} onCheckedChange={(checked) => setIsIndoor(!!checked)} />
+                                            <Label htmlFor="type-indoor" className="font-normal">Intérieur</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-3 my-2">
+                                            <Checkbox id="type-outdoor" checked={isOutdoor} onCheckedChange={(checked) => setIsOutdoor(!!checked)} />
+                                            <Label htmlFor="type-outdoor" className="font-normal">Extérieur</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-3 my-2">
+                                            <Checkbox id="accessible" checked={isAccessible} onCheckedChange={(checked) => setIsAccessible(!!checked)} />
+                                            <Label htmlFor="accessible" className="font-normal">Accès PMR</Label>
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                            </SidebarContent>
+                        </ScrollArea>
+                        <SidebarFooter>
+                            <Button onClick={clearFilters} variant="ghost">Effacer les filtres</Button>
+                        </SidebarFooter>
+                    </Sidebar>
                     
-                    <AccordionItem value="other">
-                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Autres</AccordionTrigger>
-                        <AccordionContent className="px-4">
-                        <div className="flex items-center space-x-3 my-2">
-                            <Checkbox id="type-indoor" checked={isIndoor} onCheckedChange={(checked) => setIsIndoor(!!checked)} />
-                            <Label htmlFor="type-indoor" className="font-normal">Intérieur</Label>
-                            </div>
-                            <div className="flex items-center space-x-3 my-2">
-                            <Checkbox id="type-outdoor" checked={isOutdoor} onCheckedChange={(checked) => setIsOutdoor(!!checked)} />
-                            <Label htmlFor="type-outdoor" className="font-normal">Extérieur</Label>
-                            </div>
-                            <div className="flex items-center space-x-3 my-2">
-                            <Checkbox id="accessible" checked={isAccessible} onCheckedChange={(checked) => setIsAccessible(!!checked)} />
-                            <Label htmlFor="accessible" className="font-normal">Accès PMR</Label>
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    </Accordion>
-                </SidebarContent>
-                </ScrollArea>
-                <SidebarFooter>
-                    <Button onClick={clearFilters} variant="ghost">Effacer les filtres</Button>
-                </SidebarFooter>
-            </Sidebar>
-
-            <div className="absolute inset-0 z-0">
-                <HomeMapContainer 
-                    facilities={filteredFacilities} 
-                    center={mapCenter} 
-                    zoom={mapZoom} 
-                    onMarkerClick={handleMarkerClick}
-                />
+                    <div className="absolute inset-0 z-10 w-full h-full rounded-lg overflow-hidden shadow-lg border">
+                        <HomeMapContainer 
+                            facilities={filteredFacilities} 
+                            center={mapCenter} 
+                            zoom={mapZoom} 
+                            onMarkerClick={handleMarkerClick}
+                        />
+                    </div>
+                </SidebarProvider>
             </div>
-            </SidebarProvider>
 
             <Sheet open={!!selectedFacility} onOpenChange={(open) => !open && handleSheetClose()}>
                 <SheetContent className="w-full sm:max-w-xl p-0 overflow-y-auto">
@@ -309,3 +312,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
