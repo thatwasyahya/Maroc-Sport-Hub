@@ -5,33 +5,33 @@ import L from 'leaflet';
 import 'leaflet.markercluster';
 import { useEffect, useRef } from 'react';
 import type { Facility } from '@/lib/types';
-import { Button } from './ui/button';
-import Link from 'next/link';
 
 // Fix for default icon path issues with webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+if (typeof window !== 'undefined') {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  });
+}
 
 
-const MarkerClusterGroup = ({ facilities }: { facilities: Facility[] }) => {
+const MarkerCluster = ({ facilities }: { facilities: Facility[] }) => {
     const map = useMap();
     const markerClusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   
     useEffect(() => {
-      if (map) {
+        if (!map) return;
+
         markerClusterGroupRef.current = L.markerClusterGroup();
-        markerClusterGroupRef.current.addTo(map);
-      }
+        map.addLayer(markerClusterGroupRef.current);
   
-      return () => {
-        if (markerClusterGroupRef.current) {
-          map.removeLayer(markerClusterGroupRef.current);
-        }
-      };
+        return () => {
+            if (markerClusterGroupRef.current) {
+                map.removeLayer(markerClusterGroupRef.current);
+            }
+        };
     }, [map]);
   
     useEffect(() => {
@@ -67,7 +67,7 @@ const MapView = ({ facilities }: MapViewProps) => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MarkerClusterGroup facilities={facilities} />
+      <MarkerCluster facilities={facilities} />
     </MapContainer>
   );
 };
