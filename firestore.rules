@@ -49,7 +49,7 @@ service cloud.firestore {
       }
 
       allow get: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
-      allow list: if false;
+      allow list: if isSignedIn() && isSuperAdmin();
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
       allow update: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
       allow delete: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
@@ -183,9 +183,9 @@ service cloud.firestore {
       function isSuperAdmin() {
         return exists(/databases/$(database)/documents/roles_super_admin/$(request.auth.uid));
       }
-      allow get: if isSignedIn() && isSuperAdmin();
-      allow list: if false;
-      allow create: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
+      allow get: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
+      allow list: if isSuperAdmin();
+      allow create: if isSignedIn() && isOwner(userId);
       allow update: if false;
       allow delete: if isSignedIn() && isSuperAdmin();
     }
@@ -206,9 +206,9 @@ service cloud.firestore {
       function isSuperAdmin() {
         return exists(/databases/$(database)/documents/roles_super_admin/$(request.auth.uid));
       }
-      allow get: if isSignedIn() && isSuperAdmin();
-      allow list: if false;
-      allow create: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
+      allow get: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
+      allow list: if isSuperAdmin();
+      allow create: if isSignedIn() && isOwner(userId);
       allow update: if false;
       allow delete: if isSignedIn() && isSuperAdmin();
     }
