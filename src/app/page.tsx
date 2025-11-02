@@ -7,7 +7,6 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarInset,
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,7 +17,7 @@ import HomeMapContainer from "@/components/home-map-container";
 import type { Facility } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { LocateFixed, X } from 'lucide-react';
+import { LocateFixed } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
@@ -100,8 +99,6 @@ export default function Home() {
       setIsIndoor(false);
       setIsOutdoor(false);
       setIsAccessible(false);
-      // This will visually uncheck the boxes by re-rendering
-      // A more robust solution might involve controlling checkbox state directly
       const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
       checkboxes.forEach(cb => cb.checked = false);
   };
@@ -117,9 +114,9 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col">
       <Header />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         <SidebarProvider>
-          <Sidebar collapsible="icon" variant="floating" className="w-72">
+          <Sidebar collapsible="icon" variant="floating" className="w-64 z-10">
             <SidebarHeader className="flex items-center justify-between">
               <h2 className="text-xl font-bold font-headline">Filtres</h2>
               <Button onClick={handleLocateMe} variant="ghost" size="icon" title="Me localiser">
@@ -204,7 +201,7 @@ export default function Home() {
                 <Button onClick={clearFilters} variant="ghost">Effacer les filtres</Button>
             </SidebarFooter>
           </Sidebar>
-          <div className="p-0 overflow-hidden relative flex-1">
+          <div className="absolute inset-0 z-0">
              <HomeMapContainer 
                 facilities={filteredFacilities} 
                 center={mapCenter} 
