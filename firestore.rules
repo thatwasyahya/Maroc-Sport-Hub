@@ -41,7 +41,7 @@ service cloud.firestore {
       }
 
       allow get: if isSignedIn() && (isOwner() || isSuperAdmin());
-      allow list: if isSignedIn() && isSuperAdmin();
+      allow list: if isSuperAdmin();
       allow create: if isSignedIn() && isOwner() && request.resource.data.id == userId;
       allow update: if isSignedIn() && (isOwner() || isSuperAdmin());
       allow delete: if isSignedIn() && (isOwner() || isSuperAdmin());
