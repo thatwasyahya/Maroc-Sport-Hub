@@ -35,13 +35,11 @@ export default function SignupPage() {
       if (email === 'super@admin.com') {
         role = 'super_admin';
         const superAdminRoleDoc = doc(firestore, 'roles_super_admin', user.uid);
-        setDocumentNonBlocking(superAdminRoleDoc, { userId: user.uid }, { merge: true });
+        setDocumentNonBlocking(superAdminRoleDoc, { createdAt: serverTimestamp() }, { merge: true });
       } else if (email === 'admin@admin.com') {
         role = 'admin';
         const adminRoleDoc = doc(firestore, 'roles_admin', user.uid);
-        setDocumentNonBlocking(adminRoleDoc, { userId: user.uid }, { merge: true });
-      } else if (email === 'user@user.com') {
-        role = 'user';
+        setDocumentNonBlocking(adminRoleDoc, { createdAt: serverTimestamp() }, { merge: true });
       }
 
       const userDocRef = doc(firestore, 'users', user.uid);
