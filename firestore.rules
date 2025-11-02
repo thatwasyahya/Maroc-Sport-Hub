@@ -1,6 +1,7 @@
 /**
  * @description This ruleset enforces a role-based access control model for the Maroc Sport Hub application.
  * It provides granular permissions for different user roles (super_admin, admin, user) across various data collections.
+ * FORCE REFRESH
  * @dataStructure
  * - /users/{userId}: Stores user profile data, accessible only by the user and super admins.
  * - /facilities/{facilityId}: Stores sports facility data, managed by admins. Includes denormalized 'adminId' for authorization.
@@ -16,7 +17,7 @@
  * - The rules leverage denormalization to avoid costly `get()` calls.
  * - List operations are restricted based on user roles and ownership.
  * @denormalizationForAuthorization
- * - Facilities include the `adminId` field to directly link to the managing admin, avoiding extra reads.
+ * - Facilities include the 'adminId' field to directly link to the managing admin, avoiding extra reads.
  * - Reservations include both `facilityId` and `userId` for direct authorization checks.
  * @structuralSegregation
  * - User-specific data (profiles, reservations, imports) is stored under the `/users/{userId}` path, ensuring private access.
@@ -93,6 +94,12 @@ service cloud.firestore {
       allow update: if isSignedIn() && (isOwner(userId) || isAdmin() || isSuperAdmin());
       allow delete: if isSignedIn() && (isOwner(userId) || isAdmin() || isSuperAdmin());
     }
+    
+    match /reservations/{reservationId} {
+       allow list: if isSignedIn() && (isAdmin() || isSuperAdmin());
+       allow get, create, update, delete: if false;
+    }
+
 
     /**
      * @description Manages Excel import data initiated by an admin. Only the admin and super admins can access this data.
@@ -133,12 +140,9 @@ service cloud.firestore {
      * @path /roles_admin/{userId}
      */
     match /roles_admin/{userId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
-      allow get: if isSignedIn() && (isOwner() || isSuperAdmin());
+      allow get: if isSignedIn();
       allow list: if isSuperAdmin();
-      allow create: if isSignedIn() && isOwner();
+      allow create: if request.auth.uid == userId;
       allow update: if false;
       allow delete: if isSuperAdmin();
     }
@@ -148,12 +152,9 @@ service cloud.firestore {
      * @path /roles_super_admin/{userId}
      */
     match /roles_super_admin/{userId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
-      allow get: if isSignedIn() && (isOwner() || isSuperAdmin());
+      allow get: if isSignedIn();
       allow list: if isSuperAdmin();
-      allow create: if isSignedIn() && isOwner();
+      allow create: if request.auth.uid == userId;
       allow update: if false;
       allow delete: if isSuperAdmin();
     }
