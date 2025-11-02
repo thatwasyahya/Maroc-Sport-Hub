@@ -62,12 +62,13 @@ export default function Home() {
         );
     }
 
-    if (isIndoor) {
+    if (isIndoor && !isOutdoor) {
         newFilteredFacilities = newFilteredFacilities.filter(f => f.type === 'indoor');
-    }
-    if (isOutdoor) {
+    } else if (!isIndoor && isOutdoor) {
         newFilteredFacilities = newFilteredFacilities.filter(f => f.type === 'outdoor');
     }
+
+
     if (isAccessible) {
         newFilteredFacilities = newFilteredFacilities.filter(f => f.accessible);
     }
