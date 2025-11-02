@@ -9,7 +9,7 @@ const createRandomUser = (role: UserRole, id: number): User => ({
   role,
 });
 
-const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Natation", "Athlétisme", "Yoga", "Musculation", "CrossFit", "Padel"];
+const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Natation", "Athlétisme", "Yoga", "Musculation", "CrossFit", "Padel"].sort();
 const regions = ["Rabat-Salé-Kénitra", "Casablanca-Settat", "Marrakech-Safi", "Tanger-Tétouan-Al Hoceïma", "Fès-Meknès", "Souss-Massa"];
 const cities: { [key: string]: string[] } = {
   "Rabat-Salé-Kénitra": ["Rabat", "Salé", "Kénitra"],
@@ -24,7 +24,7 @@ const equipmentList = [
     "Haltères", "Tapis de course", "Vélos elliptiques", "Balles de yoga", "Filets de volley-ball", 
     "Paniers de basket", "Buts de football", "Raquettes de tennis", "Kettlebells", "Cages à squat",
     "Bancs de musculation", "Cordes à sauter", "Sacs de frappe"
-];
+].sort();
 
 const createRandomEquipment = (): Equipment => ({
     id: faker.string.uuid(),
