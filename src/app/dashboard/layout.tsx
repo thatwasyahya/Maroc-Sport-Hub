@@ -34,24 +34,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
+    // We wait until both the user and their profile are fully loaded.
     const isFinishedLoading = !isUserLoading && !isProfileLoading;
     
     if (isFinishedLoading) {
-      // If user is not logged in at all, redirect to login page.
+      // If there's no user logged in, redirect to the login page.
       if (!user) {
         router.push("/login");
         return;
       }
       
-      // If user is logged in, check their role from the profile.
+      // Check if the user has the required role from their profile.
       const hasPermission = userProfile && (userProfile.role === "admin" || userProfile.role === "super_admin");
       
       if (!hasPermission) {
         // If the user is logged in but doesn't have the right role,
-        // redirect them away from the dashboard to the home page.
+        // redirect them to the home page as they cannot access the dashboard.
         router.push("/");
       } else {
-        // Only if they have permission, authorize them to see the dashboard.
+        // If they have the correct role, authorize access to the dashboard.
         setIsAuthorized(true);
       }
     }
@@ -59,7 +60,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isActive = (path: string) => pathname === path;
 
-  // Show a loading skeleton while we verify permissions
+  // Show a loading skeleton while we verify permissions.
+  // This prevents the premature redirect and provides a better user experience.
   if (!isAuthorized) {
     return (
       <div className="min-h-screen w-full flex flex-col">
@@ -87,6 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // Once authorized, render the dashboard.
   return (
     <div className="min-h-screen w-full flex flex-col">
       <Header />
