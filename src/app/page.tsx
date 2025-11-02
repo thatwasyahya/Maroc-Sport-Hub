@@ -159,10 +159,11 @@ export default function Home() {
             </div>
         </section>
 
-        <section ref={mapRef} id="map-section" className="relative py-12 md:py-20 bg-muted/50">
-            <div className="relative h-[85vh]">
+        <section ref={mapRef} id="map-section" className="py-12 md:py-20 bg-muted/50">
+          <div className="container mx-auto px-4">
+            <div className="relative h-[85vh] rounded-lg overflow-hidden shadow-lg">
                 <SidebarProvider>
-                    <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[80vh] bg-card border shadow-lg rounded-lg">
+                    <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card border shadow-lg rounded-lg">
                         <SidebarHeader className="flex items-center justify-between">
                             <h2 className="text-xl font-bold font-headline">Filtres</h2>
                             <Button onClick={handleLocateMe} variant="ghost" size="sm">
@@ -257,6 +258,7 @@ export default function Home() {
                     </div>
                 </SidebarProvider>
             </div>
+          </div>
 
             <Sheet open={!!selectedFacility} onOpenChange={(open) => !open && handleSheetClose()}>
                 <SheetContent className="w-full sm:max-w-xl p-0 overflow-y-auto">
@@ -313,5 +315,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
