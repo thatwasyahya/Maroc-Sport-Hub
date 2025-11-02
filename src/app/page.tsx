@@ -119,7 +119,7 @@ export default function Home() {
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <SidebarProvider>
-          <Sidebar collapsible="icon" variant="floating" className="w-80">
+          <Sidebar collapsible="icon" variant="floating" className="w-72">
             <SidebarHeader className="flex items-center justify-between">
               <h2 className="text-xl font-bold font-headline">Filtres</h2>
               <Button onClick={handleLocateMe} variant="ghost" size="icon" title="Me localiser">
@@ -204,14 +204,14 @@ export default function Home() {
                 <Button onClick={clearFilters} variant="ghost">Effacer les filtres</Button>
             </SidebarFooter>
           </Sidebar>
-          <SidebarInset className="p-0 overflow-hidden relative">
+          <div className="p-0 overflow-hidden relative flex-1">
              <HomeMapContainer 
                 facilities={filteredFacilities} 
                 center={mapCenter} 
                 zoom={mapZoom} 
                 onMarkerClick={handleMarkerClick}
              />
-          </SidebarInset>
+          </div>
         </SidebarProvider>
 
         <Sheet open={!!selectedFacility} onOpenChange={(open) => !open && handleSheetClose()}>
