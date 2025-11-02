@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { facilities } from "@/lib/data";
+import { facilities as allFacilities } from "@/lib/data";
 import {
   SidebarProvider,
   Sidebar,
@@ -23,7 +23,8 @@ import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 
 export default function Home() {
-  const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>(facilities);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>([]);
   
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
@@ -36,9 +37,15 @@ export default function Home() {
   const [mapZoom, setMapZoom] = useState(6);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
 
-  const allSports = useMemo(() => [...new Set(facilities.flatMap(f => f.sports))].sort(), []);
-  const allRegions = useMemo(() => [...new Set(facilities.map(f => f.region))].sort(), []);
-  const allEquipments = useMemo(() => [...new Set(facilities.flatMap(f => f.equipments.map(e => e.name)))].sort(), []);
+  // Set facilities on client side to avoid hydration mismatch from faker data
+  useEffect(() => {
+    setFacilities(allFacilities);
+    setFilteredFacilities(allFacilities);
+  }, []);
+
+  const allSports = useMemo(() => [...new Set(facilities.flatMap(f => f.sports))].sort(), [facilities]);
+  const allRegions = useMemo(() => [...new Set(facilities.map(f => f.region))].sort(), [facilities]);
+  const allEquipments = useMemo(() => [...new Set(facilities.flatMap(f => f.equipments.map(e => e.name)))].sort(), [facilities]);
 
   useEffect(() => {
     let newFilteredFacilities = facilities;
@@ -73,7 +80,7 @@ export default function Home() {
 
     setFilteredFacilities(newFilteredFacilities);
 
-  }, [selectedSports, selectedRegions, selectedEquipment, isIndoor, isOutdoor, isAccessible]);
+  }, [selectedSports, selectedRegions, selectedEquipment, isIndoor, isOutdoor, isAccessible, facilities]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>, item: string, checked: boolean) => {
     setter(prev => checked ? [...prev, item] : prev.filter(i => i !== item));
@@ -114,7 +121,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col">
       <Header />
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex-1 overflow-hidden relative">
         <SidebarProvider>
           <Sidebar collapsible="icon" variant="floating" className="w-64 z-10">
             <SidebarHeader className="flex items-center justify-between">
