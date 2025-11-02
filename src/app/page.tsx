@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { facilities } from "@/lib/data";
@@ -8,6 +8,7 @@ import {
   SidebarHeader,
   SidebarContent,
   SidebarInset,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -17,9 +18,10 @@ import HomeMapContainer from "@/components/home-map-container";
 import type { Facility } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { LocateFixed } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-
+import { LocateFixed, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import FacilityDetails from '@/components/facility-details';
+import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 
 const allSports = [...new Set(facilities.flatMap(f => f.sports))].sort();
 const allRegions = [...new Set(facilities.map(f => f.region))].sort();
@@ -28,18 +30,16 @@ const allEquipments = [...new Set(facilities.flatMap(f => f.equipments.map(e => 
 export default function Home() {
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>(facilities);
   
-  // Filter states
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [isIndoor, setIsIndoor] = useState(false);
   const [isOutdoor, setIsOutdoor] = useState(false);
   const [isAccessible, setIsAccessible] = useState(false);
-
-  // Map state
-  const [mapCenter, setMapCenter] = useState<[number, number]>([31.7917, -7.0926]); // Default center of Morocco
+  
+  const [mapCenter, setMapCenter] = useState<[number, number]>([31.7917, -7.0926]);
   const [mapZoom, setMapZoom] = useState(6);
-
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
 
   useEffect(() => {
     let newFilteredFacilities = facilities;
@@ -68,7 +68,6 @@ export default function Home() {
         newFilteredFacilities = newFilteredFacilities.filter(f => f.type === 'outdoor');
     }
 
-
     if (isAccessible) {
         newFilteredFacilities = newFilteredFacilities.filter(f => f.accessible);
     }
@@ -87,11 +86,32 @@ export default function Home() {
         setMapCenter([position.coords.latitude, position.coords.longitude]);
         setMapZoom(13);
       }, () => {
-        alert("Unable to retrieve your location.");
+        alert("Impossible de récupérer votre position.");
       });
     } else {
-      alert("Geolocation is not supported by this browser.");
+      alert("La géolocalisation n'est pas supportée par ce navigateur.");
     }
+  };
+  
+  const clearFilters = () => {
+      setSelectedSports([]);
+      setSelectedRegions([]);
+      setSelectedEquipment([]);
+      setIsIndoor(false);
+      setIsOutdoor(false);
+      setIsAccessible(false);
+      // This will visually uncheck the boxes by re-rendering
+      // A more robust solution might involve controlling checkbox state directly
+      const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = false);
+  };
+
+  const handleMarkerClick = (facility: Facility) => {
+    setSelectedFacility(facility);
+  };
+
+  const handleSheetClose = () => {
+    setSelectedFacility(null);
   };
 
   return (
@@ -101,10 +121,9 @@ export default function Home() {
         <SidebarProvider>
           <Sidebar collapsible="icon" className="w-80">
             <SidebarHeader className="flex items-center justify-between">
-              <h2 className="text-xl font-bold font-headline">Filters</h2>
-              <Button onClick={handleLocateMe} variant="ghost" size="sm">
-                <LocateFixed className="mr-2 h-4 w-4" />
-                Find Near Me
+              <h2 className="text-xl font-bold font-headline">Filtres</h2>
+              <Button onClick={handleLocateMe} variant="ghost" size="icon" title="Me localiser">
+                <LocateFixed className="h-5 w-5" />
               </Button>
             </SidebarHeader>
             
@@ -115,20 +134,26 @@ export default function Home() {
                   <AccordionItem value="sport">
                     <AccordionTrigger className="px-4 py-2 text-base font-semibold">Sport</AccordionTrigger>
                     <AccordionContent className="px-4">
-                      {allSports.map(sport => (
-                        <div key={sport} className="flex items-center space-x-2 my-2">
-                          <Checkbox id={`sport-${sport}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedSports, sport, !!checked)} />
-                          <Label htmlFor={`sport-${sport}`} className="font-normal">{sport}</Label>
-                        </div>
-                      ))}
+                      {allSports.map(sport => {
+                        const Icon = sportsIconsMap[sport];
+                        return (
+                          <div key={sport} className="flex items-center space-x-3 my-2">
+                            <Checkbox id={`sport-${sport}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedSports, sport, !!checked)} />
+                            <Label htmlFor={`sport-${sport}`} className="font-normal flex items-center gap-2">
+                              {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+                              {sport}
+                            </Label>
+                          </div>
+                        )
+                      })}
                     </AccordionContent>
                   </AccordionItem>
                   
                   <AccordionItem value="region">
-                    <AccordionTrigger className="px-4 py-2 text-base font-semibold">Region</AccordionTrigger>
+                    <AccordionTrigger className="px-4 py-2 text-base font-semibold">Région</AccordionTrigger>
                     <AccordionContent className="px-4">
                       {allRegions.map(region => (
-                        <div key={region} className="flex items-center space-x-2 my-2">
+                        <div key={region} className="flex items-center space-x-3 my-2">
                           <Checkbox id={`region-${region}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedRegions, region, !!checked)} />
                           <Label htmlFor={`region-${region}`} className="font-normal">{region}</Label>
                         </div>
@@ -137,31 +162,37 @@ export default function Home() {
                   </AccordionItem>
 
                   <AccordionItem value="equipment">
-                    <AccordionTrigger className="px-4 py-2 text-base font-semibold">Equipment</AccordionTrigger>
+                    <AccordionTrigger className="px-4 py-2 text-base font-semibold">Équipement</AccordionTrigger>
                     <AccordionContent className="px-4">
-                      {allEquipments.map(equip => (
-                        <div key={equip} className="flex items-center space-x-2 my-2">
-                          <Checkbox id={`equip-${equip}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedEquipment, equip, !!checked)} />
-                          <Label htmlFor={`equip-${equip}`} className="font-normal">{equip}</Label>
-                        </div>
-                      ))}
+                      {allEquipments.map(equip => {
+                        const Icon = equipmentIconsMap[equip];
+                        return (
+                          <div key={equip} className="flex items-center space-x-3 my-2">
+                            <Checkbox id={`equip-${equip}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedEquipment, equip, !!checked)} />
+                            <Label htmlFor={`equip-${equip}`} className="font-normal flex items-center gap-2">
+                              {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+                              {equip}
+                            </Label>
+                          </div>
+                        )
+                      })}
                     </AccordionContent>
                   </AccordionItem>
                   
                   <AccordionItem value="other">
-                    <AccordionTrigger className="px-4 py-2 text-base font-semibold">Other</AccordionTrigger>
+                    <AccordionTrigger className="px-4 py-2 text-base font-semibold">Autres</AccordionTrigger>
                     <AccordionContent className="px-4">
-                       <div className="flex items-center space-x-2 my-2">
+                       <div className="flex items-center space-x-3 my-2">
                           <Checkbox id="type-indoor" checked={isIndoor} onCheckedChange={(checked) => setIsIndoor(!!checked)} />
-                          <Label htmlFor="type-indoor" className="font-normal">Indoor</Label>
+                          <Label htmlFor="type-indoor" className="font-normal">Intérieur</Label>
                         </div>
-                        <div className="flex items-center space-x-2 my-2">
+                        <div className="flex items-center space-x-3 my-2">
                           <Checkbox id="type-outdoor" checked={isOutdoor} onCheckedChange={(checked) => setIsOutdoor(!!checked)} />
-                          <Label htmlFor="type-outdoor" className="font-normal">Outdoor</Label>
+                          <Label htmlFor="type-outdoor" className="font-normal">Extérieur</Label>
                         </div>
-                        <div className="flex items-center space-x-2 my-2">
+                        <div className="flex items-center space-x-3 my-2">
                           <Checkbox id="accessible" checked={isAccessible} onCheckedChange={(checked) => setIsAccessible(!!checked)} />
-                          <Label htmlFor="accessible" className="font-normal">Accessible</Label>
+                          <Label htmlFor="accessible" className="font-normal">Accès PMR</Label>
                         </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -169,12 +200,38 @@ export default function Home() {
                 </Accordion>
               </SidebarContent>
             </ScrollArea>
+            <SidebarFooter>
+                <Button onClick={clearFilters} variant="ghost">Effacer les filtres</Button>
+            </SidebarFooter>
           </Sidebar>
-          <SidebarInset className="p-0 overflow-hidden">
-             <HomeMapContainer facilities={filteredFacilities} center={mapCenter} zoom={mapZoom} />
+          <SidebarInset className="p-0 overflow-hidden relative">
+             <HomeMapContainer 
+                facilities={filteredFacilities} 
+                center={mapCenter} 
+                zoom={mapZoom} 
+                onMarkerClick={handleMarkerClick}
+             />
           </SidebarInset>
         </SidebarProvider>
+
+        <Sheet open={!!selectedFacility} onOpenChange={(open) => !open && handleSheetClose()}>
+            <SheetContent className="w-full sm:max-w-xl p-0 overflow-y-auto">
+                {selectedFacility && (
+                    <>
+                        <SheetHeader className="p-6">
+                            <SheetTitle className="font-headline text-3xl">{selectedFacility.name}</SheetTitle>
+                            <SheetDescription>{selectedFacility.city}, {selectedFacility.region}</SheetDescription>
+                        </SheetHeader>
+                        <FacilityDetails facility={selectedFacility} />
+                    </>
+                )}
+            </SheetContent>
+        </Sheet>
+
       </div>
+      <footer className="border-t py-4 px-6 text-center text-sm text-muted-foreground">
+        <p>&copy; {new Date().getFullYear()} Maroc Sport Hub. Tous droits réservés.</p>
+      </footer>
     </div>
   );
 }

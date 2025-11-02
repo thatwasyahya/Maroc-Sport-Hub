@@ -32,6 +32,8 @@ export interface Facility {
   photos: string[];
   equipments: Equipment[];
   availability: Record<string, string[]>; // Date -> Array of available time slots
+  pricePerHour: number;
+  deposit: number;
 }
 
 export interface Reservation {

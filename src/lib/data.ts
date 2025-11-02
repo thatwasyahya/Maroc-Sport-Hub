@@ -9,7 +9,7 @@ const createRandomUser = (role: UserRole, id: number): User => ({
   role,
 });
 
-const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Swimming", "Athletics"];
+const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Natation", "Athlétisme", "Yoga", "Musculation", "CrossFit", "Padel"];
 const regions = ["Rabat-Salé-Kénitra", "Casablanca-Settat", "Marrakech-Safi", "Tanger-Tétouan-Al Hoceïma", "Fès-Meknès", "Souss-Massa"];
 const cities: { [key: string]: string[] } = {
   "Rabat-Salé-Kénitra": ["Rabat", "Salé", "Kénitra"],
@@ -20,9 +20,15 @@ const cities: { [key: string]: string[] } = {
   "Souss-Massa": ["Agadir", "Inezgane"],
 };
 
+const equipmentList = [
+    "Haltères", "Tapis de course", "Vélos elliptiques", "Balles de yoga", "Filets de volley-ball", 
+    "Paniers de basket", "Buts de football", "Raquettes de tennis", "Kettlebells", "Cages à squat",
+    "Bancs de musculation", "Cordes à sauter", "Sacs de frappe"
+];
+
 const createRandomEquipment = (): Equipment => ({
     id: faker.string.uuid(),
-    name: faker.commerce.productName(),
+    name: faker.helpers.arrayElement(equipmentList),
     quantity: faker.number.int({ min: 1, max: 20 }),
 });
 
@@ -61,8 +67,14 @@ const createRandomFacility = (): Facility => {
         accessible: faker.datatype.boolean(),
         description: faker.lorem.paragraph(),
         photos: Array.from({ length: 3 }, (_, i) => `https://picsum.photos/seed/${faker.string.uuid()}/800/600`),
-        equipments: Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, createRandomEquipment),
-        availability
+        equipments: faker.helpers.arrayElements(Array.from({ length: equipmentList.length }, (_, i) => ({
+            id: faker.string.uuid(),
+            name: equipmentList[i],
+            quantity: faker.number.int({min: 1, max: 10})
+        })), { min: 2, max: 5 }),
+        availability,
+        pricePerHour: faker.number.int({ min: 50, max: 300 }),
+        deposit: faker.helpers.arrayElement([0, 50, 100, 200]),
     };
 };
 
