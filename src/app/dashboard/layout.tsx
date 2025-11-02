@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { BarChart2, LayoutDashboard, Upload, Users, Warehouse } from "lucide-react";
+import { LayoutDashboard, Upload, Users, Warehouse } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { doc } from 'firebase/firestore';
@@ -67,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-h-screen w-full flex flex-col">
         <Header />
         <div className="flex flex-1 overflow-hidden">
-          <div className="w-64 hidden md:block border-r p-4">
+          <div className="w-64 hidden md:block border-r p-4 bg-muted/30">
              <Skeleton className="h-8 w-3/4 mb-6" />
              <div className="space-y-4">
                 <Skeleton className="h-10 w-full" />
