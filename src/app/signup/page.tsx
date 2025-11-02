@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import type { UserRole } from '@/lib/types';
 
 export default function SignupPage() {
   const { toast } = useToast();
@@ -30,12 +31,20 @@ export default function SignupPage() {
       const user = userCredential.user;
 
       const userDocRef = doc(firestore, 'users', user.uid);
+      
+      let role: UserRole = 'user';
+      if (email === 'super@admin.com') {
+        role = 'super_admin';
+      } else if (email === 'admin@admin.com') {
+        role = 'admin';
+      }
+
       const newUser = {
         id: user.uid,
         email: user.email,
         firstName: fullName.split(' ')[0] || '',
         lastName: fullName.split(' ').slice(1).join(' ') || '',
-        role: 'user',
+        role: role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
