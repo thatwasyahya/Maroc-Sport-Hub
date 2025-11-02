@@ -37,18 +37,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const isFinishedLoading = !isUserLoading && !isProfileLoading;
     
     if (isFinishedLoading) {
+      // If user is not logged in at all, redirect to login page.
       if (!user) {
         router.push("/login");
         return;
       }
       
+      // If user is logged in, check their role from the profile.
       const hasPermission = userProfile && (userProfile.role === "admin" || userProfile.role === "super_admin");
       
       if (!hasPermission) {
         // If the user is logged in but doesn't have the right role,
-        // redirect them away from the dashboard.
+        // redirect them away from the dashboard to the home page.
         router.push("/");
       } else {
+        // Only if they have permission, authorize them to see the dashboard.
         setIsAuthorized(true);
       }
     }
