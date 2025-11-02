@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import HomeMapContainer from "@/components/home-map-container";
 import type { Facility } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import FacilityDetails from '@/components/facility-details';
@@ -160,7 +160,7 @@ export default function Home() {
         </section>
 
         <section ref={mapRef} id="map-section" className="relative py-12 md:py-20 bg-muted/50">
-            <div className="relative h-[90vh]">
+            <div className="relative h-[85vh]">
                 <SidebarProvider>
                     <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[80vh] bg-card border shadow-lg rounded-lg">
                         <SidebarHeader className="flex items-center justify-between">
