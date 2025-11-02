@@ -23,10 +23,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 
-const allSports = [...new Set(facilities.flatMap(f => f.sports))].sort();
-const allRegions = [...new Set(facilities.map(f => f.region))].sort();
-const allEquipments = [...new Set(facilities.flatMap(f => f.equipments.map(e => e.name)))].sort();
-
 export default function Home() {
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>(facilities);
   
@@ -40,6 +36,10 @@ export default function Home() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([31.7917, -7.0926]);
   const [mapZoom, setMapZoom] = useState(6);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+
+  const allSports = useMemo(() => [...new Set(facilities.flatMap(f => f.sports))].sort(), []);
+  const allRegions = useMemo(() => [...new Set(facilities.map(f => f.region))].sort(), []);
+  const allEquipments = useMemo(() => [...new Set(facilities.flatMap(f => f.equipments.map(e => e.name)))].sort(), []);
 
   useEffect(() => {
     let newFilteredFacilities = facilities;
