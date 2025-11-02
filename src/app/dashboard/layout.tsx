@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
+import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import Header from "@/components/header";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -17,19 +17,29 @@ import {
 import { BarChart2, LayoutDashboard, Upload, Users, Warehouse } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { doc } from 'firebase/firestore';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
-      router.push("/login");
-    }
-  }, [user, router]);
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
-  if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
+  useEffect(() => {
+    if (!isUserLoading && !isProfileLoading) {
+      if (!user || !userProfile || (userProfile.role !== "admin" && userProfile.role !== "super_admin")) {
+        router.push("/login");
+      }
+    }
+  }, [user, userProfile, isUserLoading, isProfileLoading, router]);
+
+  if (isUserLoading || isProfileLoading || !userProfile) {
     return null; // Or a loading/unauthorized component
   }
 
@@ -70,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                {user.role === 'super_admin' && (
+                {userProfile.role === 'super_admin' && (
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/dashboard/users")}>
                       <Link href="/dashboard/users">

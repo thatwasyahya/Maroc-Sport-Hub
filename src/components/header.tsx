@@ -4,26 +4,41 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/use-auth";
+import { useUser, useAuth, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, getFirestore } from 'firebase/firestore';
 import { Activity, LayoutDashboard, LogOut, Map, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
+  const firestore = getFirestore();
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: userProfile } = useDoc(userDocRef);
+
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    await signOut(auth);
     router.push("/");
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "";
     const names = name.split(' ');
     if (names.length > 1) {
       return `${names[0][0]}${names[names.length - 1][0]}`;
     }
-    return names[0].substring(0, 2);
+    return name.substring(0, 2);
   };
+  
+  const displayName = userProfile?.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : user?.email;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -37,20 +52,22 @@ export default function Header() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
-          {user ? (
+          {isUserLoading ? (
+            <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+          ) : user && userProfile ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatarUrl} alt={user.name} />
-                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                    <AvatarImage src={user.photoURL || undefined} alt={displayName || ""} />
+                    <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-sm font-medium leading-none">{displayName}</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
@@ -63,7 +80,7 @@ export default function Header() {
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                {(user.role === 'admin' || user.role === 'super_admin') && (
+                {(userProfile.role === 'admin' || userProfile.role === 'super_admin') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">
                       <LayoutDashboard className="mr-2 h-4 w-4" />

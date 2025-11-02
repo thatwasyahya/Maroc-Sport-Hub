@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth as useFirebaseAuth, initiateEmailSignIn } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,20 +12,28 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const auth = useFirebaseAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This is a mock login. In a real app, you'd call an API.
-    login(email);
-    toast({
-      title: "Login Successful",
-      description: "Welcome back!",
-    });
-    router.push('/');
+    if (!auth) return;
+    try {
+      await initiateEmailSignIn(auth, email, password);
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message,
+      });
+    }
   };
 
   return (

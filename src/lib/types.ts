@@ -2,10 +2,13 @@ export type UserRole = "super_admin" | "admin" | "user";
 
 export interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  avatarUrl: string;
+  avatarUrl?: string;
   role: UserRole;
+  createdAt: any; // Can be a server timestamp
+  updatedAt: any; // Can be a server timestamp
 }
 
 export interface Equipment {

@@ -1,15 +1,22 @@
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
+import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { facilities, users, reservations } from "@/lib/data";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Warehouse, Users, CalendarCheck, BarChart2 } from "lucide-react";
 import { useMemo } from "react";
 import { format, subDays } from "date-fns";
+import { doc } from 'firebase/firestore';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [user, firestore]
+  );
+  const { data: userProfile } = useDoc(userDocRef);
   
   const weeklyReservationsData = useMemo(() => {
     const data: { name: string; reservations: number }[] = [];
@@ -23,11 +30,13 @@ export default function DashboardPage() {
     }
     return data;
   }, []);
+  
+  const displayName = userProfile?.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : user?.email;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <h1 className="text-3xl font-bold tracking-tight mb-6 font-headline">
-        Welcome, {user?.name}!
+        Welcome, {displayName}!
       </h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
