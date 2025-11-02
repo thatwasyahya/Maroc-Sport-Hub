@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.markercluster';
 import { useEffect, useRef } from 'react';
@@ -21,10 +21,13 @@ const MarkerCluster = ({ facilities }: { facilities: Facility[] }) => {
     const markerClusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   
     useEffect(() => {
-        if (!map || markerClusterGroupRef.current) return;
+        if (!map) return;
 
-        markerClusterGroupRef.current = L.markerClusterGroup();
-        map.addLayer(markerClusterGroupRef.current);
+        // Initialize marker cluster group only once
+        if (!markerClusterGroupRef.current) {
+            markerClusterGroupRef.current = L.markerClusterGroup();
+            map.addLayer(markerClusterGroupRef.current);
+        }
   
         return () => {
             if (markerClusterGroupRef.current) {
