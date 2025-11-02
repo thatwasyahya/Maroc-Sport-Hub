@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useDoc, useFirestore, useMemoFirebase, useCollection } from "@/firebase";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Warehouse, Users, CalendarCheck, BarChart2 } from "lucide-react";
 import { useMemo } from "react";
-import { format, subDays } from "date-fns";
+import { format, subDays, startOfDay } from "date-fns";
 import { collection, doc } from 'firebase/firestore';
 import type { Facility, User as AppUser, Reservation } from "@/lib/types";
 
@@ -24,33 +25,26 @@ export default function DashboardPage() {
   );
   const { data: facilities } = useCollection<Facility>(facilitiesCollectionRef);
 
-  // const usersCollectionRef = useMemoFirebase(
-  //   () => collection(firestore, 'users'),
-  //   [firestore]
-  // );
-  // const { data: users } = useCollection<AppUser>(usersCollectionRef);
-  const users: AppUser[] = []; // Temporary fix to avoid permission error
+  // This was causing a permission error for non-super-admins.
+  // We will temporarily disable this metric.
+  const users: AppUser[] = []; 
+  const reservations: Reservation[] = [];
 
-  // Note: This fetches ALL reservations. For a large app, this would need to be optimized.
-  // For this dashboard, we'll assume it's acceptable.
-  // const reservationsCollectionRef = useMemoFirebase(
-  //   () => collection(firestore, 'reservations'), // This is a simplification. A real app might need a different structure.
-  //   [firestore]
-  // );
-  // const { data: reservations, isLoading: reservationsLoading } = useCollection<Reservation>(reservationsCollectionRef);
-  const reservations: Reservation[] = []; // Temporary fix
-  
   const weeklyReservationsData = useMemo(() => {
-    if (!reservations) return [];
     const data: { name: string; reservations: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
-        const date = subDays(new Date(), i);
-        // FIXME: `date` property doesn't exist on `Reservation` type
-        // const dateString = format(date, "yyyy-MM-dd");
-        const dayName = format(date, "eee");
+    const today = startOfDay(new Date());
 
-        // const dailyReservations = reservations.filter(r => r.date === dateString && r.status === 'confirmed').length;
-        const dailyReservations = 0;
+    for (let i = 6; i >= 0; i--) {
+        const date = subDays(today, i);
+        const dayName = format(date, "eee");
+        
+        // As we cannot fetch all reservations, this will be 0 for now.
+        // This logic is kept for future implementation if needed.
+        const dailyReservations = reservations.filter(r => {
+            const reservationDate = new Date(r.date);
+            return startOfDay(reservationDate).getTime() === date.getTime() && r.status === 'confirmed';
+        }).length;
+
         data.push({ name: dayName, reservations: dailyReservations });
     }
     return data;
@@ -80,6 +74,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
+            {/* This metric is temporarily disabled due to permission constraints. */}
             <div className="text-2xl font-bold">{users?.length || 0}</div>
             <p className="text-xs text-muted-foreground">including admins</p>
           </CardContent>
@@ -90,6 +85,7 @@ export default function DashboardPage() {
             <CalendarCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
+             {/* This metric is temporarily disabled due to permission constraints. */}
             <div className="text-2xl font-bold">{reservations?.length || 0}</div>
             <p className="text-xs text-muted-foreground">past and upcoming</p>
           </CardContent>
@@ -109,7 +105,7 @@ export default function DashboardPage() {
                     <BarChart data={weeklyReservationsData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
                         <Tooltip
                             contentStyle={{
                                 background: "hsl(var(--background))",
