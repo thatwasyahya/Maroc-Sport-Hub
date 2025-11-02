@@ -9,11 +9,18 @@ import { Badge } from "@/components/ui/badge";
 export default function ManageUsersPage() {
     const getInitials = (name: string) => {
         const names = name.split(' ');
-        if (names.length > 1) {
+        if (names.length > 1 && names[1]) {
           return `${names[0][0]}${names[names.length - 1][0]}`;
         }
-        return names[0].substring(0, 2);
+        return names[0] ? names[0].substring(0, 2) : '';
     };
+
+    const getDisplayName = (user: { firstName?: string; lastName?: string; email: string; name?: string }) => {
+        if (user.firstName && user.lastName) {
+            return `${user.firstName} ${user.lastName}`;
+        }
+        return user.name || user.email;
+    }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -33,38 +40,41 @@ export default function ManageUsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                            <AvatarImage src={user.avatarUrl} alt={user.name} />
-                            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="font-medium">{user.name}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">{user.role.replace("_", " ")}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Select defaultValue={user.role}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="super_admin">Super Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button size="sm">Save</Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {users.map((user) => {
+                const displayName = getDisplayName(user);
+                return (
+                    <TableRow key={user.id}>
+                    <TableCell>
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-9 w-9">
+                                <AvatarImage src={user.avatarUrl} alt={displayName} />
+                                <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+                            </Avatar>
+                            <div className="font-medium">{displayName}</div>
+                        </div>
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                        <Badge variant="outline" className="capitalize">{user.role.replace("_", " ")}</Badge>
+                    </TableCell>
+                    <TableCell>
+                        <div className="flex items-center gap-2">
+                        <Select defaultValue={user.role}>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="user">User</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="super_admin">Super Admin</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button size="sm">Save</Button>
+                        </div>
+                    </TableCell>
+                    </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

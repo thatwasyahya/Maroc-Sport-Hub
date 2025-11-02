@@ -32,10 +32,10 @@ export default function Header() {
   const getInitials = (name?: string) => {
     if (!name) return "";
     const names = name.split(' ');
-    if (names.length > 1) {
+    if (names.length > 1 && names[1]) {
       return `${names[0][0]}${names[names.length - 1][0]}`;
     }
-    return name.substring(0, 2);
+    return name ? name.substring(0, 2) : "";
   };
   
   const displayName = userProfile?.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : user?.email;
