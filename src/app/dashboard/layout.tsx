@@ -3,7 +3,7 @@
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import Header from "@/components/header";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,12 +18,14 @@ import { BarChart2, LayoutDashboard, Upload, Users, Warehouse } from "lucide-rea
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { doc } from 'firebase/firestore';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -32,18 +34,55 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isUserLoading && !isProfileLoading) {
-      if (!user || !userProfile || (userProfile.role !== "admin" && userProfile.role !== "super_admin")) {
+    const isFinishedLoading = !isUserLoading && !isProfileLoading;
+    
+    if (isFinishedLoading) {
+      if (!user) {
         router.push("/login");
+        return;
+      }
+      
+      const hasPermission = userProfile && (userProfile.role === "admin" || userProfile.role === "super_admin");
+      
+      if (!hasPermission) {
+        // If the user is logged in but doesn't have the right role,
+        // redirect them away from the dashboard.
+        router.push("/");
+      } else {
+        setIsAuthorized(true);
       }
     }
   }, [user, userProfile, isUserLoading, isProfileLoading, router]);
 
-  if (isUserLoading || isProfileLoading || !userProfile) {
-    return null; // Or a loading/unauthorized component
-  }
-
   const isActive = (path: string) => pathname === path;
+
+  // Show a loading skeleton while we verify permissions
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen w-full flex flex-col">
+        <Header />
+        <div className="flex flex-1 overflow-hidden">
+          <div className="w-64 hidden md:block border-r p-4">
+             <Skeleton className="h-8 w-3/4 mb-6" />
+             <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+             </div>
+          </div>
+          <div className="flex-1 p-8">
+            <Skeleton className="h-12 w-1/2 mb-8" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex flex-col">
@@ -80,7 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                {userProfile.role === 'super_admin' && (
+                {userProfile?.role === 'super_admin' && (
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/dashboard/users")}>
                       <Link href="/dashboard/users">
