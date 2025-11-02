@@ -172,22 +172,17 @@ service cloud.firestore {
      * @path /roles_admin/{userId}
      */
     match /roles_admin/{userId} {
-       function isSignedIn() {
-        return request.auth != null;
-      }
-
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
-
       function isSuperAdmin() {
         return exists(/databases/$(database)/documents/roles_super_admin/$(request.auth.uid));
       }
-      allow get: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
+      allow get: if request.auth != null && (isOwner(userId) || isSuperAdmin());
       allow list: if isSuperAdmin();
-      allow create: if isSignedIn() && isOwner(userId);
+      allow create: if request.auth.uid == userId;
       allow update: if false;
-      allow delete: if isSignedIn() && isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
 
      /**
@@ -195,22 +190,19 @@ service cloud.firestore {
      * @path /roles_super_admin/{userId}
      */
     match /roles_super_admin/{userId} {
-       function isSignedIn() {
-        return request.auth != null;
-      }
-
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
-
       function isSuperAdmin() {
         return exists(/databases/$(database)/documents/roles_super_admin/$(request.auth.uid));
       }
-      allow get: if isSignedIn() && (isOwner(userId) || isSuperAdmin());
+      allow get: if request.auth != null && (isOwner(userId) || isSuperAdmin());
       allow list: if isSuperAdmin();
-      allow create: if isSignedIn() && isOwner(userId);
+      allow create: if request.auth.uid == userId;
       allow update: if false;
-      allow delete: if isSignedIn() && isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
   }
 }
+
+    
