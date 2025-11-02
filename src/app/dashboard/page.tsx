@@ -1,13 +1,13 @@
 "use client";
 
-import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser, useDoc, useFirestore, useMemoFirebase, useCollection } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { facilities, users, reservations } from "@/lib/data";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Warehouse, Users, CalendarCheck, BarChart2 } from "lucide-react";
 import { useMemo } from "react";
 import { format, subDays } from "date-fns";
-import { doc } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
+import type { Facility, User as AppUser, Reservation } from "@/lib/types";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -17,8 +17,29 @@ export default function DashboardPage() {
     [user, firestore]
   );
   const { data: userProfile } = useDoc(userDocRef);
+
+  const facilitiesCollectionRef = useMemoFirebase(
+    () => collection(firestore, 'facilities'),
+    [firestore]
+  );
+  const { data: facilities } = useCollection<Facility>(facilitiesCollectionRef);
+
+  const usersCollectionRef = useMemoFirebase(
+    () => collection(firestore, 'users'),
+    [firestore]
+  );
+  const { data: users } = useCollection<AppUser>(usersCollectionRef);
+
+  // Note: This fetches ALL reservations. For a large app, this would need to be optimized.
+  // For this dashboard, we'll assume it's acceptable.
+  const reservationsCollectionRef = useMemoFirebase(
+    () => collection(firestore, 'reservations'), // This is a simplification. A real app might need a different structure.
+    [firestore]
+  );
+  const { data: reservations, isLoading: reservationsLoading } = useCollection<Reservation>(reservationsCollectionRef);
   
   const weeklyReservationsData = useMemo(() => {
+    if (!reservations) return [];
     const data: { name: string; reservations: number }[] = [];
     for (let i = 6; i >= 0; i--) {
         const date = subDays(new Date(), i);
@@ -29,7 +50,7 @@ export default function DashboardPage() {
         data.push({ name: dayName, reservations: dailyReservations });
     }
     return data;
-  }, []);
+  }, [reservations]);
   
   const displayName = userProfile?.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : user?.email;
 
@@ -45,7 +66,7 @@ export default function DashboardPage() {
             <Warehouse className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{facilities.length}</div>
+            <div className="text-2xl font-bold">{facilities?.length || 0}</div>
             <p className="text-xs text-muted-foreground">across all regions</p>
           </CardContent>
         </Card>
@@ -55,7 +76,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
+            <div className="text-2xl font-bold">{users?.length || 0}</div>
             <p className="text-xs text-muted-foreground">including admins</p>
           </CardContent>
         </Card>
@@ -65,7 +86,7 @@ export default function DashboardPage() {
             <CalendarCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{reservations.length}</div>
+            <div className="text-2xl font-bold">{reservations?.length || 0}</div>
             <p className="text-xs text-muted-foreground">past and upcoming</p>
           </CardContent>
         </Card>

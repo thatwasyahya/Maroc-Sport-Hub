@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { facilities as allFacilities } from "@/lib/data";
 import {
   SidebarProvider,
   Sidebar,
@@ -23,8 +22,16 @@ import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function Home() {
+  const firestore = useFirestore();
+  const facilitiesCollectionRef = useMemoFirebase(
+    () => collection(firestore, 'facilities'),
+    [firestore]
+  );
+  const { data: allFacilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>([]);
   
@@ -43,8 +50,10 @@ export default function Home() {
 
   useEffect(() => {
     // This will only run on the client, after hydration
-    setFacilities(allFacilities);
-  }, []);
+    if (allFacilities) {
+      setFacilities(allFacilities);
+    }
+  }, [allFacilities]);
 
   const { allSports, allRegions, allEquipments } = useMemo(() => {
     const sports = [...new Set(facilities.flatMap(f => f.sports))].sort();

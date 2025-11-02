@@ -19,6 +19,7 @@ export interface Equipment {
 
 export interface Facility {
   id: string;
+  adminId?: string;
   external_id: string;
   name: string;
   region: string;
@@ -46,5 +47,5 @@ export interface Reservation {
   date: string;
   timeSlot: string;
   status: "confirmed" | "cancelled";
-  createdAt: Date;
+  createdAt: any;
 }

@@ -30,15 +30,21 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const userDocRef = doc(firestore, 'users', user.uid);
       
       let role: UserRole = 'user';
       if (email === 'super@admin.com') {
         role = 'super_admin';
+        const superAdminRoleDoc = doc(firestore, 'roles_super_admin', user.uid);
+        setDocumentNonBlocking(superAdminRoleDoc, { userId: user.uid }, { merge: true });
       } else if (email === 'admin@admin.com') {
         role = 'admin';
+        const adminRoleDoc = doc(firestore, 'roles_admin', user.uid);
+        setDocumentNonBlocking(adminRoleDoc, { userId: user.uid }, { merge: true });
+      } else if (email === 'user@user.com') {
+        role = 'user';
       }
 
+      const userDocRef = doc(firestore, 'users', user.uid);
       const newUser = {
         id: user.uid,
         email: user.email,

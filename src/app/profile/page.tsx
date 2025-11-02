@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser, useDoc, useFirestore, useMemoFirebase, useCollection } from "@/firebase";
 import Header from "@/components/header";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { reservations as allReservations, facilities } from "@/lib/data";
 import { format } from "date-fns";
-import { doc } from "firebase/firestore";
+import { collection, doc, Timestamp } from "firebase/firestore";
+import type { Reservation, Facility } from "@/lib/types";
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -23,6 +23,18 @@ export default function ProfilePage() {
   );
   const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
+  const reservationsCollectionRef = useMemoFirebase(
+    () => (user ? collection(firestore, 'users', user.uid, 'reservations') : null),
+    [user, firestore]
+  );
+  const { data: userReservations } = useCollection<Reservation>(reservationsCollectionRef);
+  
+  const facilitiesCollectionRef = useMemoFirebase(
+    () => collection(firestore, 'facilities'),
+    [firestore]
+  );
+  const { data: facilities } = useCollection<Facility>(facilitiesCollectionRef);
+
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push("/login");
@@ -33,18 +45,29 @@ export default function ProfilePage() {
     return null; // or a loading spinner
   }
 
-  const userReservations = allReservations.filter(r => r.userId === user.uid);
-
-  const getInitials = (name?: string) => {
-    if (!name) return "";
-    const names = name.split(' ');
-    if (names.length > 1 && names[1]) {
-      return `${names[0][0]}${names[names.length - 1][0]}`;
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`;
     }
-    return name ? name.substring(0, 2) : "";
+    if(firstName) {
+      return firstName.substring(0, 2);
+    }
+    return "";
   };
   
   const displayName = userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : user.email;
+
+  const formatDate = (timestamp: any) => {
+    if (timestamp instanceof Timestamp) {
+      return format(timestamp.toDate(), "PPP");
+    }
+    // Fallback for string dates (from mock data)
+    if (typeof timestamp === 'string') {
+        return format(new Date(timestamp), "PPP");
+    }
+    return "Date invalide";
+  };
+
 
   return (
     <div className="min-h-screen w-full flex flex-col">
@@ -55,7 +78,7 @@ export default function ProfilePage() {
             <CardContent className="p-6 flex items-center gap-6">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={user.photoURL || undefined} alt={displayName || ""} />
-                <AvatarFallback className="text-3xl">{getInitials(displayName)}</AvatarFallback>
+                <AvatarFallback className="text-3xl">{getInitials(userProfile.firstName, userProfile.lastName)}</AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="text-3xl font-bold font-headline">{displayName}</h1>
@@ -81,13 +104,14 @@ export default function ProfilePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {userReservations.length > 0 ? (
+                  {userReservations && facilities && userReservations.length > 0 ? (
                     userReservations.map(reservation => {
                       const facility = facilities.find(f => f.id === reservation.facilityId);
                       return (
                         <TableRow key={reservation.id}>
                           <TableCell className="font-medium">{facility?.name || 'N/A'}</TableCell>
-                          <TableCell>{format(new Date(reservation.date), "PPP")}</TableCell>                          <TableCell>{reservation.timeSlot}</TableCell>
+                          <TableCell>{formatDate(reservation.date)}</TableCell>
+                          <TableCell>{reservation.timeSlot}</TableCell>
                           <TableCell>
                             <Badge variant={reservation.status === 'confirmed' ? 'default' : 'destructive'} className="bg-primary/20 text-primary-foreground">
                               {reservation.status}
