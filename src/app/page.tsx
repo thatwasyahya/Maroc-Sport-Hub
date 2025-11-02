@@ -42,6 +42,7 @@ export default function Home() {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // This will only run on the client, after hydration
     setFacilities(allFacilities);
   }, []);
 
@@ -146,10 +147,10 @@ export default function Home() {
             </div>
             <div className="relative z-10 max-w-4xl mx-auto">
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tight mb-4">
-                Trouvez et Réservez Votre Terrain de Sport Idéal au Maroc
+                Le Hub Complet pour les Sportifs au Maroc
                 </h1>
                 <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Explorez une carte interactive des installations sportives, filtrez par sport, équipement ou région, et réservez votre créneau en quelques clics.
+                Découvrez des infos détaillées, explorez une carte interactive et trouvez tout ce dont vous avez besoin pour votre prochaine activité sportive.
                 </p>
                 <Button size="lg" onClick={scrollToMap}>
                 Explorer la carte
@@ -161,11 +162,11 @@ export default function Home() {
         <section ref={mapRef} id="map-section" className="relative py-12 md:py-20 bg-muted/50">
             <div className="container mx-auto relative h-[90vh]">
                 <SidebarProvider>
-                    <Sidebar collapsible="icon" variant="sidebar" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card border shadow-lg rounded-lg">
+                    <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[80vh] bg-card border shadow-lg rounded-lg">
                         <SidebarHeader className="flex items-center justify-between">
                             <h2 className="text-xl font-bold font-headline">Filtres</h2>
                             <Button onClick={handleLocateMe} variant="ghost" size="sm">
-                                <LocateFixed className="h-5 w-5" />
+                                <LocateFixed className="h-5 w-5 mr-2" />
                                 <span>Me localiser</span>
                             </Button>
                         </SidebarHeader>
@@ -312,5 +313,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
