@@ -123,7 +123,7 @@ export default function Home() {
       <Header />
       <div className="flex-1 overflow-hidden relative">
         <SidebarProvider>
-          <Sidebar collapsible="icon" variant="floating" className="w-64 z-10 max-h-[70vh] top-16">
+          <Sidebar collapsible="icon" variant="floating" className="w-64 z-10 max-h-[80vh] top-16">
             <SidebarHeader className="flex items-center justify-between">
               <h2 className="text-xl font-bold font-headline">Filtres</h2>
               <Button onClick={handleLocateMe} variant="ghost" size="icon" title="Me localiser">
