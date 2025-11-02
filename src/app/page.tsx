@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Header from "@/components/header";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import HomeMap from "@/components/home-map";
+import HomeMapContainer from "@/components/home-map-container";
+
 
 const sports = [...new Set(facilities.flatMap(f => f.sports))];
 const regions = [...new Set(facilities.map(f => f.region))];
@@ -79,7 +80,7 @@ export default function Home() {
             </ScrollArea>
           </Sidebar>
           <SidebarInset className="p-0 overflow-hidden">
-            <HomeMap facilities={facilities} />
+            <HomeMapContainer facilities={facilities} />
           </SidebarInset>
         </SidebarProvider>
       </div>

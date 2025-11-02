@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.markercluster';
 import { useEffect, useRef } from 'react';
@@ -16,13 +16,12 @@ if (typeof window !== 'undefined') {
   });
 }
 
-
 const MarkerCluster = ({ facilities }: { facilities: Facility[] }) => {
     const map = useMap();
     const markerClusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   
     useEffect(() => {
-        if (!map) return;
+        if (!map || markerClusterGroupRef.current) return;
 
         markerClusterGroupRef.current = L.markerClusterGroup();
         map.addLayer(markerClusterGroupRef.current);
@@ -30,6 +29,7 @@ const MarkerCluster = ({ facilities }: { facilities: Facility[] }) => {
         return () => {
             if (markerClusterGroupRef.current) {
                 map.removeLayer(markerClusterGroupRef.current);
+                markerClusterGroupRef.current = null;
             }
         };
     }, [map]);
@@ -41,7 +41,7 @@ const MarkerCluster = ({ facilities }: { facilities: Facility[] }) => {
           const marker = L.marker([facility.location.lat, facility.location.lng]);
           marker.bindPopup(`
             <div class="p-1">
-              <h3 class="font-bold text-lg">${facility.name}</h3>
+              <h3 class="font-bold text-lg"><a href="/facilities/${facility.id}" class="hover:underline">${facility.name}</a></h3>
               <p class="text-sm text-muted-foreground">${facility.city}, ${facility.region}</p>
               <p class="text-sm mt-1">${facility.sports.join(', ')}</p>
             </div>
