@@ -38,27 +38,32 @@ export default function UsersPage() {
   );
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
+  // This check is a secondary safeguard. The primary protection is in the dashboard layout.
+  useEffect(() => {
+    if (!isUserLoading && !isProfileLoading && userProfile?.role !== 'super_admin') {
+      router.push('/dashboard');
+    }
+  }, [userProfile, isUserLoading, isProfileLoading, router]);
+
   const usersCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'users'),
-    [firestore]
+    // Only fetch users if the current user is a super_admin
+    () => (userProfile?.role === 'super_admin' ? collection(firestore, 'users') : null),
+    [firestore, userProfile?.role]
   );
-  // Note: This collection fetch will fail if the user is not a super_admin.
-  // The firestore.rules prevent non-super-admins from listing users.
-  // We rely on the parent AuthorizationProvider to prevent this page from rendering for non-super-admins.
+  
+  // Note: This collection fetch will fail if the user is not a super_admin due to firestore.rules.
+  // The logic in useMemoFirebase prevents the hook from even running if the condition isn't met.
   const { data: allUsers, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
 
   const isLoading = isUserLoading || isProfileLoading;
   
-  // This check is a secondary safeguard. The primary protection is in AuthorizationProvider.
-  useEffect(() => {
-    if (!isLoading && userProfile?.role !== 'super_admin') {
-      router.push('/dashboard');
-    }
-  }, [userProfile, isLoading, router]);
-  
-
-  if (isLoading || usersLoading) {
+  if (isLoading || (userProfile?.role === 'super_admin' && usersLoading)) {
     return <UsersSkeleton />;
+  }
+
+  // Final check before rendering
+  if (userProfile?.role !== 'super_admin') {
+      return null; // or a more explicit "access denied" message for this specific page
   }
 
   return (
