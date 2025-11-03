@@ -1,15 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Building, Users } from 'lucide-react';
+import { Activity, Building, Users, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
-import { useMemo } from 'react';
-import { AuthorizationProvider } from '@/components/AuthorizationProvider';
-import { Home } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 function DashboardLayoutSkeleton() {
   return (
@@ -32,7 +30,7 @@ function DashboardLayoutSkeleton() {
           <div className="h-6 w-24 animate-pulse rounded-md bg-muted"></div>
         </header>
         <main className="flex-1 p-6">
-          <div className="h-48 w-full animate-pulse rounded-lg bg-muted"></div>
+          <div className="h-full w-full animate-pulse rounded-lg bg-muted"></div>
         </main>
       </div>
     </div>
@@ -40,15 +38,38 @@ function DashboardLayoutSkeleton() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
   const pathname = usePathname();
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
-  const { data: userProfile } = useDoc<User>(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
+
+  useEffect(() => {
+    const isLoading = isUserLoading || isProfileLoading;
+    if (isLoading) {
+      return; // Wait until everything is loaded
+    }
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) {
+      router.push('/');
+      return;
+    }
+
+    // If all checks pass, authorize the user
+    setIsAuthorized(true);
+
+  }, [user, userProfile, isUserLoading, isProfileLoading, router]);
 
   const navLinks = useMemo(() => {
     const links = [
@@ -61,8 +82,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return links;
   }, [userProfile?.role]);
 
+  if (!isAuthorized) {
+    return <DashboardLayoutSkeleton />;
+  }
+
   return (
-    <AuthorizationProvider loadingSkeleton={<DashboardLayoutSkeleton />}>
       <div className="flex min-h-screen w-full bg-muted/40">
         <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
           <div className="flex h-16 items-center border-b px-6">
@@ -101,6 +125,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <main className="flex-1 p-6">{children}</main>
         </div>
       </div>
-    </AuthorizationProvider>
   );
 }
