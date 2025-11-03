@@ -17,7 +17,7 @@ export function initializeFirebase() {
       const firestore = getFirestore(app);
       connectFirestoreEmulator(firestore, 'firestore', 8080);
       const auth = getAuth(app);
-      connectAuthEmulator(auth, 'http://auth:9099');
+      connectAuthEmulator(auth, 'http://auth:9099', { disableWarnings: true });
       return { firebaseApp: app, auth, firestore };
     }
     
@@ -37,7 +37,7 @@ export function initializeFirebase() {
 
       const auth = getAuth(app);
       try {
-        connectAuthEmulator(auth, 'http://auth:9099');
+        connectAuthEmulator(auth, 'http://auth:9099', { disableWarnings: true });
       } catch(e) {
         // already connected
       }

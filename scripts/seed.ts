@@ -1,14 +1,21 @@
 // tsx scripts/seed.ts
-import { initializeApp } from 'firebase-admin/app';
+import { initializeApp, App } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { users, facilities, equipments, reservations } from '../src/lib/data';
 import { firebaseConfig } from '../src/firebase/config';
 
-// Initialize Firebase Admin SDK
-const app = initializeApp({
-    projectId: firebaseConfig.projectId,
-});
+let app: App;
+if (process.env.NEXT_PUBLIC_USE_EMULATOR) {
+    // Connect to emulators
+    process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+    process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
+    app = initializeApp({ projectId: firebaseConfig.projectId });
+} else {
+    // Connect to production services
+    app = initializeApp({ projectId: firebaseConfig.projectId });
+}
+
 
 const db = getFirestore(app);
 const auth = getAuth(app);
