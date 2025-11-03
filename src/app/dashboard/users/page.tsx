@@ -10,6 +10,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
+function UsersSkeleton() {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64 mt-2" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+}
+
 export default function UsersPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -27,11 +44,11 @@ export default function UsersPage() {
   );
   const { data: allUsers, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
 
+  const isLoading = isUserLoading || isProfileLoading;
+
   useEffect(() => {
-    const isLoading = isUserLoading || isProfileLoading;
-    if (isLoading) {
-      return;
-    }
+    if (isLoading) return;
+
     if (!user) {
         router.push('/login');
         return;
@@ -39,26 +56,10 @@ export default function UsersPage() {
     if (userProfile?.role !== 'super_admin') {
       router.push('/dashboard');
     }
-  }, [userProfile, isProfileLoading, isUserLoading, router, user]);
-
-  const isLoading = isUserLoading || isProfileLoading || usersLoading;
+  }, [userProfile, isLoading, router, user]);
 
   if (isLoading || userProfile?.role !== 'super_admin') {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>View and manage all users in the system.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-48 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <UsersSkeleton />;
   }
 
   return (
@@ -77,7 +78,13 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {allUsers && allUsers.length > 0 ? (
+            {usersLoading ? (
+              <TableRow>
+                <TableCell colSpan={3} className="h-24 text-center">
+                  Loading users...
+                </TableCell>
+              </TableRow>
+            ) : allUsers && allUsers.length > 0 ? (
               allUsers.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.firstName} {u.lastName}</TableCell>

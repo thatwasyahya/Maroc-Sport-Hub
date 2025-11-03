@@ -1,73 +1,24 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Activity, Home, Users, Building, BarChart3 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
-
-function DashboardSkeleton() {
-  return (
-    <div className="flex min-h-screen">
-      <aside className="w-64 border-r bg-card p-4">
-        <div className="flex items-center gap-2 mb-8">
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-6 w-32" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-      </aside>
-      <main className="flex-1 p-8">
-        <Skeleton className="h-96 w-full" />
-      </main>
-    </div>
-  );
-}
+import { useMemo } from 'react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
   const pathname = usePathname();
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
-
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const isLoading = isUserLoading || isProfileLoading;
-
-  useEffect(() => {
-    // Ne rien faire tant que les données sont en cours de chargement
-    if (isLoading) {
-      return;
-    }
-
-    // Si pas d'utilisateur après le chargement, rediriger vers la connexion
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
-    // L'utilisateur est chargé, on vérifie son profil
-    const hasPermission = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
-
-    if (hasPermission) {
-      setIsAuthorized(true);
-    } else {
-      // Si pas de permission, rediriger vers l'accueil
-      router.push('/');
-    }
-  }, [isLoading, user, userProfile, router]);
+  const { data: userProfile } = useDoc<User>(userDocRef);
   
   const navLinks = useMemo(() => {
     const links = [
@@ -79,11 +30,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     return links;
   }, [userProfile?.role]);
-
-  // Affiche l'écran de chargement tant que l'autorisation n'est pas confirmée
-  if (isLoading || !isAuthorized) {
-    return <DashboardSkeleton />;
-  }
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
