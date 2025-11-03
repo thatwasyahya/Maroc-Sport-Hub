@@ -25,37 +25,49 @@ export function AuthorizationProvider({ children, loadingSkeleton }: Authorizati
   const isLoading = isUserLoading || isProfileLoading;
 
   useEffect(() => {
-    // Wait until all loading is done before making a decision.
+    // Wait until loading is fully complete.
     if (isLoading) {
       return;
     }
 
-    // If loading is done and there's no user, redirect to login.
+    // If loading is done and there is still no authenticated user, redirect to login.
     if (!user) {
       router.push('/login');
-      return;
+    }
+    
+    // If a user is logged in, but their profile with roles doesn't exist or they don't have the right role,
+    // redirect them to the home page.
+    if (user && !userProfile) {
+        // This can happen for a brief moment after signup before the user doc is created.
+        // Or if the doc creation failed.
+        // A redirect to home is safer than getting stuck or seeing errors.
+        router.push('/');
+        return;
     }
 
-    // If loading is done and there is a user, but no profile or incorrect role.
-    if (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) {
-      router.push('/');
-      return;
+    if (userProfile && userProfile.role !== 'admin' && userProfile.role !== 'super_admin') {
+        router.push('/');
+        return;
     }
 
   }, [isLoading, user, userProfile, router]);
 
 
-  // While loading, show the skeleton.
-  if (isLoading) {
+  // While loading, or if the user is not yet defined, show the skeleton.
+  if (isLoading || !user) {
     return <>{loadingSkeleton}</>;
   }
 
-  // If authorized, show the actual content.
-  if (user && userProfile && (userProfile.role === 'admin' || userProfile.role === 'super_admin')) {
-    return <>{children}</>;
+  // If we have a user, but no profile yet, also show skeleton while useEffect handles potential redirect.
+  if (!userProfile) {
+    return <>{loadingSkeleton}</>;
+  }
+  
+  // If the user has the correct role, show the content.
+  if (userProfile.role === 'admin' || userProfile.role === 'super_admin') {
+     return <>{children}</>;
   }
 
-  // Fallback: If not loading but not authorized, show skeleton.
-  // This state should be brief as the useEffect will trigger a redirect.
+  // Fallback while redirecting.
   return <>{loadingSkeleton}</>;
 }
