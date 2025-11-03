@@ -21,7 +21,7 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) || isSuperAdmin();
     }
     
     function isOwner(userId) {
@@ -60,8 +60,17 @@ service cloud.firestore {
      **************************************************/
     match /facilities/{facilityId} {
       allow get, list: if true; // Publicly readable
-      allow create: if isAdmin() || isSuperAdmin();
+      allow create: if isAdmin();
       allow update, delete: if (isAdmin() && resource.data.adminId == request.auth.uid) || isSuperAdmin();
+    }
+    
+    /**************************************************
+     * Collection: equipments
+     * Description: Manages sports equipment data.
+     **************************************************/
+    match /equipments/{equipmentId} {
+      allow get, list: if true; // Publicly readable
+      allow create, update, delete: if isAdmin();
     }
 
     /**************************************************
@@ -69,18 +78,19 @@ service cloud.firestore {
      * Description: Manages reservations for a user.
      **************************************************/
     match /users/{userId}/reservations/{reservationId} {
-      allow get, list: if isOwner(userId) || isAdmin() || isSuperAdmin();
+      allow get, list: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
-      allow update, delete: if isOwner(userId) || isAdmin() || isSuperAdmin();
+      allow update, delete: if isOwner(userId) || isAdmin();
     }
-    
+
     /**************************************************
-     * DEPRECATED Collection: reservations
-     * Deny all access to the root `reservations` collection
+     * Collection: reservations (root level)
+     * Description: Used by admins to list all reservations.
      **************************************************/
-    match /reservations/{reservationId} {
-       allow read, write: if false;
-    }
+     match /reservations/{reservationId} {
+       allow get, list: if isAdmin();
+       allow create, update, delete: if false; // Reservations are created under users
+     }
 
     /**************************************************
      * Subcollection: imports

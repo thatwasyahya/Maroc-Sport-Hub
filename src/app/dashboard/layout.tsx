@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Building, Users, Home, Loader, ShieldAlert } from 'lucide-react';
+import { Activity, Building, Users, Home, Loader, ShieldAlert, Dumbbell, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 import { useMemo } from 'react';
@@ -22,6 +22,7 @@ function DashboardLayoutSkeleton() {
           </Link>
         </div>
         <nav className="flex-1 p-4 space-y-2">
+          <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
           <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
           <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
         </nav>
@@ -78,6 +79,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const links = [
       { href: '/dashboard', label: 'Overview', icon: Activity },
       { href: '/dashboard/facilities', label: 'Facilities', icon: Building },
+      { href: '/dashboard/equipments', label: 'Equipments', icon: Dumbbell },
+      { href: '/dashboard/reservations', label: 'Reservations', icon: CalendarDays },
     ];
     if (userProfile?.role === 'super_admin') {
       links.push({ href: '/dashboard/users', label: 'User Management', icon: Users });
@@ -87,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const hasPermission = userProfile && (userProfile.role === 'admin' || userProfile.role === 'super_admin');
   const isLoading = isUserLoading || isProfileLoading;
-
+  
   if (isLoading) {
     return <DashboardLayoutSkeleton />;
   }

@@ -1,374 +1,111 @@
 {
   "entities": {
     "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
       "description": "Represents a user in the system.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the user.",
-          "format": "email"
-        },
-        "role": {
-          "type": "string",
-          "description": "Role of the user (e.g., super_admin, admin, user)."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "First name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "Last name of the user."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the user." },
+        "email": { "type": "string", "description": "Email address of the user.", "format": "email" },
+        "role": { "type": "string", "description": "Role of the user (e.g., super_admin, admin, user)." },
+        "firstName": { "type": "string", "description": "First name of the user." },
+        "lastName": { "type": "string", "description": "Last name of the user." },
+        "createdAt": { "type": "string", "description": "Timestamp indicating when the user was created.", "format": "date-time" },
+        "updatedAt": { "type": "string", "description": "Timestamp indicating when the user was last updated.", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "role"
-      ]
+      "required": ["id", "email", "role"]
     },
     "Facility": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Facility",
       "type": "object",
       "description": "Represents a sports facility.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the facility."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the facility."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the facility."
-        },
-        "latitude": {
-          "type": "number",
-          "description": "Latitude of the facility location."
-        },
-        "longitude": {
-          "type": "number",
-          "description": "Longitude of the facility location."
-        },
-        "sports": {
-          "type": "array",
-          "description": "List of sports supported by the facility.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "address": {
-          "type": "string",
-          "description": "Address of the facility."
-        },
-        "city": {
-          "type": "string",
-          "description": "City where the facility is located."
-        },
-        "region": {
-          "type": "string",
-          "description": "Region where the facility is located."
-        },
-        "indoor": {
-          "type": "boolean",
-          "description": "Indicates if the facility is indoor."
-        },
-        "accessibility": {
-          "type": "string",
-          "description": "Accessibility information for the facility."
-        },
-        "adminId": {
-          "type": "string",
-          "description": "Reference to the Admin user who manages this facility. (Relationship: User 1:N Facility)"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the facility." },
+        "name": { "type": "string", "description": "Name of the facility." },
+        "description": { "type": "string", "description": "Description of the facility." },
+        "rentalCost": { "type": "number", "description": "Cost per hour for renting the facility." },
+        "depositCost": { "type": "number", "description": "Security deposit for the facility." },
+        "sports": { "type": "array", "items": { "type": "string" }, "description": "List of sports supported by the facility." },
+        "address": { "type": "string", "description": "Address of the facility." },
+        "adminId": { "type": "string", "description": "Reference to the Admin user who manages this facility." },
+        "equipmentIds": { "type": "array", "items": { "type": "string" }, "description": "List of equipment IDs available at the facility." }
       },
-      "required": [
-        "id",
-        "name",
-        "latitude",
-        "longitude"
-      ]
+      "required": ["id", "name", "rentalCost"]
+    },
+    "Equipment": {
+        "title": "Equipment",
+        "type": "object",
+        "description": "Represents a piece of sports equipment.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the equipment." },
+            "name": { "type": "string", "description": "Name of the equipment." },
+            "rentalCost": { "type": "number", "description": "Cost per hour for renting the equipment." },
+            "depositCost": { "type": "number", "description": "Security deposit for the equipment." },
+            "facilityId": { "type": "string", "description": "Reference to the Facility this equipment belongs to." }
+        },
+        "required": ["id", "name", "rentalCost", "facilityId"]
     },
     "Reservation": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Reservation",
       "type": "object",
       "description": "Represents a reservation for a facility.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the reservation."
-        },
-        "facilityId": {
-          "type": "string",
-          "description": "Reference to the Facility being reserved. (Relationship: Facility 1:N Reservation)"
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User who made the reservation. (Relationship: User 1:N Reservation)"
-        },
-        "startTime": {
-          "type": "string",
-          "description": "Start time of the reservation.",
-          "format": "date-time"
-        },
-        "endTime": {
-          "type": "string",
-          "description": "End time of the reservation.",
-          "format": "date-time"
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the reservation (e.g., pending, confirmed, cancelled)."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the reservation was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the reservation was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the reservation." },
+        "facilityId": { "type": "string", "description": "Reference to the Facility being reserved." },
+        "userId": { "type": "string", "description": "Reference to the User who made the reservation." },
+        "startTime": { "type": "string", "description": "Start time of the reservation.", "format": "date-time" },
+        "endTime": { "type": "string", "description": "End time of the reservation.", "format": "date-time" },
+        "status": { "type": "string", "description": "Status of the reservation (e.g., pending, confirmed, cancelled)." },
+        "totalCost": { "type": "number", "description": "Total cost of the reservation." },
+        "createdAt": { "type": "string", "description": "Timestamp indicating when the reservation was created.", "format": "date-time" },
+        "updatedAt": { "type": "string", "description": "Timestamp indicating when the reservation was last updated.", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "facilityId",
-        "userId",
-        "startTime",
-        "endTime",
-        "status"
-      ]
-    },
-    "Import": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Import",
-      "type": "object",
-      "description": "Represents an Excel import operation.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the import."
-        },
-        "adminId": {
-          "type": "string",
-          "description": "Reference to the Admin user who initiated the import. (Relationship: User 1:N Import)"
-        },
-        "filename": {
-          "type": "string",
-          "description": "Name of the imported file."
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the import (e.g., pending, processing, completed, failed)."
-        },
-        "report": {
-          "type": "string",
-          "description": "Report of the import operation, including success and error counts."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the import was started.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the import was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "adminId",
-        "filename",
-        "status"
-      ]
-    },
-    "AuditLog": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AuditLog",
-      "type": "object",
-      "description": "Represents an audit log entry.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the audit log entry."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User who performed the action. (Relationship: User 1:N AuditLog)"
-        },
-        "action": {
-          "type": "string",
-          "description": "Action performed (e.g., create, update, delete)."
-        },
-        "entityType": {
-          "type": "string",
-          "description": "Type of entity affected (e.g., User, Facility, Reservation)."
-        },
-        "entityId": {
-          "type": "string",
-          "description": "ID of the entity affected."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Timestamp of the action.",
-          "format": "date-time"
-        },
-        "details": {
-          "type": "string",
-          "description": "Additional details about the action."
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "action",
-        "entityType",
-        "entityId",
-        "timestamp"
-      ]
+      "required": ["id", "facilityId", "userId", "startTime", "endTime", "status", "totalCost"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
       {
         "path": "/users/{userId}",
         "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profile data. The 'role' field is informational. Actual permissions are determined by the 'roles_*' collections.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
+          "schema": { "$ref": "#/entities/User" },
+          "description": "Stores user profile data. The 'role' field is informational. Actual permissions are determined by the 'roles_*' collections."
         }
       },
       {
         "path": "/facilities/{facilityId}",
         "definition": {
-          "entityName": "Facility",
-          "schema": {
-            "$ref": "#/backend/entities/Facility"
-          },
-          "description": "Stores sports facility data. Includes denormalized 'adminId' for authorization independence.",
-          "params": [
-            {
-              "name": "facilityId",
-              "description": "The unique identifier of the facility."
-            }
-          ]
+          "schema": { "$ref": "#/entities/Facility" },
+          "description": "Stores sports facility data. Includes denormalized 'adminId' for authorization independence."
+        }
+      },
+      {
+        "path": "/equipments/{equipmentId}",
+        "definition": {
+            "schema": { "$ref": "#/entities/Equipment" },
+            "description": "Stores individual pieces of equipment that can be associated with facilities."
         }
       },
       {
         "path": "/users/{userId}/reservations/{reservationId}",
         "definition": {
-          "entityName": "Reservation",
-          "schema": {
-            "$ref": "#/backend/entities/Reservation"
-          },
-          "description": "Stores reservation data for a user. Accessible only by the user and admins.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "reservationId",
-              "description": "The unique identifier of the reservation."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{adminId}/imports/{importId}",
-        "definition": {
-          "entityName": "Import",
-          "schema": {
-            "$ref": "#/backend/entities/Import"
-          },
-          "description": "Stores Excel import data initiated by an admin. Accessible only by the admin and super admins.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The unique identifier of the admin."
-            },
-            {
-              "name": "importId",
-              "description": "The unique identifier of the import operation."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/audit_logs/{auditLogId}",
-        "definition": {
-          "entityName": "AuditLog",
-          "schema": {
-            "$ref": "#/backend/entities/AuditLog"
-          },
-          "description": "Stores audit log entries. Accessible only by super admins.",
-          "params": [
-            {
-              "name": "auditLogId",
-              "description": "The unique identifier of the audit log entry."
-            }
-          ]
+          "schema": { "$ref": "#/entities/Reservation" },
+          "description": "Stores reservation data for a user. Accessible only by the user and admins."
         }
       },
       {
         "path": "/roles_admin/{userId}",
         "definition": {
-          "description": "A document in this collection signifies that the user with the ID 'userId' has the 'admin' role. The document itself can be empty.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
+          "description": "A document in this collection signifies that the user with the ID 'userId' has the 'admin' role. The document itself can be empty."
         }
       },
       {
         "path": "/roles_super_admin/{userId}",
         "definition": {
-          "description": "A document in this collection signifies that the user with the ID 'userId' has the 'super_admin' role. The document itself can be empty.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
+          "description": "A document in this collection signifies that the user with the ID 'userId' has the 'super_admin' role. The document itself can be empty."
         }
       }
     ]

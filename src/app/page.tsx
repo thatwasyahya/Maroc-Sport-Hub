@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import Header from "@/components/header";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import HomeMapContainer from "@/components/home-map-container";
-import type { Facility } from '@/lib/types';
+import type { Facility, Equipment } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from "@/components/ui/button";
 import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter } from 'lucide-react';
@@ -31,7 +31,14 @@ export default function Home() {
     () => collection(firestore, 'facilities'),
     [firestore]
   );
+  const equipmentsCollectionRef = useMemoFirebase(
+    () => collection(firestore, 'equipments'),
+    [firestore]
+  );
+
   const { data: allFacilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
+  const { data: allEquipmentsData, isLoading: equipmentsLoading } = useCollection<Equipment>(equipmentsCollectionRef);
+
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>([]);
   
@@ -49,18 +56,17 @@ export default function Home() {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // This will only run on the client, after hydration
     if (allFacilities) {
       setFacilities(allFacilities);
     }
   }, [allFacilities]);
 
   const { allSports, allRegions, allEquipments } = useMemo(() => {
-    const sports = [...new Set(facilities.flatMap(f => f.sports))].sort();
+    const sports = [...new Set(facilities.flatMap(f => f.sports || []))].sort();
     const regions = [...new Set(facilities.map(f => f.region))].sort();
-    const equipments = [...new Set(facilities.flatMap(f => f.equipments.map(e => e.name)))].sort();
+    const equipments = [...new Set(allEquipmentsData?.map(e => e.name) || [])].sort();
     return { allSports: sports, allRegions: regions, allEquipments: equipments };
-  }, [facilities]);
+  }, [facilities, allEquipmentsData]);
 
 
   useEffect(() => {
@@ -68,7 +74,7 @@ export default function Home() {
 
     if (selectedSports.length > 0) {
       newFilteredFacilities = newFilteredFacilities.filter(f => 
-        selectedSports.some(sport => f.sports.includes(sport))
+        selectedSports.some(sport => f.sports?.includes(sport))
       );
     }
 
@@ -80,7 +86,10 @@ export default function Home() {
     
     if (selectedEquipment.length > 0) {
         newFilteredFacilities = newFilteredFacilities.filter(f => 
-            selectedEquipment.some(equip => f.equipments.map(e => e.name).includes(equip))
+            f.equipmentIds && allEquipmentsData && selectedEquipment.some(equipName => {
+              const equipmentNamesInFacility = f.equipmentIds.map(id => allEquipmentsData.find(e => e.id === id)?.name);
+              return equipmentNamesInFacility.includes(equipName);
+            })
         );
     }
 
@@ -96,7 +105,7 @@ export default function Home() {
 
     setFilteredFacilities(newFilteredFacilities);
 
-  }, [selectedSports, selectedRegions, selectedEquipment, isIndoor, isOutdoor, isAccessible, facilities]);
+  }, [selectedSports, selectedRegions, selectedEquipment, isIndoor, isOutdoor, isAccessible, facilities, allEquipmentsData]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>, item: string, checked: boolean) => {
     setter(prev => checked ? [...prev, item] : prev.filter(i => i !== item));

@@ -1,34 +1,95 @@
 'use client';
 
-import type { Facility } from '@/lib/types';
+import type { Facility, Reservation } from '@/lib/types';
 import { useState } from 'react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar as CalendarIcon, MapPin, Accessibility, Sun, Moon, Armchair, Wallet, ShieldCheck, Clock, User } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Accessibility, Sun, Moon, Armchair, Wallet, ShieldCheck, Clock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth, useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 export default function FacilityDetails({ facility }: { facility: Facility }) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const { user } = useAuth();
+  const firestore = useFirestore();
+  const router = useRouter();
   const { toast } = useToast();
 
-  const handleBooking = () => {
-    if (selectedDate && selectedTime) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
+
+  const handleBooking = async () => {
+    if (!user) {
       toast({
-        title: "Réservation confirmée (simulation)",
-        description: `Votre créneau pour ${facility.name} le ${selectedDate.toLocaleDateString()} de ${selectedTime} est réservé.`,
+        variant: "destructive",
+        title: "Vous n'êtes pas connecté",
+        description: "Veuillez vous connecter pour faire une réservation.",
       });
-    } else {
-       toast({
+      router.push('/login');
+      return;
+    }
+
+    if (!selectedDate || !selectedTime) {
+      toast({
         variant: "destructive",
         title: "Sélection manquante",
         description: "Veuillez sélectionner une date et un créneau horaire.",
       });
+      return;
+    }
+
+    setIsBooking(true);
+
+    try {
+      const [startTimeStr] = selectedTime.split(' - ');
+      const [hour] = startTimeStr.split(':');
+      
+      const startDate = new Date(selectedDate);
+      startDate.setHours(parseInt(hour, 10), 0, 0, 0);
+
+      const endDate = new Date(startDate);
+      endDate.setHours(startDate.getHours() + 1);
+
+      const newReservation: Omit<Reservation, 'id'> = {
+        userId: user.uid,
+        facilityId: facility.id,
+        startTime: startDate,
+        endTime: endDate,
+        status: 'confirmed',
+        totalCost: facility.rentalCost,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      
+      // Create reservation in the user's subcollection
+      const userReservationsRef = collection(firestore, 'users', user.uid, 'reservations');
+      await addDoc(userReservationsRef, newReservation);
+      
+      // Create a denormalized copy for admin lookup
+      const allReservationsRef = collection(firestore, 'reservations');
+      await addDoc(allReservationsRef, newReservation);
+
+      toast({
+        title: "Réservation confirmée !",
+        description: `Votre créneau pour ${facility.name} est réservé.`,
+      });
+      setSelectedTime(null);
+    } catch (error) {
+      console.error("Booking error:", error);
+      toast({
+        variant: "destructive",
+        title: "Une erreur est survenue",
+        description: "Votre réservation n'a pas pu être effectuée. Veuillez réessayer.",
+      });
+    } finally {
+      setIsBooking(false);
     }
   };
   
@@ -71,28 +132,8 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
       <div className="px-6 grid grid-cols-2 gap-4 text-sm">
         <div className="flex items-center gap-3"><Accessibility/> {facility.accessible ? "Accès PMR" : "Non accessible PMR"}</div>
         <div className="flex items-center gap-3">{facility.type === "indoor" ? <Moon /> : <Sun />} {facility.type.charAt(0).toUpperCase() + facility.type.slice(1)}</div>
-        <div className="flex items-center gap-3"><Wallet/> {facility.pricePerHour} MAD/heure</div>
-        <div className="flex items-center gap-3"><ShieldCheck/> Caution: {facility.deposit > 0 ? `${facility.deposit} MAD` : 'Aucune'}</div>
-      </div>
-
-      <Separator />
-
-      <div className="px-6">
-        <h3 className="text-xl font-headline font-semibold mb-4">Équipements disponibles</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {facility.equipments.map(eq => {
-              const Icon = equipmentIconsMap[eq.name] || Armchair;
-              return (
-                <Card key={eq.id} className="bg-secondary/50">
-                    <CardContent className="p-3 text-center">
-                        <Icon className="w-7 h-7 mb-2 text-primary mx-auto"/>
-                        <p className="font-semibold text-sm">{eq.name}</p>
-                        <p className="text-xs text-muted-foreground">x{eq.quantity}</p>
-                    </CardContent>
-                </Card>
-              )
-            })}
-        </div>
+        <div className="flex items-center gap-3"><Wallet/> {facility.rentalCost} MAD/heure</div>
+        <div className="flex items-center gap-3"><ShieldCheck/> Caution: {facility.depositCost > 0 ? `${facility.depositCost} MAD` : 'Aucune'}</div>
       </div>
 
       <Separator />
@@ -109,6 +150,7 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     className="rounded-md border"
+                    disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
                 />
             </div>
             <div className="mt-4 sm:mt-0 flex-1">
@@ -134,8 +176,8 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
                         Aucun créneau disponible pour cette date.
                     </p>
                 )}
-                <Button className="w-full mt-4" size="lg" onClick={handleBooking} disabled={!selectedTime}>
-                    Réserver maintenant
+                <Button className="w-full mt-4" size="lg" onClick={handleBooking} disabled={!selectedTime || isBooking}>
+                    {isBooking ? "Réservation en cours..." : "Réserver maintenant"}
                 </Button>
             </div>
         </div>

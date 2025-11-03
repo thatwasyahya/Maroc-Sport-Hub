@@ -14,7 +14,9 @@ export interface User {
 export interface Equipment {
   id: string;
   name: string;
-  quantity: number;
+  rentalCost: number;
+  depositCost: number;
+  facilityId: string; // Reference to the facility it belongs to
 }
 
 export interface Facility {
@@ -34,10 +36,10 @@ export interface Facility {
   accessible: boolean;
   description: string;
   photos: string[];
-  equipments: Equipment[];
-  availability: Record<string, string[]>; // Date -> Array of available time slots
-  pricePerHour: number;
-  deposit: number;
+  equipmentIds: string[]; // List of equipment IDs
+  availability: Record<string, string[]>;
+  rentalCost: number; // Cost per hour
+  depositCost: number;
 }
 
 export interface Reservation {
@@ -49,4 +51,5 @@ export interface Reservation {
   status: "confirmed" | "cancelled" | "pending";
   createdAt: any; // Can be a server timestamp
   updatedAt: any; // Can be a server timestamp
+  totalCost: number;
 }
