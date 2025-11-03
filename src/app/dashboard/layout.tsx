@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Activity, Building, Users, Home, Loader, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 import { useMemo } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 function DashboardLayoutSkeleton() {
   return (
@@ -90,13 +92,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return <DashboardLayoutSkeleton />;
   }
 
-  // If loading is finished and user has no permission, show a message instead of redirecting.
-  // This will PREVENT the redirect loop.
   if (!hasPermission) {
     return <NoPermission />;
   }
 
-  // If we reach here, it means loading is done and user has permission.
   return (
       <div className="flex min-h-screen w-full bg-muted/40">
         <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
