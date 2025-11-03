@@ -80,14 +80,6 @@ export default function Header() {
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                {(userProfile.role === 'admin' || userProfile.role === 'super_admin') && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      <span>Dashboard</span>
-                    </Link>
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
