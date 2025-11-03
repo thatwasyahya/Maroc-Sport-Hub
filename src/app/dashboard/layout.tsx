@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Building, Users, Home } from 'lucide-react';
+import { Activity, Building, Users, Home, Loader } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 import { useEffect, useMemo, useState } from 'react';
@@ -29,8 +29,11 @@ function DashboardLayoutSkeleton() {
           <div className="h-6 w-32 animate-pulse rounded-md bg-muted"></div>
           <div className="h-6 w-24 animate-pulse rounded-md bg-muted"></div>
         </header>
-        <main className="flex-1 p-6">
-          <div className="h-full w-full animate-pulse rounded-lg bg-muted"></div>
+        <main className="flex-1 p-6 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <Loader className="h-8 w-8 animate-spin" />
+                <p>Verifying permissions...</p>
+            </div>
         </main>
       </div>
     </div>
@@ -42,34 +45,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const firestore = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthorized, setIsAuthorized] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
+  
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    const isLoading = isUserLoading || isProfileLoading;
-    if (isLoading) {
-      return; // Wait until everything is loaded
+    // Wait until both user and profile loading are complete
+    if (isUserLoading || isProfileLoading) {
+      return;
     }
 
+    // If no user is logged in, redirect to login
     if (!user) {
       router.push('/login');
       return;
     }
 
-    if (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) {
+    // If user profile exists and has a valid role, grant access
+    if (userProfile && (userProfile.role === 'admin' || userProfile.role === 'super_admin')) {
+      setIsAuthorized(true);
+    } else {
+      // Otherwise, redirect to home
       router.push('/');
-      return;
     }
-
-    // If all checks pass, authorize the user
-    setIsAuthorized(true);
-
   }, [user, userProfile, isUserLoading, isProfileLoading, router]);
+
 
   const navLinks = useMemo(() => {
     const links = [

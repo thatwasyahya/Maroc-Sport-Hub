@@ -266,7 +266,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profile data. Accessible only by the user and super admins.",
+          "description": "Stores user profile data. The 'role' field is informational. Actual permissions are determined by the 'roles_*' collections.",
           "params": [
             {
               "name": "userId",
@@ -350,11 +350,7 @@
       {
         "path": "/roles_admin/{userId}",
         "definition": {
-          "entityName": "RoleAdmin",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Indicates that a user is an admin. Existence determines admin role.",
+          "description": "A document in this collection signifies that the user with the ID 'userId' has the 'admin' role. The document itself can be empty.",
           "params": [
             {
               "name": "userId",
@@ -366,11 +362,7 @@
       {
         "path": "/roles_super_admin/{userId}",
         "definition": {
-          "entityName": "RoleSuperAdmin",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Indicates that a user is a super admin. Existence determines super admin role.",
+          "description": "A document in this collection signifies that the user with the ID 'userId' has the 'super_admin' role. The document itself can be empty.",
           "params": [
             {
               "name": "userId",
@@ -379,7 +371,6 @@
           ]
         }
       }
-    ],
-    "reasoning": "This Firestore structure is designed to support the Maroc Sport Hub application, focusing on security, scalability, and maintainability. It adheres to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). The structure facilitates role-based access control (super_admin, admin, user) and supports core features like facility mapping, Excel import, user authentication, booking system, and an admin dashboard.\n\n**Authorization Independence:**\n*   The `Facility` document includes the `adminId` field, which denormalizes the relationship between `User` and `Facility`. This eliminates the need for `get()` calls to the `users` collection to verify admin access to facilities.\n*   Similarly, the `Reservation` includes both `facilityId` and `userId`, removing the need to fetch related documents for authorization.\n*   Role existence is leveraged for admins and super admins. The presence of a document in `/roles_admin/{userId}` and `/roles_super_admin/{userId}` grants the respective role. This existence check is more efficient than reading the user document to check a `role` field.\n\n**Structural Segregation:**\n*   The structure avoids mixing data with different access needs in the same collection. For instance, user profiles are stored under `/users/{userId}`, ensuring private access, while facilities are in the `/facilities` collection, managed by admins.\n*   Admin-specific data, such as imports, is stored under `/users/{adminId}/imports`, further segregating access.\n\n**Access Modeling:**\n*   Path-based ownership is used for user-owned data like reservations (`/users/{userId}/reservations/{reservationId}`).\n*   The admin-facility relationship is modeled using the `adminId` field in the `Facility` document, enabling efficient queries for facilities managed by a specific admin.\n*   Global roles are managed using existence checks in dedicated collections (`/roles_admin/{userId}`, `/roles_super_admin/{userId}`).\n\n**QAPs (Rules are not Filters):**\n*   The separation of data into collections based on access requirements (e.g., user-owned reservations vs. admin-managed facilities) enables secure `list` operations without the need for filtering in rules.\n*   The use of existence checks for admin and super admin roles allows for efficient role-based filtering of data.\n\n**Invariants:**\n*   Timestamps (`createdAt`, `updatedAt`) are included in entities to maintain data integrity and support auditing.\n*   The structure supports the integrity of ownership by explicitly defining relationships between entities (e.g., `Facility.adminId` links to `User.id`)."
+    ]
   }
 }

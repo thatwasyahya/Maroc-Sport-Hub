@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useFirestore } from '@/firebase';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { UserRole } from '@/lib/types';
 
@@ -30,25 +30,23 @@ export default function SignupPage() {
     setIsSigningUp(true);
 
     try {
+      // 1. Create the user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // 2. Determine the user's role
       let role: UserRole = 'user';
-      const userDocRef = doc(firestore, 'users', user.uid);
-
-      // Using Promise.all to wait for all database operations to complete
-      const operations = [];
-
       if (email === 'super@admin.com') {
         role = 'super_admin';
-        const superAdminRoleDoc = doc(firestore, 'roles_super_admin', user.uid);
-        operations.push(setDoc(superAdminRoleDoc, { createdAt: serverTimestamp() }));
       } else if (email === 'admin@admin.com') {
         role = 'admin';
-        const adminRoleDoc = doc(firestore, 'roles_admin', user.uid);
-        operations.push(setDoc(adminRoleDoc, { createdAt: serverTimestamp() }));
       }
+      
+      // 3. Use a batch write to create user profile and role document atomically
+      const batch = writeBatch(firestore);
 
+      // - Create the user document in the `users` collection
+      const userDocRef = doc(firestore, 'users', user.uid);
       const newUser = {
         id: user.uid,
         email: user.email,
@@ -58,12 +56,22 @@ export default function SignupPage() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      
-      operations.push(setDoc(userDocRef, newUser, { merge: true }));
-      
-      // Wait for all Firestore writes to complete before proceeding
-      await Promise.all(operations);
+      batch.set(userDocRef, newUser);
 
+      // - Create the role document in the corresponding `roles_*` collection
+      if (role === 'super_admin') {
+        const superAdminRoleDoc = doc(firestore, 'roles_super_admin', user.uid);
+        batch.set(superAdminRoleDoc, { createdAt: serverTimestamp() });
+      } else if (role === 'admin') {
+        const adminRoleDoc = doc(firestore, 'roles_admin', user.uid);
+        batch.set(adminRoleDoc, { createdAt: serverTimestamp() });
+      }
+
+      // 4. Commit the batch. This is an atomic operation.
+      // We explicitly await this to ensure all data is written before proceeding.
+      await batch.commit();
+
+      // 5. Show success and redirect
       toast({
         title: "Account Created",
         description: "You have been successfully signed up.",

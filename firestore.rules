@@ -1,31 +1,16 @@
 /**
  * @description This ruleset enforces a role-based access control model for the Maroc Sport Hub application.
  * It provides granular permissions for different user roles (super_admin, admin, user) across various data collections.
- * FORCE REFRESH
- * @dataStructure
- * - /users/{userId}: Stores user profile data, accessible only by the user and super admins.
- * - /facilities/{facilityId}: Stores sports facility data, managed by admins. Includes denormalized 'adminId' for authorization.
- * - /users/{userId}/reservations/{reservationId}: Stores reservation data for a user, accessible only by the user and admins.
- * - /users/{adminId}/imports/{importId}: Stores Excel import data initiated by an admin, accessible only by the admin and super admins.
- * - /audit_logs/{auditLogId}: Stores audit log entries, accessible only by super admins.
- * - /roles_admin/{userId}: Indicates that a user is an admin. Existence determines admin role.
- * - /roles_super_admin/{userId}: Indicates that a user is a super admin. Existence determines super admin role.
- * @keySecurityDecisions
- * - Strict user-ownership model for user profiles and reservations.
- * - Role-based access control for facilities, imports, and audit logs.
- * - Super admins have broad access to all data.
- * - The rules leverage denormalization to avoid costly `get()` calls.
- * - List operations are restricted based on user roles and ownership.
- * @denormalizationForAuthorization
- * - Facilities include the 'adminId' field to directly link to the managing admin, avoiding extra reads.
- * - Reservations include both `facilityId` and `userId` for direct authorization checks.
- * @structuralSegregation
- * - User-specific data (profiles, reservations, imports) is stored under the `/users/{userId}` path, ensuring private access.
- * - Global roles are managed in dedicated collections (`/roles_admin/{userId}`, `/roles_super_admin/{userId}`).
+ * The core security principle is Database-Based Access Control (DBAC), where permissions are determined by the existence
+ * of documents in the `roles_admin` and `roles_super_admin` collections.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    /**************************************************
+     * Helper Functions
+     **************************************************/
 
     function isSignedIn() {
       return request.auth != null;
@@ -35,128 +20,83 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/roles_super_admin/$(request.auth.uid));
     }
     
-    match /users/{userId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
-
-      allow get: if isSignedIn() && (isOwner() || isSuperAdmin());
-      allow list: if isSuperAdmin();
-      allow create: if isSignedIn() && isOwner() && request.resource.data.id == userId;
-      allow update: if isSignedIn() && (isOwner() || isSuperAdmin());
-      allow delete: if isSignedIn() && (isOwner() || isSuperAdmin());
-    }
-
-    /**
-     * @description Manages sports facility data. Admin users, identified by the 'adminId' field, can manage these facilities.
-     * @path /facilities/{facilityId}
-     * @allow (get, list): Anyone can read facility data.
-     * @allow (create): Only admins can create facilities, with the 'adminId' matching their own ID.
-     * @allow (update, delete): Only the admin who owns the facility can modify or delete it.
-     * @deny: Non-admins cannot create, update, or delete facilities.
-     * @principle Enforces admin-ownership for writes on facilities.
-     */
-    match /facilities/{facilityId} {
-      function isFacilityAdmin(adminId) {
-        return request.auth.uid == adminId;
-      }
-
-      function isExistingFacilityAdmin(adminId) {
-        return isFacilityAdmin(adminId);
-      }
-
-      allow get, list: if true;
-      allow create: if isSignedIn() && (isFacilityAdmin(request.resource.data.adminId) || isSuperAdmin()) ;
-      allow update: if isSignedIn() && (isExistingFacilityAdmin(resource.data.adminId) || isSuperAdmin());
-      allow delete: if isSignedIn() && (isExistingFacilityAdmin(resource.data.adminId) || isSuperAdmin());
-    }
-
-    /**
-     * @description Manages reservation data for a specific user. Only the user and admins can access and manage these reservations.
-     * @path /users/{userId}/reservations/{reservationId}
-     * @allow (get, list): Authenticated user or admins can read reservation data for a specified user.
-     * @allow (create): Authenticated user can create reservation under its ID
-     * @allow (update, delete): Authenticated user or admin can modify or delete reservation data for specified user.
-     * @deny: Other users cannot access this data.
-     * @principle Enforces user-ownership and admin access for reservations.
-     */
-    match /users/{userId}/reservations/{reservationId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isAdmin() {
-        return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
-      }
-
-      allow get, list: if isSignedIn() && (isOwner(userId) || isAdmin() || isSuperAdmin());
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isSignedIn() && (isOwner(userId) || isAdmin() || isSuperAdmin());
-      allow delete: if isSignedIn() && (isOwner(userId) || isAdmin() || isSuperAdmin());
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
     
-    match /reservations/{reservationId} {
-       allow list: if isSignedIn() && (isAdmin() || isSuperAdmin());
-       allow get, create, update, delete: if false;
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-
-    /**
-     * @description Manages Excel import data initiated by an admin. Only the admin and super admins can access this data.
-     * @path /users/{adminId}/imports/{importId}
-     * @allow (get, list): The admin or super admins can read the import data.
-     * @allow (create): Only admins can create import operations under their ID.
-     * @allow (update, delete): Only the admin who created the import or super admins can modify or delete it.
-     * @deny: Other users cannot access this data.
-     * @principle Enforces admin-ownership for import data.
-     */
-    match /users/{adminId}/imports/{importId} {
-      function isAdmin(adminId) {
-        return request.auth.uid == adminId;
-      }
-      
-      allow get, list: if isSignedIn() && (isAdmin(adminId) || isSuperAdmin());
-      allow create: if isSignedIn() && isAdmin(adminId) && request.resource.data.adminId == adminId;
-      allow update: if isSignedIn() && (isAdmin(adminId) || isSuperAdmin());
-      allow delete: if isSignedIn() && (isAdmin(adminId) || isSuperAdmin());
+    /**************************************************
+     * Collection: users
+     * Description: Stores public user profile data.
+     **************************************************/
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSuperAdmin(); // Only super admins can list all users
+      allow create: if isOwner(userId); // Any signed-in user can create their own profile
+      allow update: if isOwner(userId) || isSuperAdmin(); // Users can update their own profile, super admins can update any
+      allow delete: if isOwner(userId) || isSuperAdmin();
     }
 
-    /**
-     * @description Manages audit log entries. Only super admins can access this data.
-     * @path /audit_logs/{auditLogId}
-     * @allow (get, list): Only super admins can read audit logs.
-     * @deny (create, update, delete): No one can create, update, or delete audit logs through the client.
-     * @principle Restricts access to audit logs to super admins.
-     */
-    match /audit_logs/{auditLogId} {
-      allow get, list: if isSuperAdmin();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    /**
-     * @description Indicates that a user is an admin. Existence of this document grants admin privileges.
-     * @path /roles_admin/{userId}
-     */
+    /**************************************************
+     * Collections: roles_*
+     * Description: These collections grant roles via document existence.
+     **************************************************/
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
-      allow list: if isSuperAdmin();
-      allow create: if request.auth.uid == userId;
-      allow update: if false;
-      allow delete: if isSuperAdmin();
+      allow list, create, update, delete: if isSuperAdmin(); // Only super admins can manage admin roles
     }
 
-     /**
-     * @description Indicates that a user is an super admin. Existence of this document grants super admin privileges.
-     * @path /roles_super_admin/{userId}
-     */
     match /roles_super_admin/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isSuperAdmin();
-      allow create: if request.auth.uid == userId;
-      allow update: if false;
-      allow delete: if isSuperAdmin();
+      allow get: if isSuperAdmin();
+      allow list, create, update, delete: if isSuperAdmin(); // Only super admins can manage other super admins
+    }
+    
+    /**************************************************
+     * Collection: facilities
+     * Description: Manages sports facility data.
+     **************************************************/
+    match /facilities/{facilityId} {
+      allow get, list: if true; // Publicly readable
+      allow create: if isAdmin() || isSuperAdmin();
+      allow update, delete: if (isAdmin() && resource.data.adminId == request.auth.uid) || isSuperAdmin();
+    }
+
+    /**************************************************
+     * Subcollection: reservations
+     * Description: Manages reservations for a user.
+     **************************************************/
+    match /users/{userId}/reservations/{reservationId} {
+      allow get, list: if isOwner(userId) || isAdmin() || isSuperAdmin();
+      allow create: if isOwner(userId);
+      allow update, delete: if isOwner(userId) || isAdmin() || isSuperAdmin();
+    }
+    
+    /**************************************************
+     * DEPRECATED Collection: reservations
+     * Deny all access to the root `reservations` collection
+     **************************************************/
+    match /reservations/{reservationId} {
+       allow read, write: if false;
+    }
+
+    /**************************************************
+     * Subcollection: imports
+     * Description: Manages data imports by admins.
+     **************************************************/
+    match /users/{adminId}/imports/{importId} {
+      allow read, write: if (isOwner(adminId) && isAdmin()) || isSuperAdmin();
+    }
+
+    /**************************************************
+     * Collection: audit_logs
+     * Description: Logs system actions.
+     **************************************************/
+    match /audit_logs/{auditLogId} {
+      allow read: if isSuperAdmin();
+      allow write: if false; // Logs should be created server-side
     }
   }
 }
