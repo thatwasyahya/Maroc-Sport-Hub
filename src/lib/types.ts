@@ -46,6 +46,7 @@ export interface Reservation {
   id: string;
   facilityId: string;
   userId: string;
+  userEmail: string; // Denormalized for easy display
   startTime: any; // Can be a server timestamp or string
   endTime: any; // Can be a server timestamp or string
   status: "confirmed" | "cancelled" | "pending";

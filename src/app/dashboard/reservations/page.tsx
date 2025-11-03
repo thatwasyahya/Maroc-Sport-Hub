@@ -2,13 +2,12 @@
 'use client';
 
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import type { Reservation, Facility, User } from '@/lib/types';
+import { collection, Timestamp } from 'firebase/firestore';
+import type { Reservation, Facility } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Timestamp } from 'firebase/firestore';
 
 
 export default function ReservationsPage() {
@@ -19,20 +18,15 @@ export default function ReservationsPage() {
     () => collection(firestore, 'reservations'),
     [firestore]
   );
-  const usersCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'users'),
-    [firestore]
-  );
   const facilitiesCollectionRef = useMemoFirebase(
     () => collection(firestore, 'facilities'),
     [firestore]
   );
 
   const { data: reservations, isLoading: reservationsLoading } = useCollection<Reservation>(reservationsCollectionRef);
-  const { data: users, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
   const { data: facilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
 
-  const isLoading = reservationsLoading || usersLoading || facilitiesLoading;
+  const isLoading = reservationsLoading || facilitiesLoading;
 
   const formatDate = (dateValue: any) => {
     if (!dateValue) return "Invalid Date";
@@ -55,7 +49,7 @@ export default function ReservationsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
+              <TableHead>User Email</TableHead>
               <TableHead>Facility</TableHead>
               <TableHead>Start Time</TableHead>
               <TableHead>Status</TableHead>
@@ -71,11 +65,10 @@ export default function ReservationsPage() {
               </TableRow>
             ) : reservations && reservations.length > 0 ? (
               reservations.map((reservation) => {
-                const user = users?.find(u => u.id === reservation.userId);
                 const facility = facilities?.find(f => f.id === reservation.facilityId);
                 return (
                     <TableRow key={reservation.id}>
-                        <TableCell className="font-medium">{user?.email || 'Unknown User'}</TableCell>
+                        <TableCell className="font-medium">{reservation.userEmail || 'Unknown User'}</TableCell>
                         <TableCell>{facility?.name || 'Unknown Facility'}</TableCell>
                         <TableCell>{formatDate(reservation.startTime)}</TableCell>
                         <TableCell>

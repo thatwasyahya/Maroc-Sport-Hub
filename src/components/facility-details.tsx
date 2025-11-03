@@ -26,7 +26,7 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
   const [isBooking, setIsBooking] = useState(false);
 
   const handleBooking = async () => {
-    if (!user) {
+    if (!user || !user.email) {
       toast({
         variant: "destructive",
         title: "Vous n'êtes pas connecté",
@@ -59,6 +59,7 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
 
       const newReservation: Omit<Reservation, 'id'> = {
         userId: user.uid,
+        userEmail: user.email, // Denormalize user email for easier lookup
         facilityId: facility.id,
         startTime: startDate,
         endTime: endDate,
