@@ -44,8 +44,9 @@ export interface Reservation {
   id: string;
   facilityId: string;
   userId: string;
-  date: string;
-  timeSlot: string;
-  status: "confirmed" | "cancelled";
-  createdAt: any;
+  startTime: any; // Can be a server timestamp or string
+  endTime: any; // Can be a server timestamp or string
+  status: "confirmed" | "cancelled" | "pending";
+  createdAt: any; // Can be a server timestamp
+  updatedAt: any; // Can be a server timestamp
 }

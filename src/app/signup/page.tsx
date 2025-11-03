@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { useAuth, useFirestore } from '@/firebase';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { UserRole } from '@/lib/types';
 
@@ -21,28 +21,34 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !firestore) return;
+    if (!auth || !firestore || isSigningUp) return;
+
+    setIsSigningUp(true);
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      
       let role: UserRole = 'user';
+      const userDocRef = doc(firestore, 'users', user.uid);
+
+      // Using Promise.all to wait for all database operations to complete
+      const operations = [];
+
       if (email === 'super@admin.com') {
         role = 'super_admin';
         const superAdminRoleDoc = doc(firestore, 'roles_super_admin', user.uid);
-        setDocumentNonBlocking(superAdminRoleDoc, { createdAt: serverTimestamp() });
+        operations.push(setDoc(superAdminRoleDoc, { createdAt: serverTimestamp() }));
       } else if (email === 'admin@admin.com') {
         role = 'admin';
         const adminRoleDoc = doc(firestore, 'roles_admin', user.uid);
-        setDocumentNonBlocking(adminRoleDoc, { createdAt: serverTimestamp() });
+        operations.push(setDoc(adminRoleDoc, { createdAt: serverTimestamp() }));
       }
 
-      const userDocRef = doc(firestore, 'users', user.uid);
       const newUser = {
         id: user.uid,
         email: user.email,
@@ -53,7 +59,10 @@ export default function SignupPage() {
         updatedAt: serverTimestamp(),
       };
       
-      setDocumentNonBlocking(userDocRef, newUser, { merge: true });
+      operations.push(setDoc(userDocRef, newUser, { merge: true }));
+      
+      // Wait for all Firestore writes to complete before proceeding
+      await Promise.all(operations);
 
       toast({
         title: "Account Created",
@@ -67,6 +76,8 @@ export default function SignupPage() {
         title: "Sign Up Failed",
         description: error.message,
       });
+    } finally {
+      setIsSigningUp(false);
     }
   };
 
@@ -100,8 +111,8 @@ export default function SignupPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
-            <Button type="submit" className="w-full">
-              Create an account
+            <Button type="submit" className="w-full" disabled={isSigningUp}>
+              {isSigningUp ? 'Creating Account...' : 'Create an account'}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

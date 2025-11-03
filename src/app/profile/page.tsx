@@ -52,6 +52,9 @@ export default function ProfilePage() {
     if(firstName) {
       return firstName.substring(0, 2);
     }
+    if(user?.email){
+      return user.email.substring(0,2).toUpperCase();
+    }
     return "";
   };
   
@@ -60,17 +63,22 @@ export default function ProfilePage() {
   const formatDate = (dateValue: any) => {
     if (!dateValue) return "Date invalide";
     try {
-      if (dateValue instanceof Timestamp) {
-        return format(dateValue.toDate(), "PPP");
-      }
-      // Fallback for string dates (from mock data)
-      if (typeof dateValue === 'string') {
-          return format(new Date(dateValue), "PPP");
-      }
-      return "Date invalide";
+      const date = dateValue instanceof Timestamp ? dateValue.toDate() : new Date(dateValue);
+      return format(date, "PPP");
     } catch (error) {
       console.error("Error formatting date:", error);
       return "Date invalide";
+    }
+  };
+
+  const formatTime = (dateValue: any) => {
+    if (!dateValue) return "";
+    try {
+      const date = dateValue instanceof Timestamp ? dateValue.toDate() : new Date(dateValue);
+      return format(date, "p");
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return "";
     }
   };
 
@@ -116,10 +124,13 @@ export default function ProfilePage() {
                       return (
                         <TableRow key={reservation.id}>
                           <TableCell className="font-medium">{facility?.name || 'N/A'}</TableCell>
-                          <TableCell>{formatDate(reservation.date)}</TableCell>
-                          <TableCell>{reservation.timeSlot}</TableCell>
+                          <TableCell>{formatDate(reservation.startTime)}</TableCell>
+                          <TableCell>{`${formatTime(reservation.startTime)} - ${formatTime(reservation.endTime)}`}</TableCell>
                           <TableCell>
-                            <Badge variant={reservation.status === 'confirmed' ? 'default' : 'destructive'} className="bg-primary/20 text-primary-foreground">
+                            <Badge 
+                               variant={reservation.status === 'confirmed' ? 'default' : reservation.status === 'pending' ? 'secondary' : 'destructive'} 
+                               className="capitalize"
+                            >
                               {reservation.status}
                             </Badge>
                           </TableCell>
