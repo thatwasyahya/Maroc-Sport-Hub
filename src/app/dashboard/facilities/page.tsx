@@ -1,15 +1,13 @@
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-import type { Facility, User } from '@/lib/types';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Facility } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function FacilitiesSkeleton() {
@@ -34,40 +32,13 @@ function FacilitiesSkeleton() {
 
 
 export default function FacilitiesPage() {
-  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
-
-  const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
-    [user, firestore]
-  );
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
-
+  
   const facilitiesCollectionRef = useMemoFirebase(
     () => collection(firestore, 'facilities'),
     [firestore]
   );
   const { data: facilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
-
-  const isLoading = isUserLoading || isProfileLoading;
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    
-    if (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) {
-      router.push('/');
-    }
-  }, [isLoading, user, userProfile, router]);
-
-  if (isLoading || !userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) {
-    return <FacilitiesSkeleton />;
-  }
 
   return (
     <Card>

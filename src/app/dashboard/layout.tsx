@@ -4,10 +4,40 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Home, Users, Building, BarChart3 } from 'lucide-react';
+import { Activity, Building, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 import { useMemo } from 'react';
+import { AuthorizationProvider } from '@/components/AuthorizationProvider';
+import { Home } from 'lucide-react';
+
+function DashboardLayoutSkeleton() {
+  return (
+    <div className="flex min-h-screen w-full bg-muted/40">
+      <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
+        <div className="flex h-16 items-center border-b px-6">
+          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+            <Activity className="h-6 w-6 text-primary" />
+            <span>Admin Panel</span>
+          </Link>
+        </div>
+        <nav className="flex-1 p-4 space-y-2">
+          <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
+          <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
+        </nav>
+      </aside>
+      <div className="flex flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-6">
+          <div className="h-6 w-32 animate-pulse rounded-md bg-muted"></div>
+          <div className="h-6 w-24 animate-pulse rounded-md bg-muted"></div>
+        </header>
+        <main className="flex-1 p-6">
+          <div className="h-48 w-full animate-pulse rounded-lg bg-muted"></div>
+        </main>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
@@ -19,10 +49,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     [user, firestore]
   );
   const { data: userProfile } = useDoc<User>(userDocRef);
-  
+
   const navLinks = useMemo(() => {
     const links = [
-      { href: '/dashboard', label: 'Overview', icon: BarChart3 },
+      { href: '/dashboard', label: 'Overview', icon: Activity },
       { href: '/dashboard/facilities', label: 'Facilities', icon: Building },
     ];
     if (userProfile?.role === 'super_admin') {
@@ -32,43 +62,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [userProfile?.role]);
 
   return (
-    <div className="flex min-h-screen w-full bg-muted/40">
-      <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
-        <div className="flex h-16 items-center border-b px-6">
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-            <Activity className="h-6 w-6 text-primary" />
-            <span>Admin Panel</span>
-          </Link>
-        </div>
-        <nav className="flex-1 p-4">
-          <ul className="space-y-1">
-            {navLinks.map(({ href, label, icon: Icon }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-                    pathname === href && 'bg-muted text-primary'
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </aside>
-      <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-6">
-            <div className="font-semibold text-lg">Dashboard</div>
-            <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-                <Home className="h-4 w-4" />
-                Back to Site
+    <AuthorizationProvider loadingSkeleton={<DashboardLayoutSkeleton />}>
+      <div className="flex min-h-screen w-full bg-muted/40">
+        <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
+          <div className="flex h-16 items-center border-b px-6">
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+              <Activity className="h-6 w-6 text-primary" />
+              <span>Admin Panel</span>
             </Link>
-        </header>
-        <main className="flex-1 p-6">{children}</main>
+          </div>
+          <nav className="flex-1 p-4">
+            <ul className="space-y-1">
+              {navLinks.map(({ href, label, icon: Icon }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+                      pathname === href && 'bg-muted text-primary'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+        <div className="flex flex-1 flex-col">
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-6">
+              <div className="font-semibold text-lg">Dashboard</div>
+              <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                  <Home className="h-4 w-4" />
+                  Back to Site
+              </Link>
+          </header>
+          <main className="flex-1 p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </AuthorizationProvider>
   );
 }

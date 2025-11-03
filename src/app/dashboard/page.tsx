@@ -1,12 +1,10 @@
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-import type { Facility, User } from '@/lib/types';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Facility } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function DashboardSkeleton() {
@@ -41,15 +39,8 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardPage() {
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
-
-  const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
-    [user, firestore]
-  );
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
   const facilitiesCollectionRef = useMemoFirebase(
     () => collection(firestore, 'facilities'),
@@ -57,29 +48,15 @@ export default function DashboardPage() {
   );
   const { data: facilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
   
-  const isLoading = isUserLoading || isProfileLoading;
-
-  useEffect(() => {
-    if (isLoading) return; // Wait for loading to finish
-
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    
-    if (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) {
-      router.push('/');
-    }
-  }, [isLoading, user, userProfile, router]);
-
-
-  if (isLoading || !userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'super_admin')) {
+  if (!user) {
+    // This should technically not be reached due to AuthorizationProvider,
+    // but it's good practice for safety.
     return <DashboardSkeleton />;
   }
 
   return (
     <div className="grid gap-6">
-      <h1 className="text-2xl font-bold">Welcome, {userProfile.firstName || 'Admin'}!</h1>
+      <h1 className="text-2xl font-bold">Welcome, {user.displayName || user.email}!</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

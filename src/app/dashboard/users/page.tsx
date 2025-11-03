@@ -39,26 +39,25 @@ export default function UsersPage() {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
   const usersCollectionRef = useMemoFirebase(
-    () => (userProfile?.role === 'super_admin' ? collection(firestore, 'users') : null),
-    [firestore, userProfile]
+    () => collection(firestore, 'users'),
+    [firestore]
   );
+  // Note: This collection fetch will fail if the user is not a super_admin.
+  // The firestore.rules prevent non-super-admins from listing users.
+  // We rely on the parent AuthorizationProvider to prevent this page from rendering for non-super-admins.
   const { data: allUsers, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
 
   const isLoading = isUserLoading || isProfileLoading;
-
+  
+  // This check is a secondary safeguard. The primary protection is in AuthorizationProvider.
   useEffect(() => {
-    if (isLoading) return;
-
-    if (!user) {
-        router.push('/login');
-        return;
-    }
-    if (userProfile?.role !== 'super_admin') {
+    if (!isLoading && userProfile?.role !== 'super_admin') {
       router.push('/dashboard');
     }
-  }, [userProfile, isLoading, router, user]);
+  }, [userProfile, isLoading, router]);
+  
 
-  if (isLoading || userProfile?.role !== 'super_admin') {
+  if (isLoading || usersLoading) {
     return <UsersSkeleton />;
   }
 
@@ -78,13 +77,7 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {usersLoading ? (
-              <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
-                  Loading users...
-                </TableCell>
-              </TableRow>
-            ) : allUsers && allUsers.length > 0 ? (
+            {allUsers && allUsers.length > 0 ? (
               allUsers.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.firstName} {u.lastName}</TableCell>
@@ -99,7 +92,7 @@ export default function UsersPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={3} className="h-24 text-center">
-                  No users found.
+                  No users found or you do not have permission to view them.
                 </TableCell>
               </TableRow>
             )}
