@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { collection, doc, Timestamp } from "firebase/firestore";
-import type { Reservation, Facility } from "@/lib/types";
+import type { Reservation, Facility, User } from "@/lib/types";
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -21,7 +21,7 @@ export default function ProfilePage() {
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
   const reservationsCollectionRef = useMemoFirebase(
     () => (user ? collection(firestore, 'users', user.uid, 'reservations') : null),
@@ -57,15 +57,21 @@ export default function ProfilePage() {
   
   const displayName = userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : user.email;
 
-  const formatDate = (timestamp: any) => {
-    if (timestamp instanceof Timestamp) {
-      return format(timestamp.toDate(), "PPP");
+  const formatDate = (dateValue: any) => {
+    if (!dateValue) return "Date invalide";
+    try {
+      if (dateValue instanceof Timestamp) {
+        return format(dateValue.toDate(), "PPP");
+      }
+      // Fallback for string dates (from mock data)
+      if (typeof dateValue === 'string') {
+          return format(new Date(dateValue), "PPP");
+      }
+      return "Date invalide";
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Date invalide";
     }
-    // Fallback for string dates (from mock data)
-    if (typeof timestamp === 'string') {
-        return format(new Date(timestamp), "PPP");
-    }
-    return "Date invalide";
   };
 
 
