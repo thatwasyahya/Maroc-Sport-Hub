@@ -16,7 +16,6 @@ export interface Equipment {
   name: string;
   rentalCost: number;
   depositCost: number;
-  facilityId: string; // Reference to the facility it belongs to
 }
 
 export interface Facility {
