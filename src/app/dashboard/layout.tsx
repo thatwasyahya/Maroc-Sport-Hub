@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Building, Users, Home, Loader } from 'lucide-react';
+import { Activity, Building, Users, Home, Loader, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 function DashboardLayoutSkeleton() {
   return (
@@ -40,10 +40,30 @@ function DashboardLayoutSkeleton() {
   );
 }
 
+function NoPermission() {
+    return (
+        <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
+            <Card className="max-w-md text-center">
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-center gap-2">
+                        <ShieldAlert className="h-6 w-6 text-destructive" />
+                        Access Denied
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">You do not have permission to view this page.</p>
+                    <Button asChild className="mt-4">
+                        <Link href="/">Go to Homepage</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
   const pathname = usePathname();
 
   const userDocRef = useMemoFirebase(
@@ -51,30 +71,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     [user, firestore]
   );
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
-  
-  const [isAuthorized, setIsAuthorized] = useState(false);
-
-  useEffect(() => {
-    // Wait until both user and profile loading are complete
-    if (isUserLoading || isProfileLoading) {
-      return;
-    }
-
-    // If no user is logged in, redirect to login
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
-    // If user profile exists and has a valid role, grant access
-    if (userProfile && (userProfile.role === 'admin' || userProfile.role === 'super_admin')) {
-      setIsAuthorized(true);
-    } else {
-      // Otherwise, redirect to home
-      router.push('/');
-    }
-  }, [user, userProfile, isUserLoading, isProfileLoading, router]);
-
 
   const navLinks = useMemo(() => {
     const links = [
@@ -87,10 +83,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return links;
   }, [userProfile?.role]);
 
-  if (!isAuthorized) {
+  const hasPermission = userProfile && (userProfile.role === 'admin' || userProfile.role === 'super_admin');
+  const isLoading = isUserLoading || isProfileLoading;
+
+  if (isLoading) {
     return <DashboardLayoutSkeleton />;
   }
 
+  // If loading is finished and user has no permission, show a message instead of redirecting.
+  // This will PREVENT the redirect loop.
+  if (!hasPermission) {
+    return <NoPermission />;
+  }
+
+  // If we reach here, it means loading is done and user has permission.
   return (
       <div className="flex min-h-screen w-full bg-muted/40">
         <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
