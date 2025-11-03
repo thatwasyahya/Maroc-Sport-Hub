@@ -22,7 +22,7 @@ export interface Equipment {
 export interface Facility {
   id: string;
   adminId?: string;
-  external_id: string;
+  external_id?: string;
   name: string;
   region: string;
   city: string;
