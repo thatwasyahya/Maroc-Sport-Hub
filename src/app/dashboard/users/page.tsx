@@ -30,26 +30,34 @@ export default function UsersPage() {
   useEffect(() => {
     const isLoading = isUserLoading || isProfileLoading;
     if (isLoading) {
-      return; // Still loading, do nothing.
+      return;
     }
     if (!user) {
-        router.push('/login'); // Should be handled by layout, but as a safeguard.
+        router.push('/login');
         return;
     }
     if (userProfile?.role !== 'super_admin') {
-      router.push('/dashboard'); // Not a super_admin, redirect to dashboard home.
+      router.push('/dashboard');
     }
   }, [userProfile, isProfileLoading, isUserLoading, router, user]);
 
-  if (isUserLoading || isProfileLoading || userProfile?.role !== 'super_admin') {
+  const isLoading = isUserLoading || isProfileLoading || usersLoading;
+
+  if (isLoading || userProfile?.role !== 'super_admin') {
     return (
-      <div className="flex items-center justify-center h-full">
-         <div className="w-full space-y-4">
-            <Skeleton className="h-10 w-1/4" />
-            <Skeleton className="h-6 w-1/2" />
+      <Card>
+        <CardHeader>
+          <CardTitle>User Management</CardTitle>
+          <CardDescription>View and manage all users in the system.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
             <Skeleton className="h-48 w-full" />
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -69,13 +77,7 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {usersLoading ? (
-              <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
-                  Loading users...
-                </TableCell>
-              </TableRow>
-            ) : allUsers && allUsers.length > 0 ? (
+            {allUsers && allUsers.length > 0 ? (
               allUsers.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.firstName} {u.lastName}</TableCell>

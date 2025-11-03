@@ -44,27 +44,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const isLoading = isUserLoading || isProfileLoading;
 
   useEffect(() => {
-    const isLoading = isUserLoading || isProfileLoading;
+    // Ne rien faire tant que les données sont en cours de chargement
     if (isLoading) {
-      return; // Wait until all data is loaded
+      return;
     }
 
+    // Si pas d'utilisateur après le chargement, rediriger vers la connexion
     if (!user) {
       router.push('/login');
       return;
     }
 
+    // L'utilisateur est chargé, on vérifie son profil
     const hasPermission = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
 
-    if (!hasPermission) {
-      router.push('/'); // If logged in but not admin, go to home
-    } else {
+    if (hasPermission) {
       setIsAuthorized(true);
+    } else {
+      // Si pas de permission, rediriger vers l'accueil
+      router.push('/');
     }
-  }, [user, isUserLoading, userProfile, isProfileLoading, router]);
-
+  }, [isLoading, user, userProfile, router]);
+  
   const navLinks = useMemo(() => {
     const links = [
       { href: '/dashboard', label: 'Overview', icon: BarChart3 },
@@ -76,7 +80,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return links;
   }, [userProfile?.role]);
 
-  if (!isAuthorized) {
+  // Affiche l'écran de chargement tant que l'autorisation n'est pas confirmée
+  if (isLoading || !isAuthorized) {
     return <DashboardSkeleton />;
   }
 
