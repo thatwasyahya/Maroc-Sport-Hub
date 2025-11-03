@@ -31,8 +31,7 @@ import type { Equipment, Facility } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
-
-const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Natation", "Athlétisme", "Yoga", "Musculation", "CrossFit", "Padel"].sort();
+import { sports } from '@/lib/data';
 
 const facilitySchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -95,12 +94,10 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     try {
       const facilitiesCollectionRef = collection(firestore, 'facilities');
       
-      const newFacilityData: Omit<Facility, 'id'> = {
+      const newFacilityData: Omit<Facility, 'id' | 'availability' | 'photos'> & { createdAt: any, updatedAt: any } = {
         ...data,
         adminId: user.uid,
         location: { lat: 33.5731, lng: -7.5898 }, // Default to Casablanca for now
-        photos: ['https://picsum.photos/seed/facility/800/600'],
-        availability: {}, // Default to empty availability, can be managed later
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };

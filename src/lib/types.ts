@@ -2,6 +2,7 @@ export type UserRole = "super_admin" | "admin" | "user";
 
 export interface User {
   id: string;
+  name: string; // Full name
   firstName: string;
   lastName: string;
   email: string;
@@ -16,6 +17,7 @@ export interface Equipment {
   name: string;
   rentalCost: number;
   depositCost: number;
+  quantity: number;
 }
 
 export interface Facility {

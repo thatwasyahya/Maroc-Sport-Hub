@@ -4,12 +4,16 @@ import type { Facility, User, Reservation, Equipment, UserRole } from "./types";
 const createRandomUser = (role: UserRole, id: number): User => ({
   id: faker.string.uuid(),
   name: faker.person.fullName(),
+  firstName: faker.person.firstName(),
+  lastName: faker.person.lastName(),
   email: faker.internet.email(),
   avatarUrl: `https://i.pravatar.cc/150?u=${id}`,
   role,
+  createdAt: faker.date.recent(),
+  updatedAt: faker.date.recent(),
 });
 
-const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Natation", "Athlétisme", "Yoga", "Musculation", "CrossFit", "Padel"].sort();
+export const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Natation", "Athlétisme", "Yoga", "Musculation", "CrossFit", "Padel"].sort();
 const regions = ["Rabat-Salé-Kénitra", "Casablanca-Settat", "Marrakech-Safi", "Tanger-Tétouan-Al Hoceïma", "Fès-Meknès", "Souss-Massa"];
 const cities: { [key: string]: string[] } = {
   "Rabat-Salé-Kénitra": ["Rabat", "Salé", "Kénitra"],
@@ -20,7 +24,7 @@ const cities: { [key: string]: string[] } = {
   "Souss-Massa": ["Agadir", "Inezgane"],
 };
 
-const equipmentList = [
+export const equipmentList = [
     "Haltères", "Tapis de course", "Vélos elliptiques", "Balles de yoga", "Filets de volley-ball", 
     "Paniers de basket", "Buts de football", "Raquettes de tennis", "Kettlebells", "Cages à squat",
     "Bancs de musculation", "Cordes à sauter", "Sacs de frappe"
@@ -29,6 +33,8 @@ const equipmentList = [
 const createRandomEquipment = (): Equipment => ({
     id: faker.string.uuid(),
     name: faker.helpers.arrayElement(equipmentList),
+    rentalCost: faker.number.int({ min: 10, max: 50 }),
+    depositCost: faker.helpers.arrayElement([0, 50, 100]),
     quantity: faker.number.int({ min: 1, max: 20 }),
 });
 
@@ -40,7 +46,7 @@ const generateTimeSlots = (startHour: number, endHour: number): string[] => {
     return slots;
 };
 
-const createRandomFacility = (): Facility => {
+const createRandomFacility = (allEquipments: Equipment[]): Facility => {
     const region = faker.helpers.arrayElement(regions);
     const city = faker.helpers.arrayElement(cities[region]);
     
@@ -53,6 +59,7 @@ const createRandomFacility = (): Facility => {
 
     return {
         id: faker.string.uuid(),
+        adminId: faker.string.uuid(),
         external_id: `ext_${faker.string.alphanumeric(10)}`,
         name: `${faker.company.name()} Sports Complex`,
         region,
@@ -67,14 +74,10 @@ const createRandomFacility = (): Facility => {
         accessible: faker.datatype.boolean(),
         description: faker.lorem.paragraph(),
         photos: Array.from({ length: 3 }, (_, i) => `https://picsum.photos/seed/${faker.string.uuid()}/800/600`),
-        equipments: faker.helpers.arrayElements(Array.from({ length: equipmentList.length }, (_, i) => ({
-            id: faker.string.uuid(),
-            name: equipmentList[i],
-            quantity: faker.number.int({min: 1, max: 10})
-        })), { min: 2, max: 5 }),
+        equipmentIds: faker.helpers.arrayElements(allEquipments.map(e => e.id), { min: 2, max: 5 }),
         availability,
-        pricePerHour: faker.number.int({ min: 50, max: 300 }),
-        deposit: faker.helpers.arrayElement([0, 50, 100, 200]),
+        rentalCost: faker.number.int({ min: 50, max: 300 }),
+        depositCost: faker.helpers.arrayElement([0, 50, 100, 200]),
     };
 };
 
@@ -84,25 +87,37 @@ const createRandomReservation = (facilities: Facility[], users: User[]): Reserva
     
     const availableDates = Object.keys(facility.availability);
     const date = faker.helpers.arrayElement(availableDates);
-    const timeSlot = faker.helpers.arrayElement(facility.availability[date] || []);
+    const [startTimeStr] = faker.helpers.arrayElement(facility.availability[date] || ["08:00 - 09:00"]).split(' - ');
+    const [hour] = startTimeStr.split(':');
+      
+    const startDate = new Date(date);
+    startDate.setHours(parseInt(hour, 10), 0, 0, 0);
+
+    const endDate = new Date(startDate);
+    endDate.setHours(startDate.getHours() + 1);
 
     return {
         id: faker.string.uuid(),
         facilityId: facility.id,
         userId: user.id,
-        date: date,
-        timeSlot: timeSlot,
-        status: faker.helpers.arrayElement(["confirmed", "cancelled"]),
+        userEmail: user.email,
+        startTime: startDate,
+        endTime: endDate,
+        status: faker.helpers.arrayElement(["confirmed", "cancelled", "pending"]),
         createdAt: faker.date.recent({ days: 10 }),
+        updatedAt: faker.date.recent({ days: 10 }),
+        totalCost: facility.rentalCost,
     };
 };
 
 export const users: User[] = [
-    { id: 'super-admin-0', name: 'Super Admin', email: 'super@admin.com', avatarUrl: `https://i.pravatar.cc/150?u=super-admin`, role: 'super_admin' },
+    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://i.pravatar.cc/150?u=super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date() },
     ...Array.from({ length: 10 }, (_, i) => createRandomUser("admin", i)),
     ...Array.from({ length: 50 }, (_, i) => createRandomUser("user", i + 10)),
 ];
 
-export const facilities: Facility[] = Array.from({ length: 20 }, createRandomFacility);
+export const equipments: Equipment[] = Array.from({ length: equipmentList.length }, createRandomEquipment);
+
+export const facilities: Facility[] = Array.from({ length: 20 }, () => createRandomFacility(equipments));
 
 export const reservations: Reservation[] = Array.from({ length: 100 }, () => createRandomReservation(facilities, users));
