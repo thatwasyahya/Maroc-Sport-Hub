@@ -8,6 +8,7 @@ import type { User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function UsersPage() {
   const { user, isUserLoading } = useUser();
@@ -21,22 +22,33 @@ export default function UsersPage() {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
   const usersCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'users'),
-    [firestore]
+    () => (userProfile?.role === 'super_admin' ? collection(firestore, 'users') : null),
+    [firestore, userProfile]
   );
   const { data: allUsers, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
 
   useEffect(() => {
     const isLoading = isUserLoading || isProfileLoading;
-    if (!isLoading && userProfile?.role !== 'super_admin') {
-      router.push('/dashboard');
+    if (isLoading) {
+      return; // Still loading, do nothing.
     }
-  }, [userProfile, isProfileLoading, isUserLoading, router]);
+    if (!user) {
+        router.push('/login'); // Should be handled by layout, but as a safeguard.
+        return;
+    }
+    if (userProfile?.role !== 'super_admin') {
+      router.push('/dashboard'); // Not a super_admin, redirect to dashboard home.
+    }
+  }, [userProfile, isProfileLoading, isUserLoading, router, user]);
 
-  if (userProfile?.role !== 'super_admin') {
+  if (isUserLoading || isProfileLoading || userProfile?.role !== 'super_admin') {
     return (
       <div className="flex items-center justify-center h-full">
-        <p>Checking permissions...</p>
+         <div className="w-full space-y-4">
+            <Skeleton className="h-10 w-1/4" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-48 w-full" />
+        </div>
       </div>
     );
   }
@@ -60,7 +72,7 @@ export default function UsersPage() {
             {usersLoading ? (
               <TableRow>
                 <TableCell colSpan={3} className="h-24 text-center">
-                  Loading...
+                  Loading users...
                 </TableCell>
               </TableRow>
             ) : allUsers && allUsers.length > 0 ? (

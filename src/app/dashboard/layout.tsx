@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     const isLoading = isUserLoading || isProfileLoading;
     if (isLoading) {
-      return; // Wait until loading is complete
+      return; // Wait until all data is loaded
     }
 
     if (!user) {
@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const hasPermission = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
 
     if (!hasPermission) {
-      router.push('/'); // Redirect if not authorized
+      router.push('/'); // If logged in but not admin, go to home
     } else {
       setIsAuthorized(true);
     }
