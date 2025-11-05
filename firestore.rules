@@ -45,14 +45,16 @@ service cloud.firestore {
      * Description: These collections grant roles via document existence.
      **************************************************/
     match /roles_admin/{userId} {
-      // Users can check their own role. Only super admins can manage roles.
+      // Allow reading own role, super admins can manage all roles.
       allow get: if isOwner(userId) || isSuperAdmin();
       allow list, create, update, delete: if isSuperAdmin();
     }
 
     match /roles_super_admin/{userId} {
-      // Users can check their own role. Only super admins can manage roles.
-      allow get: if isOwner(userId) || isSuperAdmin();
+      // Allow any signed-in user to check their own super_admin status.
+      // This is crucial for the isSuperAdmin() function to work correctly.
+      allow get: if isOwner(userId) && isSignedIn();
+      // Only super admins can list or modify roles.
       allow list, create, update, delete: if isSuperAdmin();
     }
     
