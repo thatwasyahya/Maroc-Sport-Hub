@@ -40,31 +40,35 @@ export default function UsersPage() {
 
   // This check is a secondary safeguard. The primary protection is in the dashboard layout.
   useEffect(() => {
-    if (!isUserLoading && !isProfileLoading && userProfile?.role !== 'super_admin') {
+    if (!isUserLoading && !isProfileLoading && userProfile && userProfile.role !== 'super_admin') {
       router.push('/dashboard');
     }
   }, [userProfile, isUserLoading, isProfileLoading, router]);
 
   const usersCollectionRef = useMemoFirebase(
     // Only fetch users if the current user is a super_admin
-    () => (userProfile?.role === 'super_admin' ? collection(firestore, 'users') : null),
-    [firestore, userProfile?.role]
+    () => (userProfile && userProfile.role === 'super_admin' ? collection(firestore, 'users') : null),
+    [firestore, userProfile]
   );
   
-  // Note: This collection fetch will fail if the user is not a super_admin due to firestore.rules.
-  // The logic in useMemoFirebase prevents the hook from even running if the condition isn't met.
   const { data: allUsers, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
 
   const isLoading = isUserLoading || isProfileLoading;
   
-  if (isLoading || (userProfile?.role === 'super_admin' && usersLoading)) {
+  if (isLoading || !userProfile) {
     return <UsersSkeleton />;
   }
 
   // Final check before rendering
-  if (userProfile?.role !== 'super_admin') {
-      return null; // or a more explicit "access denied" message for this specific page
+  if (userProfile.role !== 'super_admin') {
+      // While the useEffect will redirect, we can return null to avoid a flash of content
+      return <UsersSkeleton />;
   }
+  
+  if (usersLoading) {
+    return <UsersSkeleton />;
+  }
+
 
   return (
      <Card>
