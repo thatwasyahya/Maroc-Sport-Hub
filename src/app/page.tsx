@@ -24,6 +24,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
+import { getRegions } from '@/lib/maroc-api';
 
 export default function Home() {
   const firestore = useFirestore();
@@ -63,7 +64,7 @@ export default function Home() {
 
   const { allSports, allRegions, allEquipments } = useMemo(() => {
     const sports = [...new Set(facilities.flatMap(f => f.sports || []))].sort();
-    const regions = [...new Set(facilities.map(f => f.region))].sort();
+    const regions = getRegions().map(r => r.name).sort();
     const equipments = [...new Set(allEquipmentsData?.map(e => e.name) || [])].sort();
     return { allSports: sports, allRegions: regions, allEquipments: equipments };
   }, [facilities, allEquipmentsData]);

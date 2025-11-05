@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import type { Facility, User, Reservation, Equipment, UserRole } from "./types";
+import { regions, cities } from "./maroc-api";
 
 const createRandomUser = (role: UserRole, id: number): User => ({
   id: faker.string.uuid(),
@@ -14,15 +15,6 @@ const createRandomUser = (role: UserRole, id: number): User => ({
 });
 
 export const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Natation", "Athlétisme", "Yoga", "Musculation", "CrossFit", "Padel"].sort();
-const regions = ["Rabat-Salé-Kénitra", "Casablanca-Settat", "Marrakech-Safi", "Tanger-Tétouan-Al Hoceïma", "Fès-Meknès", "Souss-Massa"];
-const cities: { [key: string]: string[] } = {
-  "Rabat-Salé-Kénitra": ["Rabat", "Salé", "Kénitra"],
-  "Casablanca-Settat": ["Casablanca", "Settat", "Mohammedia"],
-  "Marrakech-Safi": ["Marrakech", "Safi", "Essaouira"],
-  "Tanger-Tétouan-Al Hoceïma": ["Tanger", "Tétouan", "Al Hoceïma"],
-  "Fès-Meknès": ["Fès", "Meknès"],
-  "Souss-Massa": ["Agadir", "Inezgane"],
-};
 
 export const equipmentList = [
     "Haltères", "Tapis de course", "Vélos elliptiques", "Balles de yoga", "Filets de volley-ball", 
@@ -48,7 +40,7 @@ const generateTimeSlots = (startHour: number, endHour: number): string[] => {
 
 const createRandomFacility = (allEquipments: Equipment[]): Facility => {
     const region = faker.helpers.arrayElement(regions);
-    const city = faker.helpers.arrayElement(cities[region]);
+    const city = faker.helpers.arrayElement(cities[region.name] || []);
     
     const availability: Record<string, string[]> = {};
     for (let i = 0; i < 7; i++) {
@@ -62,7 +54,7 @@ const createRandomFacility = (allEquipments: Equipment[]): Facility => {
         adminId: faker.string.uuid(),
         external_id: `ext_${faker.string.alphanumeric(10)}`,
         name: `${faker.company.name()} Sports Complex`,
-        region,
+        region: region.name,
         city,
         address: faker.location.streetAddress(),
         location: {
@@ -116,7 +108,14 @@ export const users: User[] = [
     ...Array.from({ length: 50 }, (_, i) => createRandomUser("user", i + 10)),
 ];
 
-export const equipments: Equipment[] = Array.from({ length: equipmentList.length }, createRandomEquipment);
+export const equipments: Equipment[] = Array.from({ length: equipmentList.length }, (_, i) => ({
+    id: faker.string.uuid(),
+    name: equipmentList[i],
+    rentalCost: faker.number.int({ min: 10, max: 50 }),
+    depositCost: faker.helpers.arrayElement([0, 50, 100]),
+    quantity: faker.number.int({ min: 1, max: 20 }),
+}));
+
 
 export const facilities: Facility[] = Array.from({ length: 20 }, () => createRandomFacility(equipments));
 

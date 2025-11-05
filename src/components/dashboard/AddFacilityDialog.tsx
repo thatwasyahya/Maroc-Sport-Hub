@@ -26,12 +26,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Equipment, Facility } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
 import { sports } from '@/lib/data';
+import { getRegions, getCities } from '@/lib/maroc-api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const facilitySchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -61,6 +63,9 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const regions = getRegions();
+  const [cities, setCities] = useState<string[]>([]);
 
   const equipmentsCollectionRef = useMemoFirebase(
     () => collection(firestore, 'equipments'),
@@ -84,6 +89,17 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
       accessible: false,
     },
   });
+  
+  const selectedRegion = form.watch('region');
+
+  useEffect(() => {
+    if (selectedRegion) {
+        setCities(getCities(selectedRegion));
+        form.setValue('city', '');
+    } else {
+        setCities([]);
+    }
+  }, [selectedRegion, form]);
 
   const onSubmit = async (data: FacilityFormValues) => {
     if (!user) {
@@ -163,32 +179,50 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                   />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                  control={form.control}
-                  name="region"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Region</FormLabel>
-                      <FormControl>
-                          <Input placeholder="e.g., Casablanca-Settat" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                  />
-                  <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                          <Input placeholder="e.g., Casablanca" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                  />
+                <FormField
+                    control={form.control}
+                    name="region"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Region</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select a region" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {regions.map((region) => (
+                            <SelectItem key={region.name} value={region.name}>{region.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select a city" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {cities.map((city) => (
+                                <SelectItem key={city} value={city}>{city}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <FormField
