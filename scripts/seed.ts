@@ -6,16 +6,10 @@ import { users, facilities, equipments, reservations } from '../src/lib/data';
 import { firebaseConfig } from '../src/firebase/config';
 
 let app: App;
-if (process.env.NEXT_PUBLIC_USE_EMULATOR) {
-    // Connect to emulators
-    process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
-    process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
-    app = initializeApp({ projectId: firebaseConfig.projectId });
-} else {
-    // Connect to production services
-    app = initializeApp({ projectId: firebaseConfig.projectId });
-}
-
+// Always connect to emulators for seeding
+process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
+app = initializeApp({ projectId: firebaseConfig.projectId });
 
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -80,6 +74,7 @@ async function seedDatabase() {
 
     // Seed Reservations
     console.log('Seeding reservations...');
+    const reservationBatch = db.batch();
     for (const reservation of reservations) {
         const userReservationsRef = db.collection('users').doc(reservation.userId).collection('reservations').doc(reservation.id);
         const rootReservationsRef = db.collection('reservations').doc(reservation.id);
@@ -90,9 +85,10 @@ async function seedDatabase() {
             createdAt: Timestamp.fromDate(reservation.createdAt as Date),
             updatedAt: Timestamp.fromDate(reservation.updatedAt as Date),
         };
-        await userReservationsRef.set(reservationData);
-        await rootReservationsRef.set(reservationData); // Denormalize for admin view
+        reservationBatch.set(userReservationsRef, reservationData);
+        reservationBatch.set(rootReservationsRef, reservationData); // Denormalize for admin view
     }
+    await reservationBatch.commit();
     console.log('Reservations seeded.');
 
     console.log('Database seed complete!');

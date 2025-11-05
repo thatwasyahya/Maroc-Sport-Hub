@@ -9,44 +9,23 @@ import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
 export function initializeFirebase() {
   const isEmulator = process.env.NEXT_PUBLIC_USE_EMULATOR === 'true';
 
-  if (!getApps().length) {
-    const app = initializeApp(firebaseConfig);
-    
-    if (isEmulator) {
-      console.log('Using Firebase Emulators');
-      const firestore = getFirestore(app);
-      connectFirestoreEmulator(firestore, 'firestore', 8080);
-      const auth = getAuth(app);
-      connectAuthEmulator(auth, 'http://auth:9099', { disableWarnings: true });
-      return { firebaseApp: app, auth, firestore };
-    }
-    
-    return getSdks(app);
-  }
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-  const app = getApp();
+  const firestore = getFirestore(app);
+  const auth = getAuth(app);
 
   if (isEmulator) {
-      console.log('Using Firebase Emulators');
-      const firestore = getFirestore(app);
-      try {
-        connectFirestoreEmulator(firestore, 'firestore', 8080);
-      } catch (e) {
-        // already connected
-      }
-
-      const auth = getAuth(app);
-      try {
-        connectAuthEmulator(auth, 'http://auth:9099', { disableWarnings: true });
-      } catch(e) {
-        // already connected
-      }
-      return { firebaseApp: app, auth, firestore };
+    console.log('Using Firebase Emulators');
+    try {
+      connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
+      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    } catch (e) {
+      // Emulators are likely already connected
+      // console.warn(e);
+    }
   }
 
-
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(app);
+  return { firebaseApp: app, auth, firestore };
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
