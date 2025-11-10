@@ -152,269 +152,271 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <ScrollArea className="h-[60vh] p-4">
-              <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Nom de l'installation</FormLabel>
-                      <FormControl>
-                          <Input placeholder="e.g., City Stadium" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                  />
-                  <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Adresse</FormLabel>
-                      <FormControl>
-                          <Input placeholder="e.g., 123 Main St" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                  />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="region"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Région</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Choisir une région" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {regions.map((region) => (
-                            <SelectItem key={region.name} value={region.name}>{region.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Ville</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Choisir une ville" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {cities.map((city) => (
-                                <SelectItem key={city} value={city}>{city}</SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                  control={form.control}
-                  name="rentalCost"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Coût de location (MAD/hr)</FormLabel>
-                      <FormControl>
-                          <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                  />
-                  <FormField
-                  control={form.control}
-                  name="depositCost"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Coût de la caution (MAD)</FormLabel>
-                      <FormControl>
-                          <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                  />
-              </div>
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Décrivez l'installation, ses caractéristiques et ses règles."
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="space-y-4 rounded-md border p-4">
-                <FormLabel>Équipements</FormLabel>
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-end gap-2">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                     <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Nom de l'installation</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g., City Stadium" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Adresse</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g., 123 Main St" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
                       control={form.control}
-                      name={`equipments.${index}.quantity`}
+                      name="region"
                       render={({ field }) => (
-                        <FormItem className="w-24">
-                          <FormLabel className="text-xs">Qté</FormLabel>
+                      <FormItem>
+                          <FormLabel>Région</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
+                          <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Qté" />
+                              <SelectValue placeholder="Choisir une région" />
                               </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="X">X</SelectItem>
-                              {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                                <SelectItem key={num} value={String(num)}>{num}</SelectItem>
+                          </FormControl>
+                          <SelectContent>
+                              {regions.map((region) => (
+                              <SelectItem key={region.name} value={region.name}>{region.name}</SelectItem>
                               ))}
-                            </SelectContent>
+                          </SelectContent>
                           </Select>
                           <FormMessage />
-                        </FormItem>
+                      </FormItem>
                       )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Ville</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}>
+                          <FormControl>
+                              <SelectTrigger>
+                              <SelectValue placeholder="Choisir une ville" />
+                              </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                              {cities.map((city) => (
+                                  <SelectItem key={city} value={city}>{city}</SelectItem>
+                              ))}
+                          </SelectContent>
+                          </Select>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                    control={form.control}
+                    name="rentalCost"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Coût de location (MAD/hr)</FormLabel>
+                        <FormControl>
+                            <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                     />
                     <FormField
-                      control={form.control}
-                      name={`equipments.${index}.name`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel className="text-xs">Nom de l'équipement</FormLabel>
-                          <FormControl>
-                            <Input placeholder="ex: Ballons de basket" {...field} />
-                          </FormControl>
-                          <FormMessage />
+                    control={form.control}
+                    name="depositCost"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Coût de la caution (MAD)</FormLabel>
+                        <FormControl>
+                            <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
                         </FormItem>
-                      )}
+                    )}
                     />
-                    <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => append({ name: '', quantity: '1' })}
-                >
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Ajouter un équipement
-                </Button>
-              </div>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Décrivez l'installation, ses caractéristiques et ses règles."
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="sports"
-                render={() => (
-                  <FormItem>
-                    <div className="mb-2">
-                      <FormLabel>Sports</FormLabel>
-                      <FormDescription>Sélectionnez les sports disponibles dans cette installation.</FormDescription>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                    {sports.map((sport) => (
+                <div className="space-y-4 rounded-md border p-4 mt-4">
+                  <FormLabel>Équipements</FormLabel>
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-end gap-2">
                       <FormField
-                        key={sport}
                         control={form.control}
-                        name="sports"
+                        name={`equipments.${index}.quantity`}
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormItem className="w-24">
+                            <FormLabel className="text-xs">Qté</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(sport)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...(field.value || []), sport])
-                                      : field.onChange(field.value?.filter((value) => value !== sport))
-                                  }}
-                                />
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Qté" />
+                                </SelectTrigger>
                               </FormControl>
-                              <FormLabel className="font-normal">{sport}</FormLabel>
-                            </FormItem>
+                              <SelectContent>
+                                <SelectItem value="X">X</SelectItem>
+                                {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                                  <SelectItem key={num} value={String(num)}>{num}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
                         )}
                       />
-                    ))}
+                      <FormField
+                        control={form.control}
+                        name={`equipments.${index}.name`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel className="text-xs">Nom de l'équipement</FormLabel>
+                            <FormControl>
+                              <Input placeholder="ex: Ballons de basket" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex gap-8 pt-4">
-                  <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                          <FormItem className="space-y-3">
-                              <FormLabel>Type</FormLabel>
-                              <FormControl>
-                                  <RadioGroup
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  className="flex space-x-4"
-                                  >
-                                  <FormItem className="flex items-center space-x-2 space-y-0">
-                                      <FormControl>
-                                      <RadioGroupItem value="outdoor" />
-                                      </FormControl>
-                                      <FormLabel className="font-normal">Extérieur</FormLabel>
-                                  </FormItem>
-                                  <FormItem className="flex items-center space-x-2 space-y-0">
-                                      <FormControl>
-                                      <RadioGroupItem value="indoor" />
-                                      </FormControl>
-                                      <FormLabel className="font-normal">Intérieur</FormLabel>
-                                  </FormItem>
-                                  </RadioGroup>
-                              </FormControl>
-                              <FormMessage />
-                          </FormItem>
-                      )}
-                  />
-                  <FormField
-                      control={form.control}
-                      name="accessible"
-                      render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 rounded-md border p-3">
-                              <FormControl>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => append({ name: '', quantity: '1' })}
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Ajouter un équipement
+                  </Button>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="sports"
+                  render={() => (
+                    <FormItem>
+                      <div className="mb-2">
+                        <FormLabel>Sports</FormLabel>
+                        <FormDescription>Sélectionnez les sports disponibles dans cette installation.</FormDescription>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                      {sports.map((sport) => (
+                        <FormField
+                          key={sport}
+                          control={form.control}
+                          name="sports"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
                                   <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
+                                    checked={field.value?.includes(sport)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...(field.value || []), sport])
+                                        : field.onChange(field.value?.filter((value) => value !== sport))
+                                    }}
                                   />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                  <FormLabel>Accès PMR</FormLabel>
-                                  <FormDescription>Cette installation est-elle accessible aux personnes à mobilité réduite?</FormDescription>
-                              </div>
-                          </FormItem>
-                      )}
-                  />
+                                </FormControl>
+                                <FormLabel className="font-normal">{sport}</FormLabel>
+                              </FormItem>
+                          )}
+                        />
+                      ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-8 pt-4">
+                    <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                            <FormItem className="space-y-3">
+                                <FormLabel>Type</FormLabel>
+                                <FormControl>
+                                    <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex space-x-4"
+                                    >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="outdoor" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">Extérieur</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="indoor" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">Intérieur</FormLabel>
+                                    </FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="accessible"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 rounded-md border p-3">
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>Accès PMR</FormLabel>
+                                    <FormDescription>Cette installation est-elle accessible aux personnes à mobilité réduite?</FormDescription>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                </div>
               </div>
             </ScrollArea>
             <DialogFooter className="pt-4">
