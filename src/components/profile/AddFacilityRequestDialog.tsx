@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -24,7 +23,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser, useFirestore, useFirebaseApp } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
@@ -38,19 +37,6 @@ import { PlusCircle, Trash2, Search, Loader2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
 import type { FacilityRequest } from '@/lib/types';
 import { geocodeAddress } from '@/services/nominatim';
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
-};
-
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -67,12 +53,6 @@ const facilityRequestSchema = z.object({
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
-  attachment: z.instanceof(File).optional()
-    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 2MB.`)
-    .refine(
-      (file) => !file || ACCEPTED_FILE_TYPES.includes(file.type),
-      "Only .jpg, .jpeg, .png, .webp and .pdf formats are supported."
-    ),
 });
 
 type FacilityRequestFormValues = z.infer<typeof facilityRequestSchema>;
@@ -195,24 +175,17 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
-      const { attachment, ...restOfData } = data;
-      let attachmentDataUrl: string | undefined = undefined;
-
-      if (attachment) {
-        attachmentDataUrl = await fileToBase64(attachment);
-      }
-      
       const location = { lat, lng };
 
       const newRequestData: Omit<FacilityRequest, 'id'> = {
-        ...restOfData,
+        ...data,
         userId: user.uid,
         userName: user.displayName || user.email || 'Anonymous',
+        userEmail: user.email || '',
         status: 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         location,
-        attachmentUrl: attachmentDataUrl
       };
 
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
@@ -423,26 +396,12 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                   )}
                 />
 
-                 <FormField
-                    control={form.control}
-                    name="attachment"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
-                        <FormDescription>
-                          Ajoutez une image ou un PDF (max 2MB).
-                        </FormDescription>
-                        <FormControl>
-                          <Input 
-                            type="file" 
-                            accept={ACCEPTED_FILE_TYPES.join(',')}
-                            onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : undefined)}
-                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                 <FormItem>
+                    <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
+                    <FormDescription>
+                      Vous pourrez discuter de la pièce jointe avec un administrateur après avoir soumis la demande.
+                    </FormDescription>
+                  </FormItem>
 
                 <div className="flex gap-8 pt-4">
                     <FormField
@@ -509,5 +468,3 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     </Dialog>
   );
 }
-
-    
