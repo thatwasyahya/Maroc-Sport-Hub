@@ -1,8 +1,5 @@
 "use client";
 
-import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import L from 'leaflet';
 import 'leaflet.markercluster';
 import { useEffect, useRef } from 'react';
@@ -85,5 +82,3 @@ const MapView = ({ facilities, center, zoom, onMarkerClick }: { facilities: Faci
 };
 
 export default MapView;
-
-    
