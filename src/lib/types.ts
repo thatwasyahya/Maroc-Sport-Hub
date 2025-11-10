@@ -1,3 +1,4 @@
+
 export type UserRole = "super_admin" | "admin" | "user";
 
 export interface User {
@@ -25,15 +26,15 @@ export interface Facility {
   region: string;
   city: string;
   address: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
   sports: string[];
   type: "indoor" | "outdoor";
   accessible: boolean;
   description: string;
-  photos?: string[];
+  photos?: string[],
+  location: {
+    lat: number;
+    lng: number;
+  };
   equipments?: EquipmentItem[];
 }
 
