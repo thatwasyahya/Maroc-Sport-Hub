@@ -306,7 +306,6 @@ export default function Home() {
               <h4 className="font-semibold text-card-foreground/90">Navigation</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/" className="text-muted-foreground hover:text-primary">Accueil</Link></li>
-                <li><Link href="/profile" className="text-muted-foreground hover:text-primary">Mon Profil</Link></li>
               </ul>
             </div>
             <div className="space-y-4">

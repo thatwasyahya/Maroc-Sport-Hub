@@ -42,28 +42,3 @@ export interface Facility {
   depositCost: number;
   // Removed availability
 }
-
-
-export type RequestStatus = "pending" | "approved" | "rejected";
-
-export interface FacilityRequest {
-    id: string;
-    userId: string;
-    userEmail: string;
-    userName: string;
-    status: RequestStatus;
-    rejectionReason?: string;
-    createdAt: any;
-    updatedAt: any;
-    // Includes all fields from the facility form
-    name: string;
-    description: string;
-    address: string;
-    region: string;
-    city: string;
-    rentalCost: number;
-    depositCost: number;
-    sports: string[];
-    type: "indoor" | "outdoor";
-    accessible: boolean;
-}
