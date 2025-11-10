@@ -57,7 +57,7 @@ export function addDocumentNonBlocking(colRef: CollectionReference, data: any) {
  * Does NOT await the write operation internally.
  */
 export function updateDocumentNonBlocking(docRef: DocumentReference, data: any) {
-  updateDoc(docRef, data)
+  return updateDoc(docRef, data)
     .catch(error => {
       errorEmitter.emit(
         'permission-error',
@@ -92,5 +92,5 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
  * Updates a user's avatar URL.
  */
 export function updateUserAvatar(docRef: DocumentReference, avatarUrl: string) {
-    updateDocumentNonBlocking(docRef, { avatarUrl });
+    return updateDocumentNonBlocking(docRef, { avatarUrl });
 }
