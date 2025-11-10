@@ -56,12 +56,12 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
         <div className="px-6">
           <h3 className="text-lg font-semibold mb-3">Équipements Inclus</h3>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            {facilityEquipments.map(equipName => {
-              const Icon = equipmentIconsMap[equipName] || Sprout;
+            {facilityEquipments.map(item => {
+              const Icon = equipmentIconsMap[item.name] || Sprout;
               return (
-                <div key={equipName} className="flex items-center gap-3 text-muted-foreground">
+                <div key={item.name} className="flex items-center gap-3 text-muted-foreground">
                   <Icon className="w-4 h-4" />
-                  <span>{equipName}</span>
+                  <span>{item.name} ({item.quantity})</span>
                 </div>
               )
             })}

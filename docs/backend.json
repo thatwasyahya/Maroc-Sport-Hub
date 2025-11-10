@@ -15,6 +15,16 @@
       },
       "required": ["id", "email", "role"]
     },
+    "EquipmentItem": {
+      "title": "EquipmentItem",
+      "type": "object",
+      "description": "Represents a piece of equipment with its quantity.",
+      "properties": {
+        "name": { "type": "string" },
+        "quantity": { "type": "string", "description": "Quantity of the equipment, can be a number or 'X'." }
+      },
+      "required": ["name", "quantity"]
+    },
     "Facility": {
       "title": "Facility",
       "type": "object",
@@ -28,7 +38,11 @@
         "sports": { "type": "array", "items": { "type": "string" }, "description": "List of sports supported by the facility." },
         "address": { "type": "string", "description": "Address of the facility." },
         "adminId": { "type": "string", "description": "Reference to the Admin user who manages this facility." },
-        "equipments": { "type": "array", "items": { "type": "string" }, "description": "List of equipment names available at the facility." }
+        "equipments": { 
+          "type": "array", 
+          "items": { "$ref": "#/entities/EquipmentItem" }, 
+          "description": "List of equipment available at the facility." 
+        }
       },
       "required": ["id", "name", "rentalCost"]
     },
@@ -49,7 +63,10 @@
         "rentalCost": { "type": "number" },
         "depositCost": { "type": "number" },
         "sports": { "type": "array", "items": { "type": "string" } },
-        "equipments": { "type": "array", "items": { "type": "string" } },
+        "equipments": { 
+          "type": "array", 
+          "items": { "$ref": "#/entities/EquipmentItem" } 
+        },
         "type": { "type": "string", "enum": ["indoor", "outdoor"] },
         "accessible": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },

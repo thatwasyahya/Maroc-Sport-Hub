@@ -12,12 +12,9 @@ export interface User {
   updatedAt: any; // Can be a server timestamp
 }
 
-export interface Equipment {
-  id: string;
+export interface EquipmentItem {
   name: string;
-  rentalCost: number;
-  depositCost: number;
-  quantity: number;
+  quantity: string; // Can be a number or 'X'
 }
 
 export interface Facility {
@@ -37,7 +34,7 @@ export interface Facility {
   accessible: boolean;
   description: string;
   photos: string[];
-  equipments: string[]; // List of equipment names
+  equipments: EquipmentItem[];
   rentalCost: number; // Cost per hour
   depositCost: number;
   // Removed availability
@@ -59,7 +56,7 @@ export interface FacilityRequest {
   rentalCost: number;
   depositCost: number;
   sports: string[];
-  equipments: string[];
+  equipments: EquipmentItem[];
   type: 'indoor' | 'outdoor';
   accessible: boolean;
   createdAt: any;

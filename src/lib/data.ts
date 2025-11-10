@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import type { Facility, User, UserRole } from "./types";
+import type { Facility, User, UserRole, EquipmentItem } from "./types";
 import { regions, cities } from "./maroc-api";
 
 const createRandomUser = (role: UserRole, id: number): User => ({
@@ -22,12 +22,12 @@ export const equipmentList = [
     "Bancs de musculation", "Cordes à sauter", "Sacs de frappe"
 ].sort();
 
-const generateTimeSlots = (startHour: number, endHour: number): string[] => {
-    const slots = [];
-    for (let i = startHour; i < endHour; i++) {
-        slots.push(`${String(i).padStart(2, '0')}:00 - ${String(i + 1).padStart(2, '0')}:00`);
-    }
-    return slots;
+const generateRandomEquipments = (): EquipmentItem[] => {
+    const selectedEquipments = faker.helpers.arrayElements(equipmentList, { min: 2, max: 5 });
+    return selectedEquipments.map(name => ({
+        name,
+        quantity: faker.helpers.arrayElement(['X', ...Array.from({ length: 10 }, (_, i) => String(i + 1))])
+    }));
 };
 
 const createRandomFacility = (): Facility => {
@@ -51,7 +51,7 @@ const createRandomFacility = (): Facility => {
         accessible: faker.datatype.boolean(),
         description: faker.lorem.paragraph(),
         photos: Array.from({ length: 3 }, (_, i) => `https://picsum.photos/seed/${faker.string.uuid()}/800/600`),
-        equipments: faker.helpers.arrayElements(equipmentList, { min: 2, max: 5 }),
+        equipments: generateRandomEquipments(),
         rentalCost: faker.number.int({ min: 50, max: 300 }),
         depositCost: faker.helpers.arrayElement([0, 50, 100, 200]),
     };

@@ -60,7 +60,7 @@ export default function Home() {
   const { allSports, allRegions, allEquipments } = useMemo(() => {
     const sports = [...new Set(facilities.flatMap(f => f.sports || []))].sort();
     const regions = getRegions().map(r => r.name).sort();
-    const equipments = [...new Set(facilities.flatMap(f => f.equipments || []))].sort();
+    const equipments = [...new Set(facilities.flatMap(f => f.equipments?.map(e => e.name) || []))].sort();
     return { allSports: sports, allRegions: regions, allEquipments: equipments };
   }, [facilities]);
 
@@ -82,7 +82,7 @@ export default function Home() {
     
     if (selectedEquipment.length > 0) {
         newFilteredFacilities = newFilteredFacilities.filter(f => 
-            f.equipments && selectedEquipment.some(equipName => f.equipments.includes(equipName))
+            f.equipments && selectedEquipment.some(equipName => f.equipments.some(e => e.name === equipName))
         );
     }
 

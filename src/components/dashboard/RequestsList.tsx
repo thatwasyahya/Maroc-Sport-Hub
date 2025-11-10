@@ -52,7 +52,7 @@ export default function RequestsList() {
                 sports: request.sports,
                 type: request.type,
                 accessible: request.accessible,
-                equipments: request.equipments,
+                equipments: request.equipments || [],
                 rentalCost: request.rentalCost,
                 depositCost: request.depositCost,
                 createdAt: serverTimestamp(),

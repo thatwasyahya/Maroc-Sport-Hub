@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,8 @@ import { ScrollArea } from '../ui/scroll-area';
 import { sports } from '@/lib/data';
 import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -45,7 +47,10 @@ const facilityRequestSchema = z.object({
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
-  equipments: z.string().optional(),
+  equipments: z.array(z.object({
+    name: z.string().min(1, 'Equipment name cannot be empty.'),
+    quantity: z.string(),
+  })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
 });
@@ -77,10 +82,15 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       rentalCost: 0,
       depositCost: 0,
       sports: [],
-      equipments: '',
+      equipments: [],
       type: 'outdoor',
       accessible: false,
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "equipments",
   });
   
   const selectedRegion = form.watch('region');
@@ -102,12 +112,9 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     setIsSubmitting(true);
     try {
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
-      
-      const equipmentsArray = data.equipments ? data.equipments.split(',').map(e => e.trim()).filter(e => e) : [];
 
       await addDoc(requestsCollectionRef, {
         ...data,
-        equipments: equipmentsArray,
         userId: user.uid,
         userName: user.displayName || user.email,
         status: 'pending',
@@ -264,26 +271,64 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                   </FormItem>
                 )}
               />
-               <FormField
-                control={form.control}
-                name="equipments"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Équipements</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Saisissez une liste d'équipements séparés par des virgules (ex: Ballons, Cônes, Chasubles)"
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                     <FormDescription>
-                        Fournissez une liste des équipements disponibles, séparés par des virgules.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
+              <div className="space-y-4 rounded-md border p-4">
+                <FormLabel>Équipements</FormLabel>
+                {fields.map((field, index) => (
+                  <div key={field.id} className="flex items-end gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`equipments.${index}.quantity`}
+                      render={({ field }) => (
+                        <FormItem className="w-24">
+                          <FormLabel className="text-xs">Qté</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Qté" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="X">X</SelectItem>
+                              {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                                <SelectItem key={num} value={String(num)}>{num}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`equipments.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel className="text-xs">Nom de l'équipement</FormLabel>
+                          <FormControl>
+                            <Input placeholder="ex: Ballons de basket" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => append({ name: '', quantity: '1' })}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Ajouter un équipement
+                </Button>
+              </div>
+
               <FormField
                 control={form.control}
                 name="sports"
