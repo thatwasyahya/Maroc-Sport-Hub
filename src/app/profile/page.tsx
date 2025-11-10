@@ -58,6 +58,11 @@ export default function ProfilePage() {
   const firestore = useFirestore();
   const router = useRouter();
   const [isAddRequestDialogOpen, setIsAddRequestDialogOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -79,18 +84,18 @@ export default function ProfilePage() {
 
   const isLoading = isUserLoading || isProfileLoading;
 
-  if (isLoading || !user || !userProfile) {
+  if (!isClient || isLoading || !user || !userProfile) {
     return <ProfilePageSkeleton />;
   }
 
   const getInitials = (firstName?: string, lastName?: string, email?: string | null) => {
-    if (firstName && lastName) return `${firstName[0]}${lastName[0]}`;
+    if (firstName && lastName) return `${'\'\'\''}${firstName[0]}${'\'\'\''}${'\'\'\''}${lastName[0]}${'\'\'\''}`;
     if (firstName) return firstName.substring(0, 2);
     if (email) return email.substring(0, 2).toUpperCase();
     return "";
   };
   
-  const displayName = userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : user.email;
+  const displayName = userProfile.firstName ? `${'\'\'\''}${userProfile.firstName}${'\'\'\''} ${'\'\'\''}${userProfile.lastName}${'\'\'\''}` : user.email;
 
   const getStatusBadgeVariant = (status: FacilityRequest['status']) => {
     switch (status) {
@@ -156,7 +161,7 @@ export default function ProfilePage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">You haven't submitted any requests yet.</TableCell>
+                      <TableCell colSpan={4} className="h-24 text-center">You haven&apos;t submitted any requests yet.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
