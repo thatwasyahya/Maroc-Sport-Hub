@@ -35,7 +35,7 @@ import { sports } from '@/lib/data';
 import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlusCircle, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const facilitySchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -45,7 +45,7 @@ const facilitySchema = z.object({
   city: z.string().min(2, "City is required."),
   rentalCost: z.coerce.number().min(0, 'Rental cost must be a positive number.'),
   depositCost: z.coerce.number().min(0, 'Deposit cost must be a positive number.'),
-  sports: z.array(z.string()).refine((value) => value.some((item) => item), {
+  sports: z.array(z.string()).refine((value) => value.length > 0, {
     message: "You have to select at least one sport.",
   }),
   equipments: z.array(z.object({
@@ -71,6 +71,8 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
   
   const regions = getRegions();
   const [cities, setCities] = useState<string[]>([]);
+  
+  const sportOptions = sports.map(sport => ({ value: sport, label: sport }));
 
   const form = useForm<FacilityFormValues>({
     resolver: zodResolver(facilitySchema),
@@ -344,39 +346,22 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                   </Button>
                 </div>
 
-                <FormField
+                 <FormField
                   control={form.control}
                   name="sports"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
-                      <div className="mb-2">
-                        <FormLabel>Sports</FormLabel>
-                        <FormDescription>Select the sports available at this facility.</FormDescription>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                      {sports.map((sport) => (
-                        <FormField
-                          key={sport}
-                          control={form.control}
-                          name="sports"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(sport)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), sport])
-                                        : field.onChange(field.value?.filter((value) => value !== sport))
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">{sport}</FormLabel>
-                              </FormItem>
-                          )}
+                      <FormLabel>Sports</FormLabel>
+                       <FormDescription>Select the sports available at this facility.</FormDescription>
+                      <FormControl>
+                        <MultiSelect
+                          options={sportOptions}
+                          selected={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select sports..."
+                          className="w-full"
                         />
-                      ))}
-                      </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
