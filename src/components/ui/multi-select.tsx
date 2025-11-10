@@ -41,10 +41,29 @@ function MultiSelect({
   placeholder = "Select options...",
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState("");
 
   const handleUnselect = (item: string) => {
     onChange(selected.filter((i) => i !== item));
   };
+  
+  const handleSelect = (optionValue: string) => {
+     onChange(
+        selected.includes(optionValue)
+          ? selected.filter((item) => item !== optionValue)
+          : [...selected, optionValue]
+      );
+  }
+
+  const filteredOptions = options.filter(option => 
+    option.label.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  const showCreateOption =
+    inputValue &&
+    !filteredOptions.some(
+      (option) => option.label.toLowerCase() === inputValue.toLowerCase()
+    );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -58,22 +77,23 @@ function MultiSelect({
         >
           <div className="flex gap-1 flex-wrap">
             {selected.length > 0 ? (
-              options
-                .filter((option) => selected.includes(option.value))
-                .map((option) => (
+              selected.map((selectedValue) => {
+                const option = options.find(o => o.value === selectedValue)
+                return (
                   <Badge
                     variant="secondary"
-                    key={option.value}
+                    key={selectedValue}
                     className="mr-1"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleUnselect(option.value);
+                      handleUnselect(selectedValue);
                     }}
                   >
-                    {option.label}
+                    {option ? option.label : selectedValue}
                     <X className="ml-1 h-3 w-3" />
                   </Badge>
-                ))
+                )
+              })
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
             )}
@@ -83,20 +103,30 @@ function MultiSelect({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput placeholder="Search..." />
+          <CommandInput 
+            placeholder="Search..."
+            value={inputValue}
+            onValueChange={setInputValue}
+          />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+               {showCreateOption && (
+                <CommandItem
+                  onSelect={() => {
+                    handleSelect(inputValue);
+                    setInputValue("");
+                  }}
+                >
+                  Create "{inputValue}"
+                </CommandItem>
+              )}
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   onSelect={() => {
-                    onChange(
-                      selected.includes(option.value)
-                        ? selected.filter((item) => item !== option.value)
-                        : [...selected, option.value]
-                    );
-                    setOpen(true);
+                    handleSelect(option.value);
+                    setInputValue("");
                   }}
                 >
                   <Check
