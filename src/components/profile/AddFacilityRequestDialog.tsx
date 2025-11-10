@@ -54,8 +54,8 @@ const facilityRequestSchema = z.object({
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
-  photo: z.instanceof(FileList).refine((files) => files?.length > 0, 'Une photo est requise.'),
-  attachment: z.instanceof(FileList).optional(),
+  photo: z.any().refine((files) => files?.length > 0, 'Une photo est requise.'),
+  attachment: z.any().optional(),
 });
 
 type FacilityRequestFormValues = z.infer<typeof facilityRequestSchema>;
