@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import RequestDetailsDialog from './RequestDetailsDialog';
+import { errorEmitter, FirestorePermissionError } from '@/firebase';
 
 export default function RequestsList() {
     const firestore = useFirestore();
@@ -39,48 +40,50 @@ export default function RequestsList() {
         if (!firestore) return;
         setProcessingId(request.id);
 
-        try {
-            const batch = writeBatch(firestore);
+        const batch = writeBatch(firestore);
+        const newFacilityRef = doc(collection(firestore, 'facilities'));
+        const newFacilityData: Omit<Facility, 'id'> & { createdAt: any, updatedAt: any } = {
+            adminId: request.userId,
+            name: request.name,
+            description: request.description,
+            address: request.address,
+            region: request.region,
+            city: request.city,
+            sports: request.sports,
+            type: request.type,
+            accessible: request.accessible,
+            equipments: request.equipments || [],
+            location: { lat: 33.5731, lng: -7.5898 },
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+        batch.set(newFacilityRef, newFacilityData);
 
-            // 1. Create new facility document
-            const newFacilityRef = doc(collection(firestore, 'facilities'));
-            const newFacilityData: Omit<Facility, 'id' | 'photos'> & { createdAt: any, updatedAt: any } = {
-                adminId: request.userId,
-                name: request.name,
-                description: request.description,
-                address: request.address,
-                region: request.region,
-                city: request.city,
-                sports: request.sports,
-                type: request.type,
-                accessible: request.accessible,
-                equipments: request.equipments || [],
-                location: { lat: 33.5731, lng: -7.5898 }, // Default to Casablanca, can be updated later
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            };
-            batch.set(newFacilityRef, newFacilityData);
-
-            // 2. Update the request status
-            const requestRef = doc(firestore, 'facilityRequests', request.id);
-            batch.update(requestRef, { status: 'approved', updatedAt: serverTimestamp() });
-            
-            await batch.commit();
-
-            toast({
-                title: 'Request Approved',
-                description: `Facility "${request.name}" has been created.`,
+        const requestRef = doc(firestore, 'facilityRequests', request.id);
+        batch.update(requestRef, { status: 'approved', updatedAt: serverTimestamp() });
+        
+        batch.commit()
+            .then(() => {
+                toast({
+                    title: 'Request Approved',
+                    description: `Facility "${request.name}" has been created.`,
+                });
+            })
+            .catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: requestRef.path,
+                    operation: 'update',
+                    requestResourceData: { status: 'approved' },
+                }));
+                 errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: newFacilityRef.path,
+                    operation: 'create',
+                    requestResourceData: newFacilityData,
+                }));
+            })
+            .finally(() => {
+                setProcessingId(null);
             });
-        } catch (error) {
-            console.error("Error approving request: ", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Could not approve the request.',
-            });
-        } finally {
-            setProcessingId(null);
-        }
     };
     
     const handleReject = async (request: FacilityRequest) => {
@@ -88,50 +91,55 @@ export default function RequestsList() {
         setProcessingId(request.id);
         const reason = prompt("Raison du rejet (optionnel):");
 
-        try {
-            const requestRef = doc(firestore, 'facilityRequests', request.id);
-            const batch = writeBatch(firestore);
-            batch.update(requestRef, { 
-                status: 'rejected', 
-                rejectionReason: reason || 'No reason provided',
-                updatedAt: serverTimestamp() 
+        const requestRef = doc(firestore, 'facilityRequests', request.id);
+        const updateData = { 
+            status: 'rejected', 
+            rejectionReason: reason || 'No reason provided',
+            updatedAt: serverTimestamp() 
+        };
+        const batch = writeBatch(firestore);
+        batch.update(requestRef, updateData);
+        
+        batch.commit()
+            .then(() => {
+                toast({
+                    title: 'Request Rejected',
+                    description: `Request for "${request.name}" has been rejected.`,
+                });
+            })
+            .catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: requestRef.path,
+                    operation: 'update',
+                    requestResourceData: updateData,
+                }));
+            })
+            .finally(() => {
+                setProcessingId(null);
             });
-            await batch.commit();
-             toast({
-                title: 'Request Rejected',
-                description: `Request for "${request.name}" has been rejected.`,
-            });
-        } catch (error) {
-            console.error("Error rejecting request: ", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Could not reject the request.',
-            });
-        } finally {
-            setProcessingId(null);
-        }
     };
     
     const handleDelete = async (requestId: string) => {
         if (!firestore) return;
         setProcessingId(requestId);
-        try {
-            await deleteDoc(doc(firestore, 'facilityRequests', requestId));
-            toast({
-                title: 'Request Deleted',
-                description: 'The request has been permanently deleted.',
+        const docRef = doc(firestore, 'facilityRequests', requestId);
+
+        deleteDoc(docRef)
+            .then(() => {
+                toast({
+                    title: 'Request Deleted',
+                    description: 'The request has been permanently deleted.',
+                });
+            })
+            .catch(error => {
+                 errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: docRef.path,
+                    operation: 'delete',
+                }));
+            })
+            .finally(() => {
+                setProcessingId(null);
             });
-        } catch (error) {
-            console.error("Error deleting request: ", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Could not delete the request.',
-            });
-        } finally {
-            setProcessingId(null);
-        }
     };
 
     const getStatusBadgeVariant = (status: FacilityRequest['status']) => {
@@ -297,4 +305,3 @@ export default function RequestsList() {
             )}
         </>
     );
-}
