@@ -29,7 +29,7 @@ export interface Facility {
   type: "indoor" | "outdoor";
   accessible: boolean;
   description: string;
-  photos?: string[],
+  photoUrl?: string;
   location: {
     lat: number;
     lng: number;
@@ -61,5 +61,6 @@ export interface FacilityRequest {
     lat: number;
     lng: number;
   };
-  attachmentUrl?: string; // URL to the file in Firebase Storage
+  photoUrl?: string; // URL to the main photo in Firebase Storage
+  attachmentUrl?: string; // URL to the attachment in Firebase Storage
 }

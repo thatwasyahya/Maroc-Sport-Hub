@@ -12,17 +12,19 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Paperclip } from 'lucide-react';
+import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Paperclip, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
+import Image from 'next/image';
 
 interface RequestDetailsDialogProps {
   request: FacilityRequest | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDeleteAttachment?: (request: FacilityRequest) => void;
 }
 
-export default function RequestDetailsDialog({ request, open, onOpenChange }: RequestDetailsDialogProps) {
+export default function RequestDetailsDialog({ request, open, onOpenChange, onDeleteAttachment }: RequestDetailsDialogProps) {
   if (!request) return null;
   
   const getStatusBadgeVariant = (status: FacilityRequest['status']) => {
@@ -36,7 +38,7 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-2xl">{request.name}</DialogTitle>
           <DialogDescription>
@@ -56,6 +58,16 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                 </div>
                 
                 <Separator />
+                
+                {request.photoUrl && (
+                    <div className="grid gap-2">
+                        <h3 className="font-semibold">Photo Principale</h3>
+                        <div className="relative aspect-video w-full rounded-md overflow-hidden">
+                            <Image src={request.photoUrl} alt="Photo principale de l'installation" fill className="object-cover" />
+                        </div>
+                    </div>
+                )}
+
 
                 <div className="grid gap-2">
                     <h3 className="font-semibold">Informations Générales</h3>
@@ -123,12 +135,19 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                         <Separator />
                         <div className="grid gap-2">
                             <h3 className="font-semibold">Pièce Jointe</h3>
-                            <Button variant="outline" asChild className="w-fit">
-                                <a href={request.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                                    <Paperclip className="mr-2 h-4 w-4" />
-                                    Voir la pièce jointe
-                                </a>
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button variant="outline" asChild className="w-fit">
+                                    <a href={request.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                        <Paperclip className="mr-2 h-4 w-4" />
+                                        Voir la pièce jointe
+                                    </a>
+                                </Button>
+                                {onDeleteAttachment && (
+                                     <Button variant="destructive" size="sm" onClick={() => onDeleteAttachment(request)}>
+                                        Supprimer
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </>
                 )}

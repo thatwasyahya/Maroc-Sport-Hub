@@ -47,6 +47,11 @@
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
             }
+        },
+        "photoUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the main facility photo in Firebase Storage."
         }
       },
       "required": ["id", "name", "location"]
@@ -81,6 +86,11 @@
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
             }
+        },
+        "photoUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the main facility photo in Firebase Storage."
         },
         "attachmentUrl": {
           "type": "string",

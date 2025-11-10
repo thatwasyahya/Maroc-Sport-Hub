@@ -54,6 +54,7 @@ const facilityRequestSchema = z.object({
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
+  photo: z.instanceof(FileList).refine((files) => files?.length > 0, 'Une photo est requise.'),
   attachment: z.instanceof(FileList).optional(),
 });
 
@@ -92,6 +93,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     },
   });
   
+  const photoRef = form.register("photo");
   const attachmentRef = form.register("attachment");
 
 
@@ -169,6 +171,13 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
   };
 
+  const uploadFile = async (file: File, path: string): Promise<string> => {
+    const storage = getStorage();
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    return getDownloadURL(snapshot.ref);
+  };
+
   const onSubmit = async (data: FacilityRequestFormValues) => {
     if (!user) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
@@ -180,14 +189,16 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
+      let photoUrl: string | undefined = undefined;
+      const photoFile = data.photo?.[0];
+      if(photoFile){
+        photoUrl = await uploadFile(photoFile, `facility-requests/${user.uid}/${Date.now()}_photo_${photoFile.name}`);
+      }
+
       let attachmentUrl: string | undefined = undefined;
       const attachmentFile = data.attachment?.[0];
-      
       if (attachmentFile) {
-        const storage = getStorage();
-        const storageRef = ref(storage, `facility-requests/${user.uid}/${Date.now()}_${attachmentFile.name}`);
-        const snapshot = await uploadBytes(storageRef, attachmentFile);
-        attachmentUrl = await getDownloadURL(snapshot.ref);
+        attachmentUrl = await uploadFile(attachmentFile, `facility-requests/${user.uid}/${Date.now()}_attachment_${attachmentFile.name}`);
       }
 
       const location = { lat, lng };
@@ -201,6 +212,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         location,
+        photoUrl,
         attachmentUrl,
       };
 
@@ -341,6 +353,44 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                     </FormItem>
                   )}
                 />
+                
+                <FormField
+                  control={form.control}
+                  name="photo"
+                  render={({ field }) => {
+                    return (
+                      <FormItem>
+                        <FormLabel>Photo de l'Installation</FormLabel>
+                        <FormDescription>
+                          Ajoutez une photo principale pour l'installation (obligatoire, max 5MB).
+                        </FormDescription>
+                        <FormControl>
+                          <Input type="file" accept="image/*" {...photoRef} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="attachment"
+                  render={({ field }) => {
+                    return (
+                      <FormItem>
+                        <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
+                        <FormDescription>
+                          Ajoutez un document ou une image supplémentaire (max 5MB).
+                        </FormDescription>
+                        <FormControl>
+                          <Input type="file" {...attachmentRef} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
 
                 <div className="space-y-4 rounded-md border p-4 mt-4">
                   <div className="mb-4">
@@ -410,25 +460,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="attachment"
-                  render={({ field }) => {
-                    return (
-                      <FormItem>
-                        <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
-                        <FormDescription>
-                          Ajoutez une image ou un document (max 5MB).
-                        </FormDescription>
-                        <FormControl>
-                          <Input type="file" {...attachmentRef} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
                 />
 
                 <div className="flex gap-8 pt-4">

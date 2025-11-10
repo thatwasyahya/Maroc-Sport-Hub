@@ -14,7 +14,7 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
     <div className="space-y-6 pb-6">
       <div className="relative w-full h-64">
         <Image
-          src={facility.photos?.[0] || 'https://picsum.photos/seed/facility/800/600'}
+          src={facility.photoUrl || 'https://picsum.photos/seed/facility/800/600'}
           alt={facility.name}
           fill
           className="object-cover"
