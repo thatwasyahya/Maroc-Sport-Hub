@@ -13,7 +13,7 @@ export function initializeFirebase() {
 
   const firestore = getFirestore(app);
   const auth = getAuth(app);
-  const storage = getStorage(app);
+  const storage = getStorage(app, firebaseConfig.storageBucket);
 
   return { firebaseApp: app, auth, firestore, storage };
 }
