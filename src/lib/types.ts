@@ -42,16 +42,3 @@ export interface Facility {
   rentalCost: number; // Cost per hour
   depositCost: number;
 }
-
-export interface Reservation {
-  id: string;
-  facilityId: string;
-  userId: string;
-  userEmail: string; // Denormalized for easy display
-  startTime: any; // Can be a server timestamp or string
-  endTime: any; // Can be a server timestamp or string
-  status: "confirmed" | "cancelled" | "pending";
-  createdAt: any; // Can be a server timestamp
-  updatedAt: any; // Can be a server timestamp
-  totalCost: number;
-}

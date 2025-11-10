@@ -2,7 +2,7 @@
 import { initializeApp, App } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-import { users, facilities, equipments, reservations } from '../src/lib/data';
+import { users, facilities, equipments } from '../src/lib/data';
 import { firebaseConfig } from '../src/firebase/config';
 
 let app: App;
@@ -71,25 +71,6 @@ async function seedDatabase() {
     });
     await facilityBatch.commit();
     console.log('Facilities seeded.');
-
-    // Seed Reservations
-    console.log('Seeding reservations...');
-    const reservationBatch = db.batch();
-    for (const reservation of reservations) {
-        const userReservationsRef = db.collection('users').doc(reservation.userId).collection('reservations').doc(reservation.id);
-        const rootReservationsRef = db.collection('reservations').doc(reservation.id);
-        const reservationData = {
-            ...reservation,
-            startTime: Timestamp.fromDate(reservation.startTime as Date),
-            endTime: Timestamp.fromDate(reservation.endTime as Date),
-            createdAt: Timestamp.fromDate(reservation.createdAt as Date),
-            updatedAt: Timestamp.fromDate(reservation.updatedAt as Date),
-        };
-        reservationBatch.set(userReservationsRef, reservationData);
-        reservationBatch.set(rootReservationsRef, reservationData); // Denormalize for admin view
-    }
-    await reservationBatch.commit();
-    console.log('Reservations seeded.');
 
     console.log('Database seed complete!');
     process.exit(0);

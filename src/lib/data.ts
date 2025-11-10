@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import type { Facility, User, Reservation, Equipment, UserRole } from "./types";
+import type { Facility, User, Equipment, UserRole } from "./types";
 import { regions, cities } from "./maroc-api";
 
 const createRandomUser = (role: UserRole, id: number): User => ({
@@ -73,35 +73,6 @@ const createRandomFacility = (allEquipments: Equipment[]): Facility => {
     };
 };
 
-const createRandomReservation = (facilities: Facility[], users: User[]): Reservation => {
-    const facility = faker.helpers.arrayElement(facilities);
-    const user = faker.helpers.arrayElement(users.filter(u => u.role === 'user'));
-    
-    const availableDates = Object.keys(facility.availability);
-    const date = faker.helpers.arrayElement(availableDates);
-    const [startTimeStr] = faker.helpers.arrayElement(facility.availability[date] || ["08:00 - 09:00"]).split(' - ');
-    const [hour] = startTimeStr.split(':');
-      
-    const startDate = new Date(date);
-    startDate.setHours(parseInt(hour, 10), 0, 0, 0);
-
-    const endDate = new Date(startDate);
-    endDate.setHours(startDate.getHours() + 1);
-
-    return {
-        id: faker.string.uuid(),
-        facilityId: facility.id,
-        userId: user.id,
-        userEmail: user.email,
-        startTime: startDate,
-        endTime: endDate,
-        status: faker.helpers.arrayElement(["confirmed", "cancelled", "pending"]),
-        createdAt: faker.date.recent({ days: 10 }),
-        updatedAt: faker.date.recent({ days: 10 }),
-        totalCost: facility.rentalCost,
-    };
-};
-
 export const users: User[] = [
     { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://i.pravatar.cc/150?u=super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date() },
     ...Array.from({ length: 10 }, (_, i) => createRandomUser("admin", i)),
@@ -116,7 +87,4 @@ export const equipments: Equipment[] = Array.from({ length: equipmentList.length
     quantity: faker.number.int({ min: 1, max: 20 }),
 }));
 
-
 export const facilities: Facility[] = Array.from({ length: 20 }, () => createRandomFacility(equipments));
-
-export const reservations: Reservation[] = Array.from({ length: 100 }, () => createRandomReservation(facilities, users));

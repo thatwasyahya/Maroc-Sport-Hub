@@ -80,11 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       { href: '/dashboard', label: 'Overview', icon: Activity },
       { href: '/dashboard/facilities', label: 'Facilities', icon: Building },
       { href: '/dashboard/equipments', label: 'Equipments', icon: Dumbbell },
-      { href: '/dashboard/reservations', label: 'Reservations', icon: CalendarDays },
     ];
-    if (userProfile?.role === 'super_admin') {
-      links.push({ href: '/dashboard/users', label: 'User Management', icon: Users });
-    }
     return links;
   }, [userProfile?.role]);
 

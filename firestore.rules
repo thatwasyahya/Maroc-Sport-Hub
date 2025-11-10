@@ -78,25 +78,6 @@ service cloud.firestore {
     }
 
     /**************************************************
-     * Subcollection: reservations
-     * Description: Manages reservations for a user.
-     **************************************************/
-    match /users/{userId}/reservations/{reservationId} {
-      allow get, list: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update, delete: if isOwner(userId) || isAdmin();
-    }
-
-    /**************************************************
-     * Collection: reservations (root level)
-     * Description: Used by admins to list all reservations.
-     **************************************************/
-     match /reservations/{reservationId} {
-       allow get, list: if isAdmin();
-       allow create, update, delete: if false; // Reservations are created under users
-     }
-
-    /**************************************************
      * Subcollection: imports
      * Description: Manages data imports by admins.
      **************************************************/

@@ -44,23 +44,6 @@
             "facilityId": { "type": "string", "description": "Reference to the Facility this equipment belongs to." }
         },
         "required": ["id", "name", "rentalCost", "facilityId"]
-    },
-    "Reservation": {
-      "title": "Reservation",
-      "type": "object",
-      "description": "Represents a reservation for a facility.",
-      "properties": {
-        "id": { "type": "string", "description": "Unique identifier for the reservation." },
-        "facilityId": { "type": "string", "description": "Reference to the Facility being reserved." },
-        "userId": { "type": "string", "description": "Reference to the User who made the reservation." },
-        "startTime": { "type": "string", "description": "Start time of the reservation.", "format": "date-time" },
-        "endTime": { "type": "string", "description": "End time of the reservation.", "format": "date-time" },
-        "status": { "type": "string", "description": "Status of the reservation (e.g., pending, confirmed, cancelled)." },
-        "totalCost": { "type": "number", "description": "Total cost of the reservation." },
-        "createdAt": { "type": "string", "description": "Timestamp indicating when the reservation was created.", "format": "date-time" },
-        "updatedAt": { "type": "string", "description": "Timestamp indicating when the reservation was last updated.", "format": "date-time" }
-      },
-      "required": ["id", "facilityId", "userId", "startTime", "endTime", "status", "totalCost"]
     }
   },
   "auth": {
@@ -87,13 +70,6 @@
         "definition": {
             "schema": { "$ref": "#/entities/Equipment" },
             "description": "Stores individual pieces of equipment that can be associated with facilities."
-        }
-      },
-      {
-        "path": "/users/{userId}/reservations/{reservationId}",
-        "definition": {
-          "schema": { "$ref": "#/entities/Reservation" },
-          "description": "Stores reservation data for a user. Accessible only by the user and admins."
         }
       },
       {
