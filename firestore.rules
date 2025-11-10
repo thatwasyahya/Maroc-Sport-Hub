@@ -1,3 +1,4 @@
+
 /**
  * @description This ruleset enforces a role-based access control model for the Maroc Sport Hub application.
  * It provides granular permissions for different user roles (super_admin, admin, user) across various data collections.

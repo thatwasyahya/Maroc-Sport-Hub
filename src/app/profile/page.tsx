@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useDoc, useFirestore, useMemoFirebase, useCollection } from "@/firebase";
@@ -78,13 +79,13 @@ export default function ProfilePage() {
 
   const userRequestsQuery = useMemoFirebase(
     () => {
-      // Create the query only when the user ID is available
-      if (user) {
+      // Important: Create the query only when the user ID is available and role is confirmed.
+      if (user && userProfile && userProfile.role === 'user') {
         return query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid));
       }
-      return null;
+      return null; // Return null if user is not ready or is an admin
     },
-    [user, firestore]
+    [user, userProfile, firestore]
   );
   const { data: facilityRequests, isLoading: isRequestsLoading } = useCollection<FacilityRequest>(userRequestsQuery);
 
