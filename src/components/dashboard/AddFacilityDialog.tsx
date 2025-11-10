@@ -36,7 +36,6 @@ import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
-import { geocodeAddressWithNominatim } from '@/services/nominatim';
 
 const facilitySchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -44,6 +43,8 @@ const facilitySchema = z.object({
   address: z.string().min(5, 'Address is required.'),
   region: z.string().min(2, "Region is required."),
   city: z.string().min(2, "City is required."),
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
@@ -81,6 +82,8 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
       address: '',
       region: '',
       city: '',
+      lat: 33.5731, // Default to Casablanca
+      lng: -7.5898,
       sports: [],
       equipments: [],
       type: 'outdoor',
@@ -111,20 +114,12 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     }
     setIsSubmitting(true);
     try {
-      const { lat, lng } = await geocodeAddressWithNominatim({ address: `${data.address}, ${data.city}, Maroc` });
-      
       const facilitiesCollectionRef = collection(firestore, 'facilities');
       
+      const { lat, lng, ...restOfData } = data;
+      
       const newFacilityData: Omit<Facility, 'id' | 'photos' > & { createdAt: any, updatedAt: any } = {
-        name: data.name,
-        description: data.description,
-        address: data.address,
-        region: data.region,
-        city: data.city,
-        sports: data.sports,
-        type: data.type,
-        accessible: data.accessible,
-        equipments: data.equipments || [],
+        ...restOfData,
         adminId: user.uid,
         location: { lat, lng },
         createdAt: serverTimestamp(),
@@ -164,34 +159,32 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Facility Name</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g., City Stadium" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g., 123 Main St" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Facility Name</FormLabel>
+                      <FormControl>
+                          <Input placeholder="e.g., City Stadium" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                          <Input placeholder="e.g., 123 Main St" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                       control={form.control}
@@ -237,6 +230,35 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                       </FormItem>
                       )}
                   />
+                </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lat"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Latitude</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="any" placeholder="e.g., 33.5731" {...field} />
+                          </FormControl>
+                           <FormDescription>Find with a right-click on Google Maps.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="lng"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Longitude</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="any" placeholder="e.g., -7.5898" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
                 <FormField
                   control={form.control}

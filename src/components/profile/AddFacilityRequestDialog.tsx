@@ -35,7 +35,6 @@ import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
-import { geocodeAddressWithNominatim } from '@/services/nominatim';
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -43,6 +42,8 @@ const facilityRequestSchema = z.object({
   address: z.string().min(5, 'Address is required.'),
   region: z.string().min(2, "Region is required."),
   city: z.string().min(2, "City is required."),
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
@@ -80,6 +81,8 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       address: '',
       region: '',
       city: '',
+      lat: 33.5731, // Default to Casablanca
+      lng: -7.5898,
       sports: [],
       equipments: [],
       type: 'outdoor',
@@ -110,12 +113,12 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
-      const { lat, lng } = await geocodeAddressWithNominatim({ address: `${data.address}, ${data.city}, Maroc` });
-      
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
 
+      const { lat, lng, ...restOfData } = data;
+
       await addDoc(requestsCollectionRef, {
-        ...data,
+        ...restOfData,
         userId: user.uid,
         userName: user.displayName || user.email,
         status: 'pending',
@@ -155,34 +158,32 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Nom de l'installation</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g., City Stadium" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Adresse</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g., 123 Main St" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Nom de l'installation</FormLabel>
+                      <FormControl>
+                          <Input placeholder="e.g., City Stadium" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Adresse</FormLabel>
+                      <FormControl>
+                          <Input placeholder="e.g., 123 Main St" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                       control={form.control}
@@ -228,6 +229,35 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                       </FormItem>
                       )}
                   />
+                </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lat"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Latitude</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="any" placeholder="e.g., 33.5731" {...field} />
+                          </FormControl>
+                           <FormDescription>Find with a right-click on Google Maps.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="lng"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Longitude</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="any" placeholder="e.g., -7.5898" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
                 <FormField
                   control={form.control}
