@@ -2,7 +2,7 @@
 /**
  * @description This ruleset enforces a role-based access control model for the Maroc Sport Hub application.
  * It provides granular permissions for different user roles (super_admin, admin, user) across various data collections.
- * The core security principle is using Firebase Auth Custom Claims for role checking.
+ * The core security principle is now fetching the user's role from their document in the 'users' collection.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -17,11 +17,13 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
-      return request.auth.token.role == 'super_admin';
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin';
     }
     
     function isAdmin() {
-      return request.auth.token.role == 'admin' || isSuperAdmin();
+      // An admin is either someone with the 'admin' role or a super_admin.
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return userRole == 'admin' || userRole == 'super_admin';
     }
     
     function isOwner(userId) {
@@ -36,7 +38,9 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isSuperAdmin();
       allow create: if isOwner(userId);
+      // A user can update their own profile. A super_admin can update any profile.
       allow update: if isOwner(userId) || isSuperAdmin();
+      // A user can delete their own profile. A super_admin can delete any profile.
       allow delete: if isOwner(userId) || isSuperAdmin();
     }
     
@@ -47,7 +51,7 @@ service cloud.firestore {
     match /facilities/{facilityId} {
       allow read: if true; // Publicly readable
       allow create: if isAdmin();
-      // Only the facility admin or a super_admin can update/delete
+      // Only the facility admin (referenced by adminId) or a super_admin can update/delete.
       allow update, delete: if (isAdmin() && resource.data.adminId == request.auth.uid) || isSuperAdmin();
     }
     
@@ -62,10 +66,10 @@ service cloud.firestore {
        // A user can create a request for themselves.
        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
        
-       // Only admins can update (approve/reject) a request.
+       // Only admins or super_admins can update (approve/reject) a request.
        allow update: if isAdmin();
 
-       // Admins can delete any request. Users can only delete their own PENDING requests.
+       // Admins/super_admins can delete any request. Users can only delete their own PENDING requests.
        allow delete: if isSignedIn() && (isAdmin() || (resource.data.userId == request.auth.uid && resource.data.status == 'pending'));
      }
   }
