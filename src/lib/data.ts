@@ -8,13 +8,27 @@ const createRandomUser = (role: UserRole, id: number): User => ({
   firstName: faker.person.firstName(),
   lastName: faker.person.lastName(),
   email: faker.internet.email(),
-  avatarUrl: `https://i.pravatar.cc/150?u=${id}`,
+  avatarUrl: `https://avatar.iran.liara.run/public/${id}`,
   role,
   createdAt: faker.date.recent(),
   updatedAt: faker.date.recent(),
 });
 
-export const sports = ["Football", "Basketball", "Tennis", "Handball", "Volleyball", "Natation", "Athlétisme", "Yoga", "Musculation", "CrossFit", "Padel"].sort();
+export const sports = [
+    "Aérobic", "Aïkido", "Athlétisme", "Aviron", "Badminton", "Baseball", "Basketball", 
+    "Biathlon", "Billard", "BMX", "Bobsleigh", "Boxe", "Canoë-kayak", "Canyonisme", 
+    "Capoeira", "Cheerleading", "Course d'orientation", "Cricket", "CrossFit", "Curling", 
+    "Cyclisme", "Danse", "Deltaplane", "Équitation", "Escalade", "Escrime", "Football", 
+    "Football américain", "Futsal", "Golf", "Gymnastique", "Haltérophilie", "Handball", 
+    "Hockey sur gazon", "Hockey sur glace", "Jiu-jitsu", "Judo", "Karaté", "Kendo", 
+    "Kitesurf", "Kung-fu", "Luge", "Lutte", "MMA (Arts martiaux mixtes)", "Motocross", 
+    "Musculation", "Natation", "Natation synchronisée", "Padel", "Parachutisme", "Parkour", 
+    "Patinage artistique", "Patinage de vitesse", "Pêche sportive", "Pentathlon moderne", 
+    "Pétanque", "Plongée", "Racquetball", "Randonnée", "Rafting", "Roller", "Rugby", 
+    "Skateboard", "Ski", "Snowboard", "Softball", "Spéléologie", "Squash", "Sumo", 
+    "Surf", "Taekwondo", "Tennis", "Tennis de table", "Tir à l'arc", "Triathlon", 
+    "Voile", "Volleyball", "VTT (Vélo tout terrain)", "Water-polo", "Yoga"
+].sort();
 
 export const equipmentList = [
     "Haltères", "Tapis de course", "Vélos elliptiques", "Balles de yoga", "Filets de volley-ball", 
@@ -58,7 +72,7 @@ const createRandomFacility = (): Facility => {
 };
 
 export const users: User[] = [
-    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://i.pravatar.cc/150?u=super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date() },
+    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://avatar.iran.liara.run/public/super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date() },
     ...Array.from({ length: 10 }, (_, i) => createRandomUser("admin", i)),
     ...Array.from({ length: 50 }, (_, i) => createRandomUser("user", i + 10)),
 ];
