@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth, useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import type { User, FacilityRequest } from '@/lib/types';
 import Header from '@/components/header';
@@ -9,10 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Loader2, Pencil } from 'lucide-react';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import AddFacilityRequestDialog from '@/components/profile/AddFacilityRequestDialog';
-import AvatarSelectionDialog from '@/components/profile/AvatarSelectionDialog'; // Import the new component
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 
@@ -59,7 +59,6 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const [isAddRequestOpen, setIsAddRequestOpen] = useState(false);
-    const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false); // State for avatar dialog
 
     // Memoize user document reference
     const userDocRef = useMemoFirebase(
@@ -122,20 +121,10 @@ export default function ProfilePage() {
                             <div className="md:col-span-1">
                                 <Card>
                                     <CardContent className="pt-6 flex flex-col items-center text-center">
-                                        <div className="relative group">
-                                            <Avatar className="h-24 w-24 mb-4">
-                                                <AvatarImage src={userProfile.avatarUrl || user.photoURL || undefined} alt={userProfile.name} />
-                                                <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
-                                            </Avatar>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="absolute bottom-4 right-0 rounded-full h-8 w-8 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                                                onClick={() => setIsAvatarDialogOpen(true)}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                        </div>
+                                        <Avatar className="h-24 w-24 mb-4">
+                                            <AvatarImage src={userProfile.avatarUrl || user.photoURL || undefined} alt={userProfile.name} />
+                                            <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
+                                        </Avatar>
                                         <h2 className="text-2xl font-bold">{userProfile.name}</h2>
                                         <p className="text-muted-foreground mb-4">{userProfile.email}</p>
                                         <Badge variant="outline">{userProfile.role}</Badge>
@@ -201,7 +190,6 @@ export default function ProfilePage() {
                 </main>
             </div>
             <AddFacilityRequestDialog open={isAddRequestOpen} onOpenChange={setIsAddRequestOpen} />
-            <AvatarSelectionDialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen} />
         </>
     );
 }

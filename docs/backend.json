@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -80,7 +81,8 @@
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
             }
-        }
+        },
+        "attachmentUrl": { "type": "string", "description": "URL of the uploaded attachment for the request." }
       },
       "required": ["userId", "userName", "status", "name", "region", "city", "sports", "type", "createdAt", "location"]
     }

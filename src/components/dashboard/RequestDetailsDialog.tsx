@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { FacilityRequest } from '@/lib/types';
@@ -12,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, User } from 'lucide-react';
+import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -117,6 +118,21 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                         </div>
                     )}
                 </div>
+
+                {request.attachmentUrl && (
+                  <>
+                    <Separator />
+                    <div className="grid gap-2">
+                        <h3 className="font-semibold">Pièce Jointe</h3>
+                        <Button variant="outline" asChild className="w-fit">
+                            <a href={request.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                <Paperclip className="mr-2 h-4 w-4" />
+                                Voir la pièce jointe
+                            </a>
+                        </Button>
+                    </div>
+                  </>
+                )}
 
 
                 {request.status === 'rejected' && request.rejectionReason && (

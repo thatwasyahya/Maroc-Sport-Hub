@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -23,8 +24,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useFirebaseApp } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Checkbox } from '../ui/checkbox';
@@ -33,11 +35,13 @@ import { ScrollArea } from '../ui/scroll-area';
 import { sports } from '@/lib/data';
 import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { PlusCircle, Trash2, Search } from 'lucide-react';
+import { PlusCircle, Trash2, Search, Loader2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
-import { geocodeAddress } from '@/services/nominatim';
 import type { FacilityRequest } from '@/lib/types';
+import { geocodeAddress } from '@/services/nominatim';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -45,8 +49,6 @@ const facilityRequestSchema = z.object({
   address: z.string().min(5, 'Address is required.'),
   region: z.string().min(2, "Region is required."),
   city: z.string().min(2, "City is required."),
-  lat: z.coerce.number().optional(),
-  lng: z.coerce.number().optional(),
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
@@ -56,6 +58,12 @@ const facilityRequestSchema = z.object({
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
+  attachment: z.instanceof(File).optional()
+    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (file) => !file || ACCEPTED_FILE_TYPES.includes(file.type),
+      "Only .jpg, .jpeg, .png, .webp and .pdf formats are supported."
+    ),
 });
 
 type FacilityRequestFormValues = z.infer<typeof facilityRequestSchema>;
@@ -68,6 +76,7 @@ interface AddFacilityRequestDialogProps {
 export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFacilityRequestDialogProps) {
   const { user } = useUser();
   const firestore = useFirestore();
+  const firebaseApp = useFirebaseApp();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -116,6 +125,8 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     setGeocodingStatus('idle');
   }, [addressWatched, cityWatched]);
 
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
 
   const handleGeocode = async () => {
     const address = form.getValues("address");
@@ -137,8 +148,8 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       const fullAddress = `${address}, ${city}, ${region}, Morocco`;
       const location = await geocodeAddress(fullAddress);
       if (location) {
-        form.setValue("lat", location.lat);
-        form.setValue("lng", location.lng);
+        setLat(location.lat);
+        setLng(location.lng);
         setGeocodingStatus('success');
         toast({
           title: "Emplacement trouvé",
@@ -170,20 +181,23 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
       return;
     }
-    if (!data.lat || !data.lng) {
+    if (lat === null || lng === null) {
       toast({ variant: 'destructive', title: 'Coordonnées manquantes', description: "Veuillez utiliser le bouton 'Trouver sur la carte' pour obtenir les coordonnées avant de soumettre." });
       return;
     }
     setIsSubmitting(true);
     try {
-      const requestsCollectionRef = collection(firestore, 'facilityRequests');
-      
-      const location = {
-          lat: data.lat,
-          lng: data.lng,
-      };
+      const { attachment, ...restOfData } = data;
+      let attachmentUrl: string | undefined = undefined;
 
-      const { lat, lng, ...restOfData } = data;
+      if (attachment) {
+        const storage = getStorage(firebaseApp);
+        const fileRef = storageRef(storage, `facility-requests/${user.uid}/${Date.now()}-${attachment.name}`);
+        await uploadBytes(fileRef, attachment);
+        attachmentUrl = await getDownloadURL(fileRef);
+      }
+      
+      const location = { lat, lng };
 
       const newRequestData: Omit<FacilityRequest, 'id'> = {
         ...restOfData,
@@ -193,8 +207,10 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         location,
+        attachmentUrl
       };
 
+      const requestsCollectionRef = collection(firestore, 'facilityRequests');
       await addDoc(requestsCollectionRef, newRequestData);
 
       toast({
@@ -202,6 +218,9 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         description: `Your request for ${data.name} has been successfully submitted for review.`,
       });
       form.reset();
+      setLat(null);
+      setLng(null);
+      setGeocodingStatus('idle');
       onOpenChange(false);
     } catch (error) {
       console.error('Error adding facility request:', error);
@@ -299,7 +318,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                         </FormControl>
                         <div className='flex flex-col gap-1'>
                             <Button type="button" onClick={handleGeocode} disabled={isGeocoding}>
-                                <Search className="mr-2 h-4 w-4" />
+                                {isGeocoding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
                                 {isGeocoding ? 'Recherche...' : 'Trouver sur la carte'}
                             </Button>
                             {geocodingStatus === 'success' && <FormDescription className='text-green-600'>Coordonnées trouvées !</FormDescription>}
@@ -398,6 +417,28 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                     </FormItem>
                   )}
                 />
+
+                 <FormField
+                    control={form.control}
+                    name="attachment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
+                        <FormDescription>
+                          Ajoutez une image ou un PDF (max 5MB).
+                        </FormDescription>
+                        <FormControl>
+                          <Input 
+                            type="file" 
+                            accept={ACCEPTED_FILE_TYPES.join(',')}
+                            onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : undefined)}
+                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                 <div className="flex gap-8 pt-4">
                     <FormField
                         control={form.control}
@@ -453,6 +494,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
             <DialogFooter className="pt-4">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
               <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isSubmitting ? 'Envoi en cours...' : 'Soumettre la Demande'}
               </Button>
             </DialogFooter>

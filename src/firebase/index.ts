@@ -1,9 +1,11 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -13,26 +15,29 @@ export function initializeFirebase() {
 
   const firestore = getFirestore(app);
   const auth = getAuth(app);
+  const storage = getStorage(app);
 
   if (isEmulator) {
     console.log('Using Firebase Emulators');
     try {
       connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
       connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+      connectStorageEmulator(storage, '127.0.0.1', 9199);
     } catch (e) {
       // Emulators are likely already connected
       // console.warn(e);
     }
   }
 
-  return { firebaseApp: app, auth, firestore };
+  return { firebaseApp: app, auth, firestore, storage };
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firestore: getFirestore(firebaseApp),
+    storage: getStorage(firebaseApp)
   };
 }
 

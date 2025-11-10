@@ -61,4 +61,5 @@ export interface FacilityRequest {
     lat: number;
     lng: number;
   };
+  attachmentUrl?: string;
 }
