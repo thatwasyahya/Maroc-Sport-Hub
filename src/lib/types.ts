@@ -21,7 +21,7 @@ export interface Equipment {
 }
 
 export interface Facility {
-  id: string;
+  id:string;
   adminId: string;
   external_id?: string;
   name: string;
@@ -41,4 +41,27 @@ export interface Facility {
   rentalCost: number; // Cost per hour
   depositCost: number;
   // Removed availability
+}
+
+export type RequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface FacilityRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  status: RequestStatus;
+  rejectionReason?: string;
+  name: string;
+  description: string;
+  address: string;
+  region: string;
+  city: string;
+  rentalCost: number;
+  depositCost: number;
+  sports: string[];
+  equipmentIds: string[];
+  type: 'indoor' | 'outdoor';
+  accessible: boolean;
+  createdAt: any;
+  updatedAt: any;
 }

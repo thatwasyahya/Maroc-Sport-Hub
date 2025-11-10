@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Building, Users, Home, Loader, ShieldAlert, Dumbbell, CalendarDays, FileText } from 'lucide-react';
+import { Activity, Building, Users, Home, Loader, ShieldAlert, Dumbbell, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 import { useMemo } from 'react';
@@ -22,6 +22,7 @@ function DashboardLayoutSkeleton() {
           </Link>
         </div>
         <nav className="flex-1 p-4 space-y-2">
+          <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
           <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
           <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
           <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
@@ -78,6 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navLinks = useMemo(() => {
     const links = [
       { href: '/dashboard', label: 'Overview', icon: Activity },
+      { href: '/dashboard/requests', label: 'Requests', icon: FileText },
       { href: '/dashboard/facilities', label: 'Facilities', icon: Building },
       { href: '/dashboard/equipments', label: 'Equipments', icon: Dumbbell },
     ];

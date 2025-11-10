@@ -44,6 +44,31 @@
             "facilityId": { "type": "string", "description": "Reference to the Facility this equipment belongs to." }
         },
         "required": ["id", "name", "rentalCost"]
+    },
+    "FacilityRequest": {
+      "title": "FacilityRequest",
+      "description": "Represents a user's request to add a new facility.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The ID of the user who submitted the request." },
+        "userName": { "type": "string", "description": "The name of the user who submitted the request." },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "The current status of the request." },
+        "rejectionReason": { "type": "string", "description": "Reason for rejection, if applicable." },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "address": { "type": "string" },
+        "region": { "type": "string" },
+        "city": { "type": "string" },
+        "rentalCost": { "type": "number" },
+        "depositCost": { "type": "number" },
+        "sports": { "type": "array", "items": { "type": "string" } },
+        "equipmentIds": { "type": "array", "items": { "type": "string" } },
+        "type": { "type": "string", "enum": ["indoor", "outdoor"] },
+        "accessible": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userName", "status", "name", "region", "city", "rentalCost", "sports", "type", "createdAt"]
     }
   },
   "auth": {
@@ -55,7 +80,7 @@
         "path": "/users/{userId}",
         "definition": {
           "schema": { "$ref": "#/entities/User" },
-          "description": "Stores user profile data. The 'role' field is informational. Actual permissions are determined by the 'roles_*' collections."
+          "description": "Stores user profile data."
         }
       },
       {
@@ -73,15 +98,10 @@
         }
       },
       {
-        "path": "/roles_admin/{userId}",
+        "path": "/facilityRequests/{requestId}",
         "definition": {
-          "description": "A document in this collection signifies that the user with the ID 'userId' has the 'admin' role. The document itself can be empty."
-        }
-      },
-      {
-        "path": "/roles_super_admin/{userId}",
-        "definition": {
-          "description": "A document in this collection signifies that the user with the ID 'userId' has the 'super_admin' role. The document itself can be empty."
+          "schema": { "$ref": "#/entities/FacilityRequest" },
+          "description": "Stores user submissions for new facilities. Awaits admin approval."
         }
       }
     ]
