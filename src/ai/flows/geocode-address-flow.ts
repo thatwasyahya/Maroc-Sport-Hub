@@ -46,10 +46,10 @@ export async function geocodeAddress(
     const data = await response.json();
 
     if (data && data.length > 0) {
-      const { lat, lon } = data[0];
+      const { lat, lon } = data[0]; // Correctly read 'lon' from the API response
       return {
         lat: parseFloat(lat),
-        lng: parseFloat(lon),
+        lng: parseFloat(lon), // Assign 'lon' to 'lng'
       };
     } else {
       throw new Error('No results found for the address.');
