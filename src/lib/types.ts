@@ -51,7 +51,6 @@ export interface FacilityRequest {
     userId: string;
     userEmail: string;
     userName: string;
-    facilityName: string;
     status: RequestStatus;
     rejectionReason?: string;
     createdAt: any;

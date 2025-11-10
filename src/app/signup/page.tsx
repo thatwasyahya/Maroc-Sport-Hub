@@ -8,9 +8,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useFirestore } from '@/firebase';
-import { doc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { UserRole } from '@/lib/types';
+import { getAuth } from 'firebase-admin/auth';
+import { User } from 'firebase/auth';
+
 
 export default function SignupPage() {
   const { toast } = useToast();
@@ -47,25 +50,18 @@ export default function SignupPage() {
 
       // - Create the user document in the `users` collection
       const userDocRef = doc(firestore, 'users', user.uid);
+      const [firstName, ...lastName] = fullName.split(' ');
       const newUser = {
         id: user.uid,
         email: user.email,
-        firstName: fullName.split(' ')[0] || '',
-        lastName: fullName.split(' ').slice(1).join(' ') || '',
+        name: fullName,
+        firstName: firstName || '',
+        lastName: lastName.join(' ') || '',
         role: role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
       batch.set(userDocRef, newUser);
-
-      // - Create the role document in the corresponding `roles_*` collection
-      if (role === 'super_admin') {
-        const superAdminRoleDoc = doc(firestore, 'roles_super_admin', user.uid);
-        batch.set(superAdminRoleDoc, { createdAt: serverTimestamp() });
-      } else if (role === 'admin') {
-        const adminRoleDoc = doc(firestore, 'roles_admin', user.uid);
-        batch.set(adminRoleDoc, { createdAt: serverTimestamp() });
-      }
 
       // 4. Commit the batch. This is an atomic operation.
       // We explicitly await this to ensure all data is written before proceeding.

@@ -64,7 +64,7 @@ service cloud.firestore {
      * Description: Manages user requests to add new facilities.
      **************************************************/
     match /facilityRequests/{requestId} {
-      allow get: if isSignedIn();
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow list: if isAdmin();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       // Admins can update a request to approve or reject it

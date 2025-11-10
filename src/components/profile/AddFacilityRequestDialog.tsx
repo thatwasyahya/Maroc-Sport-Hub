@@ -106,7 +106,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         userId: user.uid,
         userEmail: user.email,
         userName: user.displayName || user.email,
-        facilityName: data.name,
         status: 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
