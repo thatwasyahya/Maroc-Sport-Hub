@@ -177,12 +177,19 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     try {
       const facilitiesCollectionRef = collection(firestore, 'facilities');
       
+      // Explicitly create the location object for Firestore
+      const location = {
+        lat: data.lat,
+        lng: data.lng,
+      };
+
+      // Remove lat and lng from the top-level data object before saving
       const { lat, lng, ...restOfData } = data;
       
       const newFacilityData: Omit<Facility, 'id' | 'photos' > & { createdAt: any, updatedAt: any } = {
         ...restOfData,
         adminId: user.uid,
-        location: { lat: lat!, lng: lng! },
+        location, // Use the new location object
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };

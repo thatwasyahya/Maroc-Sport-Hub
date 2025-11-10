@@ -36,6 +36,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { PlusCircle, Trash2, Search } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { geocodeAddress } from '@/services/nominatim';
+import type { FacilityRequest } from '@/lib/types';
+
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -175,18 +177,25 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     setIsSubmitting(true);
     try {
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
+      
+      const location = {
+          lat: data.lat,
+          lng: data.lng,
+      };
 
       const { lat, lng, ...restOfData } = data;
 
-      await addDoc(requestsCollectionRef, {
+      const newRequestData: Omit<FacilityRequest, 'id'> = {
         ...restOfData,
         userId: user.uid,
-        userName: user.displayName || user.email,
+        userName: user.displayName || user.email || 'Anonymous',
         status: 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        location: { lat: lat!, lng: lng! },
-      });
+        location,
+      };
+
+      await addDoc(requestsCollectionRef, newRequestData);
 
       toast({
         title: 'Request Submitted',

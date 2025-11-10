@@ -42,6 +42,7 @@ export default function RequestsList() {
 
         const batch = writeBatch(firestore);
         const newFacilityRef = doc(collection(firestore, 'facilities'));
+        // Ensure location is passed correctly
         const newFacilityData: Omit<Facility, 'id'> & { createdAt: any, updatedAt: any } = {
             adminId: request.userId,
             name: request.name,
