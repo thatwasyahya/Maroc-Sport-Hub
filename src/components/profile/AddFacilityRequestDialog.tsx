@@ -26,7 +26,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser, useFirestore, useFirebaseApp } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Checkbox } from '../ui/checkbox';
@@ -40,8 +39,18 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import type { FacilityRequest } from '@/lib/types';
 import { geocodeAddress } from '@/services/nominatim';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
+
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -59,7 +68,7 @@ const facilityRequestSchema = z.object({
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
   attachment: z.instanceof(File).optional()
-    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 2MB.`)
     .refine(
       (file) => !file || ACCEPTED_FILE_TYPES.includes(file.type),
       "Only .jpg, .jpeg, .png, .webp and .pdf formats are supported."
@@ -76,7 +85,6 @@ interface AddFacilityRequestDialogProps {
 export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFacilityRequestDialogProps) {
   const { user } = useUser();
   const firestore = useFirestore();
-  const firebaseApp = useFirebaseApp();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -188,13 +196,10 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     setIsSubmitting(true);
     try {
       const { attachment, ...restOfData } = data;
-      let attachmentUrl: string | undefined = undefined;
+      let attachmentDataUrl: string | undefined = undefined;
 
       if (attachment) {
-        const storage = getStorage(firebaseApp);
-        const fileRef = storageRef(storage, `facility-requests/${user.uid}/${Date.now()}-${attachment.name}`);
-        await uploadBytes(fileRef, attachment);
-        attachmentUrl = await getDownloadURL(fileRef);
+        attachmentDataUrl = await fileToBase64(attachment);
       }
       
       const location = { lat, lng };
@@ -207,7 +212,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         location,
-        attachmentUrl
+        attachmentUrl: attachmentDataUrl
       };
 
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
@@ -425,7 +430,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                       <FormItem>
                         <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
                         <FormDescription>
-                          Ajoutez une image ou un PDF (max 5MB).
+                          Ajoutez une image ou un PDF (max 2MB).
                         </FormDescription>
                         <FormControl>
                           <Input 
@@ -504,3 +509,5 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     </Dialog>
   );
 }
+
+    

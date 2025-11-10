@@ -61,7 +61,7 @@ export default function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={userProfile?.avatarUrl || user.photoURL || undefined} alt={displayName || ""} />
+                    <AvatarImage src={undefined} alt={displayName || ""} />
                     <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -112,3 +112,5 @@ export default function Header() {
     </header>
   );
 }
+
+    

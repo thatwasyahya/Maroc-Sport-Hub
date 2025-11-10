@@ -1,4 +1,5 @@
 
+
 export type UserRole = "super_admin" | "admin" | "user";
 
 export interface User {
@@ -61,5 +62,7 @@ export interface FacilityRequest {
     lat: number;
     lng: number;
   };
-  attachmentUrl?: string;
+  attachmentUrl?: string; // This will now store a Base64 data URL
 }
+
+    

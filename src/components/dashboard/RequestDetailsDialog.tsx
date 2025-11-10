@@ -13,9 +13,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Paperclip } from 'lucide-react';
+import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Paperclip, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
+import { useUser } from '@/firebase';
 
 interface RequestDetailsDialogProps {
   request: FacilityRequest | null;
@@ -24,6 +25,7 @@ interface RequestDetailsDialogProps {
 }
 
 export default function RequestDetailsDialog({ request, open, onOpenChange }: RequestDetailsDialogProps) {
+  const { user } = useUser();
   if (!request) return null;
   
   const getStatusBadgeVariant = (status: FacilityRequest['status']) => {
@@ -34,6 +36,20 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
             default: return 'outline';
         }
     };
+  
+    const handleViewAttachment = () => {
+      if (!request.attachmentUrl || !user?.email) return;
+
+      const subject = `Pièce jointe pour la demande : ${request.name}`;
+      const body = `Veuillez trouver la pièce jointe pour la demande de l'installation "${request.name}" soumise par ${request.userName}.`;
+      
+      // The attachmentUrl is a Base64 data URL. We need to split it to get the content for the body.
+      // This is a bit of a hack to "attach" it to a mailto link. It might not work in all email clients
+      // if the data URL is too long.
+      const mailtoLink = `mailto:${user.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}%0A%0A---%0A%0APour "attacher" le fichier, copiez la ligne suivante et collez-la dans un éditeur de texte pour la sauvegarder avec la bonne extension si nécessaire :%0A%0A${request.attachmentUrl}`;
+
+      window.open(mailtoLink, '_blank');
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,12 +140,15 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                     <Separator />
                     <div className="grid gap-2">
                         <h3 className="font-semibold">Pièce Jointe</h3>
-                        <Button variant="outline" asChild className="w-fit">
-                            <a href={request.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                                <Paperclip className="mr-2 h-4 w-4" />
-                                Voir la pièce jointe
+                         <Button variant="outline" asChild className="w-fit" onClick={handleViewAttachment}>
+                            <a>
+                                <Mail className="mr-2 h-4 w-4" />
+                                Envoyer la pièce jointe par e-mail
                             </a>
                         </Button>
+                        <p className="text-xs text-muted-foreground">
+                            Cliquez pour vous envoyer un e-mail contenant la pièce jointe.
+                        </p>
                     </div>
                   </>
                 )}
@@ -156,3 +175,5 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
     </Dialog>
   );
 }
+
+    

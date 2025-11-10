@@ -1,3 +1,4 @@
+
 'use client';
     
 import {
@@ -88,9 +89,4 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
     });
 }
 
-/**
- * Updates a user's avatar URL.
- */
-export function updateUserAvatar(docRef: DocumentReference, avatarUrl: string) {
-    return updateDocumentNonBlocking(docRef, { avatarUrl });
-}
+    
