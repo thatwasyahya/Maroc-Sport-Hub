@@ -65,20 +65,26 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (isClient && !isUserLoading && !user) {
       router.push("/login");
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, isClient]);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
-  
+
   const userRequestsQuery = useMemoFirebase(
-    () => (user ? query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid)) : null),
-    [user, firestore]
+    () => {
+      // Only create the query if we have a user and their profile, and they are a 'user'
+      if (user && userProfile && userProfile.role === 'user') {
+        return query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid));
+      }
+      return null; // Return null if conditions are not met
+    },
+    [user, userProfile, firestore] // Depend on userProfile
   );
   const { data: facilityRequests, isLoading: isRequestsLoading } = useCollection<FacilityRequest>(userRequestsQuery);
 
@@ -130,47 +136,51 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>My Facility Requests</CardTitle>
-              <CardDescription>Track the status of your facility addition requests here.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Facility Name</TableHead>
-                    <TableHead>Date Submitted</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Reason (if rejected)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isRequestsLoading ? (
+          {userProfile.role === 'user' && (
+             <Card>
+                <CardHeader>
+                <CardTitle>My Facility Requests</CardTitle>
+                <CardDescription>Track the status of your facility addition requests here.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Table>
+                    <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">Loading requests...</TableCell>
+                        <TableHead>Facility Name</TableHead>
+                        <TableHead>Date Submitted</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Reason (if rejected)</TableHead>
                     </TableRow>
-                  ) : facilityRequests && facilityRequests.length > 0 ? (
-                    facilityRequests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell className="font-medium">{request.name}</TableCell>
-                        <TableCell>{request.createdAt?.toDate ? format(request.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
-                        <TableCell><Badge variant={getStatusBadgeVariant(request.status)} className="capitalize">{request.status}</Badge></TableCell>
-                        <TableCell>{request.rejectionReason || 'N/A'}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">You haven&apos;t submitted any requests yet.</TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                    </TableHeader>
+                    <TableBody>
+                    {isRequestsLoading ? (
+                        <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">Loading requests...</TableCell>
+                        </TableRow>
+                    ) : facilityRequests && facilityRequests.length > 0 ? (
+                        facilityRequests.map((request) => (
+                        <TableRow key={request.id}>
+                            <TableCell className="font-medium">{request.name}</TableCell>
+                            <TableCell>{request.createdAt?.toDate ? format(request.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
+                            <TableCell><Badge variant={getStatusBadgeVariant(request.status)} className="capitalize">{request.status}</Badge></TableCell>
+                            <TableCell>{request.rejectionReason || 'N/A'}</TableCell>
+                        </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">You haven&apos;t submitted any requests yet.</TableCell>
+                        </TableRow>
+                    )}
+                    </TableBody>
+                </Table>
+                </CardContent>
+            </Card>
+          )}
         </div>
       </main>
       <AddFacilityRequestDialog open={isAddRequestDialogOpen} onOpenChange={setIsAddRequestDialogOpen} />
     </div>
   );
 }
+
+    
