@@ -18,7 +18,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
@@ -28,6 +27,7 @@ export default function RequestsList() {
   const { toast } = useToast();
   const [rejectionReason, setRejectionReason] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<FacilityRequest | null>(null);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
   const requestsCollectionRef = useMemoFirebase(
     () => collection(firestore, 'facilityRequests'),
@@ -57,7 +57,7 @@ export default function RequestsList() {
         adminId: request.userId,
         equipmentIds: [],
         photos: [],
-        location: { lat: 33.5731, lng: -7.5898 },
+        location: { lat: 33.5731, lng: -7.5898 }, // TODO: Implement real geocoding
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -114,9 +114,15 @@ export default function RequestsList() {
         description: 'An error occurred while rejecting the request.',
       });
     } finally {
+        setIsRejectDialogOpen(false);
         setSelectedRequest(null);
         setRejectionReason('');
     }
+  };
+
+  const openRejectDialog = (request: FacilityRequest) => {
+    setSelectedRequest(request);
+    setIsRejectDialogOpen(true);
   };
 
   return (
@@ -152,9 +158,7 @@ export default function RequestsList() {
                     <TableCell>
                       <div className="flex gap-2">
                         <Button size="sm" onClick={() => handleApprove(request)}>Approve</Button>
-                        <AlertDialogTrigger asChild>
-                           <Button size="sm" variant="destructive" onClick={() => setSelectedRequest(request)}>Reject</Button>
-                        </AlertDialogTrigger>
+                        <Button size="sm" variant="destructive" onClick={() => openRejectDialog(request)}>Reject</Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -169,7 +173,7 @@ export default function RequestsList() {
         </CardContent>
       </Card>
 
-      <AlertDialog>
+      <AlertDialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
           <AlertDialogContent>
               <AlertDialogHeader>
               <AlertDialogTitle>Reject Facility Request</AlertDialogTitle>
