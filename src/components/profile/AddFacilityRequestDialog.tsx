@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth, useFirestore } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
@@ -47,7 +47,7 @@ const facilityRequestSchema = z.object({
   }),
   equipments: z.array(z.object({
     name: z.string().min(1, 'Equipment name cannot be empty.'),
-    quantity: z.string(),
+    quantity: z.string().min(1, 'Quantity is required.'),
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
@@ -61,7 +61,7 @@ interface AddFacilityRequestDialogProps {
 }
 
 export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFacilityRequestDialogProps) {
-  const { user } = useAuth();
+  const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -255,19 +255,9 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                         render={({ field }) => (
                           <FormItem className="w-24">
                             <FormLabel className="text-xs">Qté</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Qté" />
-                                </SelectTrigger>
+                             <FormControl>
+                                <Input placeholder="ex: 5 ou X" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="X">X</SelectItem>
-                                {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                                  <SelectItem key={num} value={String(num)}>{num}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}

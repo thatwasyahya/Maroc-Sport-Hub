@@ -57,3 +57,10 @@ export interface FacilityRequest {
   createdAt: any;
   updatedAt: any;
 }
+
+export interface Equipment {
+    id: string;
+    name: string;
+    createdAt: any;
+    updatedAt: any;
+}

@@ -48,7 +48,7 @@ const facilitySchema = z.object({
   }),
   equipments: z.array(z.object({
     name: z.string().min(1, 'Equipment name cannot be empty.'),
-    quantity: z.string(),
+    quantity: z.string().min(1, 'Quantity is required.'),
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
@@ -265,19 +265,9 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                         render={({ field }) => (
                           <FormItem className="w-24">
                             <FormLabel className="text-xs">Quantity</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Qty" />
-                                </SelectTrigger>
+                             <FormControl>
+                                <Input placeholder="e.g., 5 or X" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="X">X</SelectItem>
-                                {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                                  <SelectItem key={num} value={String(num)}>{num}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
