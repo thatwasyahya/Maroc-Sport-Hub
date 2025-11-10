@@ -53,7 +53,7 @@ export default function RequestsList() {
             type: request.type,
             accessible: request.accessible,
             equipments: request.equipments || [],
-            location: { lat: 33.5731, lng: -7.5898 },
+            location: request.location,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         };

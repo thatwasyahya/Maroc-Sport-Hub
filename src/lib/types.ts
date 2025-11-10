@@ -56,4 +56,8 @@ export interface FacilityRequest {
   accessible: boolean;
   createdAt: any;
   updatedAt: any;
+  location: {
+    lat: number;
+    lng: number;
+  };
 }

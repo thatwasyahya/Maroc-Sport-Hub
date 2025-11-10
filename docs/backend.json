@@ -40,9 +40,16 @@
           "type": "array", 
           "items": { "$ref": "#/entities/EquipmentItem" }, 
           "description": "List of equipment available at the facility." 
+        },
+        "location": {
+            "type": "object",
+            "properties": {
+                "lat": { "type": "number" },
+                "lng": { "type": "number" }
+            }
         }
       },
-      "required": ["id", "name"]
+      "required": ["id", "name", "location"]
     },
     "FacilityRequest": {
       "title": "FacilityRequest",
@@ -66,9 +73,16 @@
         "type": { "type": "string", "enum": ["indoor", "outdoor"] },
         "accessible": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "location": {
+            "type": "object",
+            "properties": {
+                "lat": { "type": "number" },
+                "lng": { "type": "number" }
+            }
+        }
       },
-      "required": ["userId", "userName", "status", "name", "region", "city", "sports", "type", "createdAt"]
+      "required": ["userId", "userName", "status", "name", "region", "city", "sports", "type", "createdAt", "location"]
     }
   },
   "auth": {

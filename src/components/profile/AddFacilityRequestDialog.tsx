@@ -35,6 +35,7 @@ import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
+import { geocodeAddress } from '@/ai/flows/geocode-address-flow';
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -109,10 +110,13 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
+      const { lat, lng } = await geocodeAddress({ address: `${data.address}, ${data.city}, ${data.region}, Morocco` });
+      
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
 
       await addDoc(requestsCollectionRef, {
         ...data,
+        location: { lat, lng },
         userId: user.uid,
         userName: user.displayName || user.email,
         status: 'pending',
@@ -212,7 +216,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                           <FormControl>
                               <SelectTrigger>
                               <SelectValue placeholder="Choisir une ville" />
-                              </SelectTrigger>
+                              </Trigger>
                           </FormControl>
                           <SelectContent>
                               {cities.map((city) => (
