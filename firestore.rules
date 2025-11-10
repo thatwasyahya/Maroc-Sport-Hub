@@ -45,12 +45,12 @@ service cloud.firestore {
      * Description: These collections grant roles via document existence.
      **************************************************/
     match /roles_admin/{userId} {
-      allow get: if isSignedIn(); // Allow any signed-in user to check their own role
+      allow get: if isSignedIn();
       allow list, create, update, delete: if isSuperAdmin();
     }
 
     match /roles_super_admin/{userId} {
-      allow get: if isSignedIn(); // Allow any signed-in user to check their own role
+      allow get: if isSignedIn();
       allow list, create, update, delete: if isSuperAdmin();
     }
     
@@ -81,11 +81,8 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isAdmin();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update(rejection): if isAdmin() && request.resource.data.status == 'rejected';
-      allow update(approval): if isAdmin() && request.resource.data.status == 'approved';
-      
-      // Separate rule for creating a facility after approval
-      allow create: if get(/databases/$(database)/documents/facilityRequests/$(requestId)).data.status == 'approved' && isAdmin();
+      // Admins can update a request to approve or reject it
+      allow update: if isAdmin();
     }
 
     /**************************************************

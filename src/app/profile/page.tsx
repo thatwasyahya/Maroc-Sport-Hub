@@ -115,8 +115,8 @@ export default function ProfilePage() {
                   ) : facilityRequests && facilityRequests.length > 0 ? (
                     facilityRequests.map((request) => (
                       <TableRow key={request.id}>
-                        <TableCell className="font-medium">{request.facilityName}</TableCell>
-                        <TableCell>{request.createdAt ? format(request.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
+                        <TableCell className="font-medium">{request.name}</TableCell>
+                        <TableCell>{request.createdAt?.toDate ? format(request.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
                         <TableCell><Badge variant={getStatusBadgeVariant(request.status)} className="capitalize">{request.status}</Badge></TableCell>
                         <TableCell>{request.rejectionReason || 'N/A'}</TableCell>
                       </TableRow>

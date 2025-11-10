@@ -1,6 +1,6 @@
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import type { FacilityRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,20 +25,28 @@ import { format } from 'date-fns';
 
 export default function RequestsPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [rejectionReason, setRejectionReason] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<FacilityRequest | null>(null);
 
-  const requestsCollectionRef = useMemoFirebase(() => collection(firestore, 'facilityRequests'), [firestore]);
+  // The query will only be created if the user is logged in.
+  const requestsCollectionRef = useMemoFirebase(
+    () => (user ? collection(firestore, 'facilityRequests') : null), 
+    [user, firestore]
+  );
   const { data: requests, isLoading: requestsLoading } = useCollection<FacilityRequest>(requestsCollectionRef);
 
   const pendingRequests = requests?.filter(r => r.status === 'pending') || [];
+  
+  // This loading state is more accurate. It waits for both user and data.
+  const isLoading = requestsLoading || !user;
 
   const handleApprove = async (request: FacilityRequest) => {
     try {
       const batch = writeBatch(firestore);
 
-      // 1. Create a new facility document
+      // 1. Create a new facility document from the request data
       const newFacilityRef = doc(collection(firestore, 'facilities'));
       const newFacilityData = {
         name: request.name,
@@ -51,10 +59,10 @@ export default function RequestsPage() {
         sports: request.sports,
         type: request.type,
         accessible: request.accessible,
-        adminId: request.userId, // Assigning the user who requested as admin for now
+        adminId: request.userId, // Assign the user who requested as admin
         equipmentIds: [], // Starts with no equipment
         photos: [], // Starts with no photos
-        location: { lat: 33.5731, lng: -7.5898 }, // Default to Casablanca
+        location: { lat: 33.5731, lng: -7.5898 }, // Default to Casablanca, to be replaced by a geocoding API
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -68,7 +76,7 @@ export default function RequestsPage() {
 
       toast({
         title: 'Request Approved',
-        description: `Facility "${request.facilityName}" has been created.`,
+        description: `Facility "${request.name}" has been created.`,
       });
     } catch (error) {
       console.error('Error approving request:', error);
@@ -102,7 +110,7 @@ export default function RequestsPage() {
 
       toast({
         title: 'Request Rejected',
-        description: `The request for "${selectedRequest.facilityName}" has been rejected.`,
+        description: `The request for "${selectedRequest.name}" has been rejected.`,
       });
     } catch (error) {
       console.error('Error rejecting request:', error);
@@ -137,16 +145,16 @@ export default function RequestsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {requestsLoading ? (
+              {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">Loading requests...</TableCell>
                 </TableRow>
               ) : pendingRequests.length > 0 ? (
                 pendingRequests.map((request) => (
                   <TableRow key={request.id}>
-                    <TableCell className="font-medium">{request.facilityName}</TableCell>
+                    <TableCell className="font-medium">{request.name}</TableCell>
                     <TableCell>{request.userName || request.userEmail}</TableCell>
-                    <TableCell>{request.createdAt ? format(request.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
+                    <TableCell>{request.createdAt?.toDate ? format(request.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
                     <TableCell><Badge variant="secondary" className="capitalize">{request.status}</Badge></TableCell>
                     <TableCell>
                       <div className="flex gap-2">
