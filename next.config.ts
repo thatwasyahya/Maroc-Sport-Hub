@@ -33,12 +33,6 @@ const nextConfig: NextConfig = {
         hostname: 'avatar.iran.liara.run',
         port: '',
         pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.pravatar.cc',
-        port: '',
-        pathname: '/**',
       }
     ],
   },
