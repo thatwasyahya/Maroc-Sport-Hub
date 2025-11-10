@@ -35,7 +35,7 @@ import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
-import { geocodeAddressWithGoogle } from '@/services/google-maps';
+import { geocodeAddressWithOpenCage } from '@/services/opencage';
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -110,7 +110,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
-      const { lat, lng } = await geocodeAddressWithGoogle({ address: `${data.address}, ${data.city}, ${data.region}` });
+      const { lat, lng } = await geocodeAddressWithOpenCage({ address: `${data.address}, ${data.city}, ${data.region}` });
       
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
 
