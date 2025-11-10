@@ -216,7 +216,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                           <FormControl>
                               <SelectTrigger>
                               <SelectValue placeholder="Choisir une ville" />
-                              </Trigger>
+                              </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                               {cities.map((city) => (

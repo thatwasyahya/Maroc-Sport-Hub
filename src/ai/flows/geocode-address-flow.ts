@@ -1,14 +1,11 @@
 'use server';
 /**
- * @fileOverview A flow for geocoding an address string into coordinates.
+ * @fileOverview A service for geocoding an address string into coordinates using the Nominatim API.
  *
  * - geocodeAddress - A function that handles the geocoding process.
- * - GeocodeAddressInput - The input type for the geocodeAddress function.
- * - GeocodeAddressOutput - The return type for the geocodeAddress function.
  */
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 export const GeocodeAddressInputSchema = z.object({
   address: z.string().describe('The address to geocode.'),
@@ -21,32 +18,45 @@ export const GeocodeAddressOutputSchema = z.object({
 });
 export type GeocodeAddressOutput = z.infer<typeof GeocodeAddressOutputSchema>;
 
+/**
+ * Geocodes an address using the free Nominatim (OpenStreetMap) API.
+ * @param input The address to geocode.
+ * @returns A promise that resolves to an object with lat and lng.
+ */
 export async function geocodeAddress(
   input: GeocodeAddressInput
 ): Promise<GeocodeAddressOutput> {
-  return geocodeAddressFlow(input);
-}
+  const { address } = input;
+  const query = encodeURIComponent(address);
+  // Using viewbox to bias results towards Morocco
+  const viewbox = '-17.2,35.9,-1.0,27.7'; 
+  const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&viewbox=${viewbox}&bounded=1`;
 
-const prompt = ai.definePrompt({
-  name: 'geocodeAddressPrompt',
-  input: { schema: GeocodeAddressInputSchema },
-  output: { schema: GeocodeAddressOutputSchema },
-  prompt: `Geocode the following address and return the latitude and longitude. The user is in Morocco, use this as a hint.
-
-Address: {{{address}}}`,
-});
-
-const geocodeAddressFlow = ai.defineFlow(
-  {
-    name: 'geocodeAddressFlow',
-    inputSchema: GeocodeAddressInputSchema,
-    outputSchema: GeocodeAddressOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
-      throw new Error('Could not geocode address.');
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'MarocSportHub/1.0 (marocsport@hub.com)', // Nominatim requires a User-Agent
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Nominatim API returned an error: ${response.statusText}`);
     }
-    return output;
+
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      const { lat, lon } = data[0];
+      return {
+        lat: parseFloat(lat),
+        lng: parseFloat(lon),
+      };
+    } else {
+      throw new Error('No results found for the address.');
+    }
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    // Fallback to a default location if geocoding fails
+    return { lat: 33.5731, lng: -7.5898 }; // Default to Casablanca
   }
-);
+}
