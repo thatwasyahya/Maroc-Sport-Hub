@@ -186,13 +186,13 @@ export default function RequestsList() {
                                                     <Loader2 className="ml-auto h-5 w-5 animate-spin" />
                                                 ) : (
                                                     <div className="flex justify-end gap-2">
-                                                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setSelectedRequest(request); }}>
+                                                        <Button size="sm" variant="ghost" onClick={() => setSelectedRequest(request)}>
                                                             <Eye className="mr-2 h-4 w-4" /> Détails
                                                         </Button>
-                                                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleApprove(request); }}>
+                                                        <Button size="sm" variant="outline" onClick={() => handleApprove(request)}>
                                                             <CheckCircle className="mr-2 h-4 w-4" /> Approuver
                                                         </Button>
-                                                        <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); handleReject(request); }}>
+                                                        <Button size="sm" variant="destructive" onClick={() => handleReject(request)}>
                                                             <XCircle className="mr-2 h-4 w-4" /> Rejeter
                                                         </Button>
                                                     </div>
@@ -247,12 +247,12 @@ export default function RequestsList() {
                                                     <Loader2 className="ml-auto h-5 w-5 animate-spin" />
                                                 ) : (
                                                     <div className='flex items-center justify-end gap-2'>
-                                                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setSelectedRequest(request); }}>
+                                                        <Button size="sm" variant="ghost" onClick={() => setSelectedRequest(request)}>
                                                             <Eye className="mr-2 h-4 w-4" /> Détails
                                                         </Button>
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={(e) => e.stopPropagation()}>
+                                                                <Button variant="ghost" size="icon" className="text-destructive">
                                                                     <Trash2 className="h-4 w-4" />
                                                                 </Button>
                                                             </AlertDialogTrigger>
