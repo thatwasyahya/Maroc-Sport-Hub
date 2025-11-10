@@ -79,15 +79,21 @@ export default function ProfilePage() {
 
   const userRequestsQuery = useMemoFirebase(
     () => {
-      // Important: Create the query only when the user ID is available and role is confirmed.
-      if (user && userProfile && userProfile.role === 'user') {
+      // Important: Create the query only when the user ID is available.
+      if (user) {
         return query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid));
       }
-      return null; // Return null if user is not ready or is an admin
+      return null;
     },
-    [user, userProfile, firestore]
+    [user, firestore]
   );
-  const { data: facilityRequests, isLoading: isRequestsLoading } = useCollection<FacilityRequest>(userRequestsQuery);
+  
+  const { data: facilityRequests, isLoading: isRequestsLoading } = useCollection<FacilityRequest>(userRequestsQuery, {
+      // This collection is only queried for the current user, so we disable the check for admin role
+      // The security rules will enforce that the user can only query their own requests.
+      requireAdmin: false 
+  });
+
 
   const isLoading = isUserLoading || isProfileLoading;
 
@@ -171,7 +177,7 @@ export default function ProfilePage() {
                         ))
                     ) : (
                         <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">You haven&apos;t submitted any requests yet.</TableCell>
+                        <TableCell colSpan={4} className="h-24 text-center">You haven't submitted any requests yet.</TableCell>
                         </TableRow>
                     )}
                     </TableBody>
