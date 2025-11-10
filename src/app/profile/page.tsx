@@ -78,13 +78,13 @@ export default function ProfilePage() {
 
   const userRequestsQuery = useMemoFirebase(
     () => {
-      // Only create the query if we have a user and their profile, and they are a 'user'
-      if (user && userProfile && userProfile.role === 'user') {
+      // Create the query only when the user ID is available
+      if (user) {
         return query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid));
       }
-      return null; // Return null if conditions are not met
+      return null;
     },
-    [user, userProfile, firestore] // Depend on userProfile
+    [user, firestore]
   );
   const { data: facilityRequests, isLoading: isRequestsLoading } = useCollection<FacilityRequest>(userRequestsQuery);
 
@@ -129,10 +129,12 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground">{user.email}</p>
                 <Badge className="mt-2 capitalize">{userProfile.role.replace("_", " ")}</Badge>
               </div>
-              <Button onClick={() => setIsAddRequestDialogOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Submit a Facility Request
-              </Button>
+              { userProfile.role === 'user' && (
+                <Button onClick={() => setIsAddRequestDialogOpen(true)}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Submit a Facility Request
+                </Button>
+              )}
             </CardContent>
           </Card>
           

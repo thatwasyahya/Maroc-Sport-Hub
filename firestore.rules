@@ -64,10 +64,13 @@ service cloud.firestore {
      * Description: Manages user requests to add new facilities.
      **************************************************/
     match /facilityRequests/{requestId} {
-      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isAdmin();
+      // An admin can get any request. A user can get their own request.
+      allow get: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      // Admins can list all requests. Users can list their own requests via a constrained query.
+      allow list: if isAdmin() || (request.query.where.size() == 1 && request.query.where[0].field == 'userId' && request.query.where[0].value == request.auth.uid);
+      // Any signed-in user can create a request for themselves.
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      // Admins can update a request to approve or reject it
+      // Only admins can update (approve/reject) a request.
       allow update: if isAdmin();
     }
   }
