@@ -13,8 +13,11 @@ export const GeocodeAddressOutputSchema = z.object({
 });
 export type GeocodeAddressOutput = z.infer<typeof GeocodeAddressOutputSchema>;
 
+// In-memory cache to store geocoded results
+const geocodeCache = new Map<string, GeocodeAddressOutput>();
+
 /**
- * Geocodes an address using the OpenCage Geocoding API.
+ * Geocodes an address using the OpenCage Geocoding API with in-memory caching.
  * This function runs on the server to protect the API key.
  * @param input The address to geocode.
  * @returns A promise that resolves to an object with lat and lng.
@@ -23,16 +26,24 @@ export async function geocodeAddressWithOpenCage(
   input: GeocodeAddressInput
 ): Promise<GeocodeAddressOutput> {
   const { address } = input;
+  const normalizedAddress = address.trim().toLowerCase();
+
+  // 1. Check if the result is in the cache
+  if (geocodeCache.has(normalizedAddress)) {
+    console.log(`[Cache HIT] for address: ${normalizedAddress}`);
+    return geocodeCache.get(normalizedAddress)!;
+  }
+  
+  console.log(`[Cache MISS] for address: ${normalizedAddress}. Calling API.`);
+
   const apiKey = process.env.OPENCAGE_API_KEY;
 
   if (!apiKey) {
     console.error('OpenCage API key is missing.');
-    // Fallback to a default location if the key is not set
     return { lat: 33.5731, lng: -7.5898 }; // Default to Casablanca
   }
 
   const query = encodeURIComponent(address);
-  // Bias results to Morocco using the countrycode parameter
   const url = `https://api.opencagedata.com/geocode/v1/json?q=${query}&key=${apiKey}&countrycode=MA&limit=1`;
 
   try {
@@ -47,10 +58,15 @@ export async function geocodeAddressWithOpenCage(
 
     if (data.status.code === 200 && data.results && data.results.length > 0) {
       const location = data.results[0].geometry;
-      return {
+      const result: GeocodeAddressOutput = {
         lat: location.lat,
         lng: location.lng,
       };
+
+      // 2. Store the successful result in the cache
+      geocodeCache.set(normalizedAddress, result);
+
+      return result;
     } else if (data.results.length === 0) {
        throw new Error('No results found for the address.');
     } else {
@@ -59,7 +75,6 @@ export async function geocodeAddressWithOpenCage(
     }
   } catch (error) {
     console.error('Geocoding fetch error:', error);
-    // Fallback to a default location if geocoding fails
-    return { lat: 33.5731, lng: -7.5898 }; // Default to Casablanca
+    return { lat: 33.5731, lng: -7.5898 }; // Default to Casablanca on error
   }
 }
