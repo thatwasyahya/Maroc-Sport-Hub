@@ -87,3 +87,10 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
       )
     });
 }
+
+/**
+ * Updates a user's avatar URL.
+ */
+export function updateUserAvatar(docRef: DocumentReference, avatarUrl: string) {
+    updateDocumentNonBlocking(docRef, { avatarUrl });
+}

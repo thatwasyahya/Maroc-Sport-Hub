@@ -9,6 +9,7 @@ import { doc, getFirestore } from 'firebase/firestore';
 import { Activity, LayoutDashboard, LogOut, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
+import type { User } from "@/lib/types";
 
 export default function Header() {
   const { user, isUserLoading } = useUser();
@@ -20,7 +21,7 @@ export default function Header() {
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
-  const { data: userProfile } = useDoc(userDocRef);
+  const { data: userProfile } = useDoc<User>(userDocRef);
 
 
   const handleLogout = async () => {
@@ -33,12 +34,12 @@ export default function Header() {
     if (!name) return "";
     const names = name.split(' ');
     if (names.length > 1 && names[1]) {
-      return `${names[0][0]}${names[names.length - 1][0]}`;
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
     }
-    return name ? name.substring(0, 2) : "";
+    return name ? name.substring(0, 2).toUpperCase() : "";
   };
   
-  const displayName = userProfile?.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : user?.email;
+  const displayName = userProfile?.name || user?.email;
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
 
   return (
@@ -55,12 +56,12 @@ export default function Header() {
         <div className="flex flex-1 items-center justify-end space-x-2">
           {isUserLoading ? (
             <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-          ) : user && userProfile ? (
+          ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.photoURL || undefined} alt={displayName || ""} />
+                    <AvatarImage src={userProfile?.avatarUrl || user.photoURL || undefined} alt={displayName || ""} />
                     <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                   </Avatar>
                 </Button>
