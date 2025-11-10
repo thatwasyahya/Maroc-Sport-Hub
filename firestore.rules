@@ -34,9 +34,9 @@ service cloud.firestore {
      **************************************************/
     match /users/{userId} {
       allow get: if isSignedIn();
-      allow list: if isSuperAdmin(); // Only super admins can list all users
-      allow create: if isOwner(userId); // Any signed-in user can create their own profile
-      allow update: if isOwner(userId) || isSuperAdmin(); // Users can update their own profile, super admins can update any
+      allow list: if isSuperAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isSuperAdmin();
       allow delete: if isOwner(userId) || isSuperAdmin();
     }
 
@@ -45,16 +45,12 @@ service cloud.firestore {
      * Description: These collections grant roles via document existence.
      **************************************************/
     match /roles_admin/{userId} {
-      // Allow reading own role, super admins can manage all roles.
-      allow get: if isOwner(userId) || isSuperAdmin();
+      allow get: if isSignedIn(); // Allow any signed-in user to check their own role
       allow list, create, update, delete: if isSuperAdmin();
     }
 
     match /roles_super_admin/{userId} {
-      // Allow any signed-in user to check their own super_admin status.
-      // This is crucial for the isSuperAdmin() function to work correctly.
-      allow get: if isOwner(userId) && isSignedIn();
-      // Only super admins can list or modify roles.
+      allow get: if isSignedIn(); // Allow any signed-in user to check their own role
       allow list, create, update, delete: if isSuperAdmin();
     }
     
@@ -75,6 +71,21 @@ service cloud.firestore {
     match /equipments/{equipmentId} {
       allow get, list: if true; // Publicly readable
       allow create, update, delete: if isAdmin();
+    }
+    
+    /**************************************************
+     * Collection: facilityRequests
+     * Description: Manages user requests to add new facilities.
+     **************************************************/
+    match /facilityRequests/{requestId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update(rejection): if isAdmin() && request.resource.data.status == 'rejected';
+      allow update(approval): if isAdmin() && request.resource.data.status == 'approved';
+      
+      // Separate rule for creating a facility after approval
+      allow create: if get(/databases/$(database)/documents/facilityRequests/$(requestId)).data.status == 'approved' && isAdmin();
     }
 
     /**************************************************

@@ -38,7 +38,33 @@ export interface Facility {
   description: string;
   photos: string[];
   equipmentIds: string[]; // List of equipment IDs
-  availability: Record<string, string[]>;
   rentalCost: number; // Cost per hour
   depositCost: number;
+  // Removed availability
+}
+
+
+export type RequestStatus = "pending" | "approved" | "rejected";
+
+export interface FacilityRequest {
+    id: string;
+    userId: string;
+    userEmail: string;
+    userName: string;
+    facilityName: string;
+    status: RequestStatus;
+    rejectionReason?: string;
+    createdAt: any;
+    updatedAt: any;
+    // Includes all fields from the facility form
+    name: string;
+    description: string;
+    address: string;
+    region: string;
+    city: string;
+    rentalCost: number;
+    depositCost: number;
+    sports: string[];
+    type: "indoor" | "outdoor";
+    accessible: boolean;
 }

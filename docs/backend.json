@@ -43,7 +43,33 @@
             "depositCost": { "type": "number", "description": "Security deposit for the equipment." },
             "facilityId": { "type": "string", "description": "Reference to the Facility this equipment belongs to." }
         },
-        "required": ["id", "name", "rentalCost", "facilityId"]
+        "required": ["id", "name", "rentalCost"]
+    },
+    "FacilityRequest": {
+        "title": "Facility Request",
+        "type": "object",
+        "description": "Represents a user's request to add a new facility.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the request." },
+            "userId": { "type": "string", "description": "ID of the user who made the request." },
+            "userEmail": { "type": "string", "description": "Email of the user who made the request." },
+            "userName": { "type": "string", "description": "Name of the user who made the request." },
+            "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "Status of the request." },
+            "rejectionReason": { "type": "string", "description": "Reason for rejection, if applicable." },
+            "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the request was created." },
+            "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the request was last updated." },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "address": { "type": "string" },
+            "region": { "type": "string" },
+            "city": { "type": "string" },
+            "rentalCost": { "type": "number" },
+            "depositCost": { "type": "number" },
+            "sports": { "type": "array", "items": { "type": "string" } },
+            "type": { "type": "string", "enum": ["indoor", "outdoor"] },
+            "accessible": { "type": "boolean" }
+        },
+        "required": ["id", "userId", "userEmail", "status", "name", "region", "city", "sports"]
     }
   },
   "auth": {
@@ -71,6 +97,13 @@
             "schema": { "$ref": "#/entities/Equipment" },
             "description": "Stores individual pieces of equipment that can be associated with facilities."
         }
+      },
+      {
+          "path": "/facilityRequests/{requestId}",
+          "definition": {
+              "schema": { "$ref": "#/entities/FacilityRequest" },
+              "description": "Stores user requests for new facilities."
+          }
       },
       {
         "path": "/roles_admin/{userId}",
