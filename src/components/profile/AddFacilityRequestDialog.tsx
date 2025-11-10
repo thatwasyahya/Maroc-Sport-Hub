@@ -43,8 +43,8 @@ const facilityRequestSchema = z.object({
   address: z.string().min(5, 'Address is required.'),
   region: z.string().min(2, "Region is required."),
   city: z.string().min(2, "City is required."),
-  lat: z.coerce.number().min(-90).max(90),
-  lng: z.coerce.number().min(-180).max(180),
+  lat: z.coerce.number().optional(),
+  lng: z.coerce.number().optional(),
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
@@ -69,6 +69,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   const regions = getRegions();
   const [cities, setCities] = useState<string[]>([]);
@@ -83,8 +84,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       address: '',
       region: '',
       city: '',
-      lat: 0,
-      lng: 0,
       sports: [],
       equipments: [],
       type: 'outdoor',
@@ -106,7 +105,15 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     } else {
         setCities([]);
     }
+    setGeocodingStatus('idle');
   }, [selectedRegion, form]);
+
+  const addressWatched = form.watch('address');
+  const cityWatched = form.watch('city');
+  useEffect(() => {
+    setGeocodingStatus('idle');
+  }, [addressWatched, cityWatched]);
+
 
   const handleGeocode = async () => {
     const address = form.getValues("address");
@@ -116,36 +123,40 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     if (!address || !city || !region) {
       toast({
         variant: "destructive",
-        title: "Address Incomplete",
-        description: "Please fill in the address, city, and region fields before geocoding.",
+        title: "Adresse incomplète",
+        description: "Veuillez remplir l'adresse, la ville et la région avant de continuer.",
       });
       return;
     }
 
     setIsGeocoding(true);
+    setGeocodingStatus('idle');
     try {
       const fullAddress = `${address}, ${city}, ${region}, Morocco`;
       const location = await geocodeAddress(fullAddress);
       if (location) {
-        form.setValue("lat", location.lat, { shouldValidate: true });
-        form.setValue("lng", location.lng, { shouldValidate: true });
+        form.setValue("lat", location.lat);
+        form.setValue("lng", location.lng);
+        setGeocodingStatus('success');
         toast({
-          title: "Location Found",
-          description: `Coordinates set to: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`,
+          title: "Emplacement trouvé",
+          description: `Les coordonnées ont été trouvées et seront sauvegardées.`,
         });
       } else {
+        setGeocodingStatus('error');
         toast({
           variant: "destructive",
-          title: "Location Not Found",
-          description: "Could not find coordinates for the entered address. Please check the address or enter coordinates manually.",
+          title: "Emplacement introuvable",
+          description: "Impossible de trouver les coordonnées. Veuillez vérifier l'adresse.",
         });
       }
     } catch (error) {
       console.error("Geocoding error:", error);
+      setGeocodingStatus('error');
       toast({
         variant: "destructive",
-        title: "Geocoding Error",
-        description: "An error occurred while trying to find the address.",
+        title: "Erreur de géocodage",
+        description: "Une erreur s'est produite lors de la recherche de l'adresse.",
       });
     } finally {
       setIsGeocoding(false);
@@ -157,8 +168,8 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
       return;
     }
-    if (data.lat === 0 || data.lng === 0) {
-      toast({ variant: 'destructive', title: 'Coordinates Missing', description: 'Please geocode the address to get coordinates before submitting.' });
+    if (!data.lat || !data.lng) {
+      toast({ variant: 'destructive', title: 'Coordonnées manquantes', description: "Veuillez utiliser le bouton 'Trouver sur la carte' pour obtenir les coordonnées avant de soumettre." });
       return;
     }
     setIsSubmitting(true);
@@ -174,7 +185,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         status: 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        location: { lat, lng },
+        location: { lat: lat!, lng: lng! },
       });
 
       toast({
@@ -273,48 +284,24 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                   render={({ field }) => (
                       <FormItem>
                       <FormLabel>Adresse</FormLabel>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-start">
                         <FormControl>
                             <Input placeholder="e.g., 123 Main St" {...field} />
                         </FormControl>
-                        <Button type="button" onClick={handleGeocode} disabled={isGeocoding}>
-                            <Search className="mr-2 h-4 w-4" />
-                            {isGeocoding ? 'Recherche...' : 'Géocoder'}
-                        </Button>
+                        <div className='flex flex-col gap-1'>
+                            <Button type="button" onClick={handleGeocode} disabled={isGeocoding}>
+                                <Search className="mr-2 h-4 w-4" />
+                                {isGeocoding ? 'Recherche...' : 'Trouver sur la carte'}
+                            </Button>
+                            {geocodingStatus === 'success' && <FormDescription className='text-green-600'>Coordonnées trouvées !</FormDescription>}
+                            {geocodingStatus === 'error' && <FormDescription className='text-destructive'>Échec de la recherche.</FormDescription>}
+                        </div>
                       </div>
                       <FormMessage />
                       </FormItem>
                   )}
                 />
-                 <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="lat"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Latitude</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="any" placeholder="e.g., 33.5731" {...field} />
-                          </FormControl>
-                           <FormDescription>Cliquez sur Géocoder pour remplir automatiquement.</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name="lng"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Longitude</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="any" placeholder="e.g., -7.5898" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                </div>
+                
                 <FormField
                   control={form.control}
                   name="description"
