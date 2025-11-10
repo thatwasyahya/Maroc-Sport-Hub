@@ -42,9 +42,7 @@ const facilityRequestSchema = z.object({
   address: z.string().min(5, 'Address is required.'),
   region: z.string().min(2, "Region is required."),
   city: z.string().min(2, "City is required."),
-  rentalCost: z.coerce.number().min(0, 'Rental cost must be a positive number.'),
-  depositCost: z.coerce.number().min(0, 'Deposit cost must be a positive number.'),
-  sports: z.array(z.string()).refine((value) => value.length > 0, {
+  sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
   equipments: z.array(z.object({
@@ -81,8 +79,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       address: '',
       region: '',
       city: '',
-      rentalCost: 0,
-      depositCost: 0,
       sports: [],
       equipments: [],
       type: 'outdoor',
@@ -229,34 +225,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                       )}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="rentalCost"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Coût de location (MAD/hr)</FormLabel>
-                        <FormControl>
-                            <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="depositCost"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Coût de la caution (MAD)</FormLabel>
-                        <FormControl>
-                            <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
                 <FormField
                   control={form.control}
                   name="description"
@@ -345,7 +313,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                         <MultiSelect
                           options={sportOptions}
                           selected={field.value}
-                          onChange={field.onChange}
+                          onChange={(value) => field.onChange(value)}
                           placeholder="Sélectionner des sports..."
                           className="w-full"
                         />

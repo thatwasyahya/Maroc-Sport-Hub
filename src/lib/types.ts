@@ -35,9 +35,6 @@ export interface Facility {
   description: string;
   photos: string[];
   equipments: EquipmentItem[];
-  rentalCost: number; // Cost per hour
-  depositCost: number;
-  // Removed availability
 }
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
@@ -53,8 +50,6 @@ export interface FacilityRequest {
   address: string;
   region: string;
   city: string;
-  rentalCost: number;
-  depositCost: number;
   sports: string[];
   equipments: EquipmentItem[];
   type: 'indoor' | 'outdoor';

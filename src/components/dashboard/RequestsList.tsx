@@ -53,8 +53,6 @@ export default function RequestsList() {
                 type: request.type,
                 accessible: request.accessible,
                 equipments: request.equipments || [],
-                rentalCost: request.rentalCost,
-                depositCost: request.depositCost,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };

@@ -3,7 +3,7 @@
 import type { Facility } from '@/lib/types';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Accessibility, Sun, Moon, Wallet, ShieldCheck, Sprout } from 'lucide-react';
+import { MapPin, Accessibility, Sun, Moon, Sprout } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 
@@ -46,8 +46,6 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
       <div className="px-6 grid grid-cols-2 gap-4 text-sm">
         <div className="flex items-center gap-3"><Accessibility/> {facility.accessible ? "Accès PMR" : "Non accessible PMR"}</div>
         <div className="flex items-center gap-3">{facility.type === "indoor" ? <Moon /> : <Sun />} {facility.type.charAt(0).toUpperCase() + facility.type.slice(1)}</div>
-        <div className="flex items-center gap-3"><Wallet/> {facility.rentalCost} MAD/heure</div>
-        <div className="flex items-center gap-3"><ShieldCheck/> Caution: {facility.depositCost > 0 ? `${facility.depositCost} MAD` : 'Aucune'}</div>
       </div>
 
       {facilityEquipments.length > 0 && <Separator />}

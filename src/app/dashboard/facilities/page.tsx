@@ -40,7 +40,6 @@ export default function FacilitiesPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Region</TableHead>
-                <TableHead>Rental Cost</TableHead>
                 <TableHead>Equipments</TableHead>
                 <TableHead>Sports</TableHead>
               </TableRow>
@@ -48,7 +47,7 @@ export default function FacilitiesPage() {
             <TableBody>
               {facilitiesLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={4} className="h-24 text-center">
                     Loading...
                   </TableCell>
                 </TableRow>
@@ -57,7 +56,6 @@ export default function FacilitiesPage() {
                   <TableRow key={facility.id}>
                     <TableCell className="font-medium">{facility.name}</TableCell>
                     <TableCell>{facility.region}</TableCell>
-                    <TableCell>{facility.rentalCost} MAD/hr</TableCell>
                     <TableCell>{facility.equipments?.length || 0}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -70,7 +68,7 @@ export default function FacilitiesPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={4} className="h-24 text-center">
                     No facilities found.
                   </TableCell>
                 </TableRow>

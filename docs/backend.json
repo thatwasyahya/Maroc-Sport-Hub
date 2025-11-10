@@ -33,8 +33,6 @@
         "id": { "type": "string", "description": "Unique identifier for the facility." },
         "name": { "type": "string", "description": "Name of the facility." },
         "description": { "type": "string", "description": "Description of the facility." },
-        "rentalCost": { "type": "number", "description": "Cost per hour for renting the facility." },
-        "depositCost": { "type": "number", "description": "Security deposit for the facility." },
         "sports": { "type": "array", "items": { "type": "string" }, "description": "List of sports supported by the facility." },
         "address": { "type": "string", "description": "Address of the facility." },
         "adminId": { "type": "string", "description": "Reference to the Admin user who manages this facility." },
@@ -44,7 +42,7 @@
           "description": "List of equipment available at the facility." 
         }
       },
-      "required": ["id", "name", "rentalCost"]
+      "required": ["id", "name"]
     },
     "FacilityRequest": {
       "title": "FacilityRequest",
@@ -60,8 +58,6 @@
         "address": { "type": "string" },
         "region": { "type": "string" },
         "city": { "type": "string" },
-        "rentalCost": { "type": "number" },
-        "depositCost": { "type": "number" },
         "sports": { "type": "array", "items": { "type": "string" } },
         "equipments": { 
           "type": "array", 
@@ -72,7 +68,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "userName", "status", "name", "region", "city", "rentalCost", "sports", "type", "createdAt"]
+      "required": ["userId", "userName", "status", "name", "region", "city", "sports", "type", "createdAt"]
     }
   },
   "auth": {

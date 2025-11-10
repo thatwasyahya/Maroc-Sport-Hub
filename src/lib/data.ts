@@ -66,8 +66,6 @@ const createRandomFacility = (): Facility => {
         description: faker.lorem.paragraph(),
         photos: Array.from({ length: 3 }, (_, i) => `https://picsum.photos/seed/${faker.string.uuid()}/800/600`),
         equipments: generateRandomEquipments(),
-        rentalCost: faker.number.int({ min: 50, max: 300 }),
-        depositCost: faker.helpers.arrayElement([0, 50, 100, 200]),
     };
 };
 

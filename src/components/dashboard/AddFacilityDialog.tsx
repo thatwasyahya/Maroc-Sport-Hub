@@ -43,9 +43,7 @@ const facilitySchema = z.object({
   address: z.string().min(5, 'Address is required.'),
   region: z.string().min(2, "Region is required."),
   city: z.string().min(2, "City is required."),
-  rentalCost: z.coerce.number().min(0, 'Rental cost must be a positive number.'),
-  depositCost: z.coerce.number().min(0, 'Deposit cost must be a positive number.'),
-  sports: z.array(z.string()).refine((value) => value.length > 0, {
+  sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
   equipments: z.array(z.object({
@@ -82,8 +80,6 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
       address: '',
       region: '',
       city: '',
-      rentalCost: 0,
-      depositCost: 0,
       sports: [],
       equipments: [],
       type: 'outdoor',
@@ -122,8 +118,6 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
         address: data.address,
         region: data.region,
         city: data.city,
-        rentalCost: data.rentalCost,
-        depositCost: data.depositCost,
         sports: data.sports,
         type: data.type,
         accessible: data.accessible,
@@ -241,34 +235,6 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                       )}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="rentalCost"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Rental Cost (MAD/hr)</FormLabel>
-                        <FormControl>
-                            <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="depositCost"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Deposit Cost (MAD)</FormLabel>
-                        <FormControl>
-                            <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
                 <FormField
                   control={form.control}
                   name="description"
@@ -357,7 +323,9 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                         <MultiSelect
                           options={sportOptions}
                           selected={field.value}
-                          onChange={field.onChange}
+                          onChange={(value) => {
+                            field.onChange(value);
+                          }}
                           placeholder="Select sports..."
                           className="w-full"
                         />
