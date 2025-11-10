@@ -274,7 +274,9 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                 />
 
                 <div className="space-y-4 rounded-md border p-4 mt-4">
-                  <FormLabel>Équipements</FormLabel>
+                  <div className="mb-4">
+                    <FormLabel>Équipements</FormLabel>
+                  </div>
                   {fields.map((field, index) => (
                     <div key={field.id} className="flex items-end gap-2">
                       <FormField
