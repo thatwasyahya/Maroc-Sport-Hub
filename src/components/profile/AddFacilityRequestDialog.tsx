@@ -25,7 +25,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser, useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Checkbox } from '../ui/checkbox';
@@ -38,6 +37,7 @@ import { PlusCircle, Trash2, Search, Loader2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
 import type { FacilityRequest } from '@/lib/types';
 import { geocodeAddress } from '@/services/nominatim';
+import { uploadFile } from '@/app/actions';
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -64,61 +64,6 @@ interface AddFacilityRequestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-// Utility to compress images
-const compressImage = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target?.result as string;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 1200;
-                const MAX_HEIGHT = 1200;
-                let width = img.width;
-                let height = img.height;
-
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    return reject(new Error('Failed to get canvas context'));
-                }
-                ctx.drawImage(img, 0, 0, width, height);
-                canvas.toBlob(
-                    (blob) => {
-                        if (!blob) {
-                            return reject(new Error('Canvas is empty'));
-                        }
-                        const compressedFile = new File([blob], file.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now(),
-                        });
-                        resolve(compressedFile);
-                    },
-                    'image/jpeg',
-                    0.8
-                ); // 80% quality
-            };
-            img.onerror = reject;
-        };
-        reader.onerror = reject;
-    });
-};
-
 
 export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFacilityRequestDialogProps) {
   const { user } = useUser();
@@ -226,21 +171,21 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
   };
 
-  const uploadFile = async (file: File, path: string): Promise<string> => {
-    const storage = getStorage();
-    let fileToUpload = file;
-    // Compress if it's an image
-    if (file.type.startsWith('image/')) {
-        try {
-            fileToUpload = await compressImage(file);
-        } catch (e) {
-            console.warn('Image compression failed, uploading original file.', e);
-        }
+  const handleFileUpload = async (file: File, type: 'photo' | 'attachment'): Promise<string | undefined> => {
+    if (!user) return undefined;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('path', `facility-requests/${user.uid}/${Date.now()}_${type}_${file.name}`);
+    
+    const result = await uploadFile(formData);
+
+    if (result.success) {
+        return result.url;
+    } else {
+        throw new Error(result.error || 'File upload failed.');
     }
-    const storageRef = ref(storage, path);
-    const snapshot = await uploadBytes(storageRef, fileToUpload);
-    return getDownloadURL(snapshot.ref);
-  };
+};
 
   const onSubmit = async (data: FacilityRequestFormValues) => {
     if (!user) {
@@ -256,23 +201,15 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       const photoFile = data.photo?.[0];
       const attachmentFile = data.attachment?.[0];
 
-      const uploadPromises: Promise<string | undefined>[] = [];
+      let photoUrl: string | undefined;
+      let attachmentUrl: string | undefined;
 
       if (photoFile) {
-        const photoPath = `facility-requests/${user.uid}/${Date.now()}_photo_${photoFile.name}`;
-        uploadPromises.push(uploadFile(photoFile, photoPath));
-      } else {
-        uploadPromises.push(Promise.resolve(undefined));
+        photoUrl = await handleFileUpload(photoFile, 'photo');
       }
-      
       if (attachmentFile) {
-        const attachmentPath = `facility-requests/${user.uid}/${Date.now()}_attachment_${attachmentFile.name}`;
-        uploadPromises.push(uploadFile(attachmentFile, attachmentPath));
-      } else {
-        uploadPromises.push(Promise.resolve(undefined));
+        attachmentUrl = await handleFileUpload(attachmentFile, 'attachment');
       }
-
-      const [photoUrl, attachmentUrl] = await Promise.all(uploadPromises);
 
       const location = { lat, lng };
 
@@ -430,12 +367,12 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                 <FormField
                   control={form.control}
                   name="photo"
-                  render={({ field }) => {
+                  render={() => {
                     return (
                       <FormItem>
                         <FormLabel>Photo de l'Installation</FormLabel>
                         <FormDescription>
-                          Ajoutez une photo principale pour l'installation (obligatoire, max 5MB).
+                          Ajoutez une photo principale pour l'installation (obligatoire).
                         </FormDescription>
                         <FormControl>
                           <Input type="file" accept="image/*" {...photoRef} />
@@ -449,12 +386,12 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                 <FormField
                   control={form.control}
                   name="attachment"
-                  render={({ field }) => {
+                  render={() => {
                     return (
                       <FormItem>
                         <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
                         <FormDescription>
-                          Ajoutez un document ou une image supplémentaire (max 5MB).
+                          Ajoutez un document ou une image supplémentaire.
                         </FormDescription>
                         <FormControl>
                           <Input type="file" {...attachmentRef} />
