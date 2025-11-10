@@ -28,22 +28,9 @@
         "sports": { "type": "array", "items": { "type": "string" }, "description": "List of sports supported by the facility." },
         "address": { "type": "string", "description": "Address of the facility." },
         "adminId": { "type": "string", "description": "Reference to the Admin user who manages this facility." },
-        "equipmentIds": { "type": "array", "items": { "type": "string" }, "description": "List of equipment IDs available at the facility." }
+        "equipments": { "type": "array", "items": { "type": "string" }, "description": "List of equipment names available at the facility." }
       },
       "required": ["id", "name", "rentalCost"]
-    },
-    "Equipment": {
-        "title": "Equipment",
-        "type": "object",
-        "description": "Represents a piece of sports equipment.",
-        "properties": {
-            "id": { "type": "string", "description": "Unique identifier for the equipment." },
-            "name": { "type": "string", "description": "Name of the equipment." },
-            "rentalCost": { "type": "number", "description": "Cost per hour for renting the equipment." },
-            "depositCost": { "type": "number", "description": "Security deposit for the equipment." },
-            "facilityId": { "type": "string", "description": "Reference to the Facility this equipment belongs to." }
-        },
-        "required": ["id", "name", "rentalCost"]
     },
     "FacilityRequest": {
       "title": "FacilityRequest",
@@ -62,7 +49,7 @@
         "rentalCost": { "type": "number" },
         "depositCost": { "type": "number" },
         "sports": { "type": "array", "items": { "type": "string" } },
-        "equipmentIds": { "type": "array", "items": { "type": "string" } },
+        "equipments": { "type": "array", "items": { "type": "string" } },
         "type": { "type": "string", "enum": ["indoor", "outdoor"] },
         "accessible": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
@@ -88,13 +75,6 @@
         "definition": {
           "schema": { "$ref": "#/entities/Facility" },
           "description": "Stores sports facility data. Includes denormalized 'adminId' for authorization independence."
-        }
-      },
-      {
-        "path": "/equipments/{equipmentId}",
-        "definition": {
-            "schema": { "$ref": "#/entities/Equipment" },
-            "description": "Stores individual pieces of equipment that can be associated with facilities."
         }
       },
       {

@@ -2,7 +2,7 @@
 import { initializeApp, App } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-import { users, facilities, equipments } from '../src/lib/data';
+import { users, facilities } from '../src/lib/data';
 import { firebaseConfig } from '../src/firebase/config';
 
 let app: App;
@@ -51,16 +51,6 @@ async function seedDatabase() {
             }
         }
     }
-
-    // Seed Equipments
-    console.log('Seeding equipments...');
-    const equipmentBatch = db.batch();
-    equipments.forEach(equipment => {
-        const docRef = db.collection('equipments').doc(equipment.id);
-        equipmentBatch.set(docRef, equipment);
-    });
-    await equipmentBatch.commit();
-    console.log('Equipments seeded.');
 
     // Seed Facilities
     console.log('Seeding facilities...');

@@ -58,7 +58,7 @@ export default function FacilitiesPage() {
                     <TableCell className="font-medium">{facility.name}</TableCell>
                     <TableCell>{facility.region}</TableCell>
                     <TableCell>{facility.rentalCost} MAD/hr</TableCell>
-                    <TableCell>{facility.equipmentIds?.length || 0}</TableCell>
+                    <TableCell>{facility.equipments?.length || 0}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {facility.sports.map((sport) => (

@@ -1,21 +1,14 @@
 'use client';
 
-import type { Facility, Equipment } from '@/lib/types';
+import type { Facility } from '@/lib/types';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Accessibility, Sun, Moon, Wallet, ShieldCheck, Sprout } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
 
 export default function FacilityDetails({ facility }: { facility: Facility }) {
-  const firestore = useFirestore();
-  
-  const equipmentsCollectionRef = useMemoFirebase(() => collection(firestore, 'equipments'), [firestore]);
-  const { data: allEquipments } = useCollection<Equipment>(equipmentsCollectionRef);
-
-  const facilityEquipments = allEquipments?.filter(e => facility.equipmentIds?.includes(e.id)) || [];
+  const facilityEquipments = facility.equipments || [];
 
   return (
     <div className="space-y-6 pb-6">
@@ -63,12 +56,12 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
         <div className="px-6">
           <h3 className="text-lg font-semibold mb-3">Équipements Inclus</h3>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            {facilityEquipments.map(equip => {
-              const Icon = equipmentIconsMap[equip.name] || Sprout;
+            {facilityEquipments.map(equipName => {
+              const Icon = equipmentIconsMap[equipName] || Sprout;
               return (
-                <div key={equip.id} className="flex items-center gap-3 text-muted-foreground">
+                <div key={equipName} className="flex items-center gap-3 text-muted-foreground">
                   <Icon className="w-4 h-4" />
-                  <span>{equip.name}</span>
+                  <span>{equipName}</span>
                 </div>
               )
             })}

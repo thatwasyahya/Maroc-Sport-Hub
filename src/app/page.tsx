@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import Header from "@/components/header";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import HomeMapContainer from "@/components/home-map-container";
-import type { Facility, Equipment } from '@/lib/types';
+import type { Facility } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from "@/components/ui/button";
 import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter } from 'lucide-react';
@@ -32,13 +32,8 @@ export default function Home() {
     () => collection(firestore, 'facilities'),
     [firestore]
   );
-  const equipmentsCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'equipments'),
-    [firestore]
-  );
 
   const { data: allFacilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
-  const { data: allEquipmentsData, isLoading: equipmentsLoading } = useCollection<Equipment>(equipmentsCollectionRef);
 
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>([]);
@@ -65,9 +60,9 @@ export default function Home() {
   const { allSports, allRegions, allEquipments } = useMemo(() => {
     const sports = [...new Set(facilities.flatMap(f => f.sports || []))].sort();
     const regions = getRegions().map(r => r.name).sort();
-    const equipments = [...new Set(allEquipmentsData?.map(e => e.name) || [])].sort();
+    const equipments = [...new Set(facilities.flatMap(f => f.equipments || []))].sort();
     return { allSports: sports, allRegions: regions, allEquipments: equipments };
-  }, [facilities, allEquipmentsData]);
+  }, [facilities]);
 
 
   useEffect(() => {
@@ -87,10 +82,7 @@ export default function Home() {
     
     if (selectedEquipment.length > 0) {
         newFilteredFacilities = newFilteredFacilities.filter(f => 
-            f.equipmentIds && allEquipmentsData && selectedEquipment.some(equipName => {
-              const equipmentNamesInFacility = f.equipmentIds.map(id => allEquipmentsData.find(e => e.id === id)?.name);
-              return equipmentNamesInFacility.includes(equipName);
-            })
+            f.equipments && selectedEquipment.some(equipName => f.equipments.includes(equipName))
         );
     }
 
@@ -106,7 +98,7 @@ export default function Home() {
 
     setFilteredFacilities(newFilteredFacilities);
 
-  }, [selectedSports, selectedRegions, selectedEquipment, isIndoor, isOutdoor, isAccessible, facilities, allEquipmentsData]);
+  }, [selectedSports, selectedRegions, selectedEquipment, isIndoor, isOutdoor, isAccessible, facilities]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>, item: string, checked: boolean) => {
     setter(prev => checked ? [...prev, item] : prev.filter(i => i !== item));
@@ -306,6 +298,7 @@ export default function Home() {
               <h4 className="font-semibold text-card-foreground/90">Navigation</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/" className="text-muted-foreground hover:text-primary">Accueil</Link></li>
+                <li><Link href="/profile" className="text-muted-foreground hover:text-primary">Profil</Link></li>
               </ul>
             </div>
             <div className="space-y-4">

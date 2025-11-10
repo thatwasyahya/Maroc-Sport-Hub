@@ -23,11 +23,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import type { Equipment } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
@@ -46,7 +45,7 @@ const facilityRequestSchema = z.object({
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
-  equipmentIds: z.array(z.string()).default([]),
+  equipments: z.string().optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
 });
@@ -67,12 +66,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
   const regions = getRegions();
   const [cities, setCities] = useState<string[]>([]);
 
-  const equipmentsCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'equipments'),
-    [firestore]
-  );
-  const { data: allEquipments } = useCollection<Equipment>(equipmentsCollectionRef);
-
   const form = useForm<FacilityRequestFormValues>({
     resolver: zodResolver(facilityRequestSchema),
     defaultValues: {
@@ -84,7 +77,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       rentalCost: 0,
       depositCost: 0,
       sports: [],
-      equipmentIds: [],
+      equipments: '',
       type: 'outdoor',
       accessible: false,
     },
@@ -110,8 +103,11 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     try {
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
       
+      const equipmentsArray = data.equipments ? data.equipments.split(',').map(e => e.trim()).filter(e => e) : [];
+
       await addDoc(requestsCollectionRef, {
         ...data,
+        equipments: equipmentsArray,
         userId: user.uid,
         userName: user.displayName || user.email,
         status: 'pending',
@@ -268,6 +264,26 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="equipments"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Équipements</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Saisissez une liste d'équipements séparés par des virgules (ex: Ballons, Cônes, Chasubles)"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                     <FormDescription>
+                        Fournissez une liste des équipements disponibles, séparés par des virgules.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="sports"
@@ -305,45 +321,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                   </FormItem>
                 )}
               />
-              {allEquipments && allEquipments.length > 0 && (
-                <FormField
-                  control={form.control}
-                  name="equipmentIds"
-                  render={() => (
-                    <FormItem>
-                       <div className="mb-2">
-                        <FormLabel>Équipement</FormLabel>
-                        <FormDescription>Sélectionnez les équipements disponibles dans cette installation.</FormDescription>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {allEquipments.map((equipment) => (
-                          <FormField
-                            key={equipment.id}
-                            control={form.control}
-                            name="equipmentIds"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(equipment.id)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), equipment.id])
-                                        : field.onChange(field.value?.filter((id) => id !== equipment.id));
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">{equipment.name}</FormLabel>
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
               <div className="flex gap-8 pt-4">
                   <FormField
                       control={form.control}

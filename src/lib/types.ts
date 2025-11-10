@@ -37,7 +37,7 @@ export interface Facility {
   accessible: boolean;
   description: string;
   photos: string[];
-  equipmentIds: string[]; // List of equipment IDs
+  equipments: string[]; // List of equipment names
   rentalCost: number; // Cost per hour
   depositCost: number;
   // Removed availability
@@ -59,7 +59,7 @@ export interface FacilityRequest {
   rentalCost: number;
   depositCost: number;
   sports: string[];
-  equipmentIds: string[];
+  equipments: string[];
   type: 'indoor' | 'outdoor';
   accessible: boolean;
   createdAt: any;

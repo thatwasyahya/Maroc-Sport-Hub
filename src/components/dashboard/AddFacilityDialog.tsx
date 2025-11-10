@@ -23,11 +23,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import type { Equipment, Facility } from '@/lib/types';
+import type { Facility } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
@@ -46,7 +46,7 @@ const facilitySchema = z.object({
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one sport.",
   }),
-  equipmentIds: z.array(z.string()).default([]),
+  equipments: z.string().optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
 });
@@ -67,12 +67,6 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
   const regions = getRegions();
   const [cities, setCities] = useState<string[]>([]);
 
-  const equipmentsCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'equipments'),
-    [firestore]
-  );
-  const { data: allEquipments } = useCollection<Equipment>(equipmentsCollectionRef);
-
   const form = useForm<FacilityFormValues>({
     resolver: zodResolver(facilitySchema),
     defaultValues: {
@@ -84,7 +78,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
       rentalCost: 0,
       depositCost: 0,
       sports: [],
-      equipmentIds: [],
+      equipments: '',
       type: 'outdoor',
       accessible: false,
     },
@@ -110,8 +104,20 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     try {
       const facilitiesCollectionRef = collection(firestore, 'facilities');
       
-      const newFacilityData: Omit<Facility, 'id' | 'availability' | 'photos'> & { createdAt: any, updatedAt: any } = {
-        ...data,
+      const equipmentsArray = data.equipments ? data.equipments.split(',').map(e => e.trim()).filter(e => e) : [];
+
+      const newFacilityData: Omit<Facility, 'id' | 'photos' > & { createdAt: any, updatedAt: any } = {
+        name: data.name,
+        description: data.description,
+        address: data.address,
+        region: data.region,
+        city: data.city,
+        rentalCost: data.rentalCost,
+        depositCost: data.depositCost,
+        sports: data.sports,
+        type: data.type,
+        accessible: data.accessible,
+        equipments: equipmentsArray,
         adminId: user.uid,
         location: { lat: 33.5731, lng: -7.5898 }, // Default to Casablanca for now
         createdAt: serverTimestamp(),
@@ -269,6 +275,26 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="equipments"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Equipments</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter a comma-separated list of equipments (e.g., Basketballs, Cones, Bibs)"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                        Provide a list of available equipments, separated by commas.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="sports"
@@ -306,45 +332,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                   </FormItem>
                 )}
               />
-              {allEquipments && allEquipments.length > 0 && (
-                <FormField
-                  control={form.control}
-                  name="equipmentIds"
-                  render={() => (
-                    <FormItem>
-                       <div className="mb-2">
-                        <FormLabel>Equipment</FormLabel>
-                        <FormDescription>Select the equipment available at this facility.</FormDescription>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {allEquipments.map((equipment) => (
-                          <FormField
-                            key={equipment.id}
-                            control={form.control}
-                            name="equipmentIds"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(equipment.id)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), equipment.id])
-                                        : field.onChange(field.value?.filter((id) => id !== equipment.id));
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">{equipment.name}</FormLabel>
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+             
               <div className="flex gap-8 pt-4">
                   <FormField
                       control={form.control}

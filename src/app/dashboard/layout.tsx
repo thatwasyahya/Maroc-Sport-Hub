@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Building, Users, Home, Loader, ShieldAlert, Dumbbell, FileText } from 'lucide-react';
+import { Activity, Building, Users, Home, Loader, ShieldAlert, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 import { useMemo } from 'react';
@@ -81,8 +81,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       { href: '/dashboard', label: 'Overview', icon: Activity },
       { href: '/dashboard/requests', label: 'Requests', icon: FileText },
       { href: '/dashboard/facilities', label: 'Facilities', icon: Building },
-      { href: '/dashboard/equipments', label: 'Equipments', icon: Dumbbell },
     ];
+    if (userProfile?.role === 'super_admin') {
+        links.push({ href: '/dashboard/users', label: 'Users', icon: Users });
+    }
     return links;
   }, [userProfile?.role]);
 

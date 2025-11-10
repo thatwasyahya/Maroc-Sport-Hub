@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, serverTimestamp, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import type { Facility, FacilityRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, MoreHorizontal, Loader2, Trash2 } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { CheckCircle, XCircle, Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -53,7 +52,7 @@ export default function RequestsList() {
                 sports: request.sports,
                 type: request.type,
                 accessible: request.accessible,
-                equipmentIds: request.equipmentIds,
+                equipments: request.equipments,
                 rentalCost: request.rentalCost,
                 depositCost: request.depositCost,
                 createdAt: serverTimestamp(),
@@ -84,7 +83,6 @@ export default function RequestsList() {
     };
     
     const handleReject = async (request: FacilityRequest) => {
-        // For now, a simple rejection. A real app might have a dialog for the reason.
         if (!firestore) return;
         setProcessingId(request.id);
         const reason = prompt("Raison du rejet (optionnel):");
