@@ -33,8 +33,8 @@ export interface Facility {
   type: "indoor" | "outdoor";
   accessible: boolean;
   description: string;
-  photos: string[];
-  equipments: EquipmentItem[];
+  photos?: string[];
+  equipments?: EquipmentItem[];
 }
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
@@ -51,16 +51,9 @@ export interface FacilityRequest {
   region: string;
   city: string;
   sports: string[];
-  equipments: EquipmentItem[];
+  equipments?: EquipmentItem[];
   type: 'indoor' | 'outdoor';
   accessible: boolean;
   createdAt: any;
   updatedAt: any;
-}
-
-export interface Equipment {
-    id: string;
-    name: string;
-    createdAt: any;
-    updatedAt: any;
 }

@@ -44,7 +44,7 @@ export default function RequestsList() {
 
             // 1. Create new facility document
             const newFacilityRef = doc(collection(firestore, 'facilities'));
-            const newFacilityData: Omit<Facility, 'id' | 'location' | 'photos'> & { adminId: string, createdAt: any, updatedAt: any } = {
+            const newFacilityData: Omit<Facility, 'id' | 'photos'> & { createdAt: any, updatedAt: any } = {
                 adminId: request.userId,
                 name: request.name,
                 description: request.description,
@@ -55,6 +55,7 @@ export default function RequestsList() {
                 type: request.type,
                 accessible: request.accessible,
                 equipments: request.equipments || [],
+                location: { lat: 33.5731, lng: -7.5898 }, // Default to Casablanca, can be updated later
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -173,7 +174,7 @@ export default function RequestsList() {
                                     </TableRow>
                                 ) : pendingRequests.length > 0 ? (
                                     pendingRequests.map((request) => (
-                                        <TableRow key={request.id} className="cursor-pointer" onClick={() => setSelectedRequest(request)}>
+                                        <TableRow key={request.id}>
                                             <TableCell className="font-medium">{request.name}</TableCell>
                                             <TableCell>{request.userName}</TableCell>
                                             <TableCell>{request.city}</TableCell>
@@ -235,7 +236,7 @@ export default function RequestsList() {
                                     </TableRow>
                                 ) : processedRequests.length > 0 ? (
                                     processedRequests.map((request) => (
-                                        <TableRow key={request.id} className="cursor-pointer" onClick={() => setSelectedRequest(request)}>
+                                        <TableRow key={request.id}>
                                             <TableCell className="font-medium">{request.name}</TableCell>
                                             <TableCell>{request.userName}</TableCell>
                                             <TableCell>
