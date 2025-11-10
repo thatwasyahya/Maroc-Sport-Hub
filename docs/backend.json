@@ -81,6 +81,11 @@
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
             }
+        },
+        "attachmentUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the uploaded attachment in Firebase Storage."
         }
       },
       "required": ["userId", "userName", "userEmail", "status", "name", "region", "city", "sports", "type", "createdAt", "location"]

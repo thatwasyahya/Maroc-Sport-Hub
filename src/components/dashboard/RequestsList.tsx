@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Loader2, Trash2, Eye } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Trash2, Eye, Paperclip } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -170,7 +170,7 @@ export default function RequestsList() {
                                     <TableHead>Installation</TableHead>
                                     <TableHead>Utilisateur</TableHead>
                                     <TableHead>Ville</TableHead>
-                                    <TableHead>Statut</TableHead>
+                                    <TableHead>Pièce jointe</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -188,7 +188,15 @@ export default function RequestsList() {
                                             <TableCell>{request.userName}</TableCell>
                                             <TableCell>{request.city}</TableCell>
                                             <TableCell>
-                                                <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
+                                                {request.attachmentUrl ? (
+                                                    <Button variant="ghost" size="sm" asChild>
+                                                        <a href={request.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                                            <Paperclip className="h-4 w-4" />
+                                                        </a>
+                                                    </Button>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground">Aucune</span>
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {processingId === request.id ? (

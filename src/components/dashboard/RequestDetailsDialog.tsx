@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Paperclip, Mail } from 'lucide-react';
+import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -33,14 +33,6 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
             default: return 'outline';
         }
     };
-  
-  const handleContactUser = () => {
-    if (!request.userEmail) return;
-    const subject = `Concernant votre demande d'ajout : ${request.name}`;
-    const body = `Bonjour ${request.userName},\n\nNous vous contactons au sujet de votre demande d'ajout de l'installation "${request.name}".\nPourriez-vous nous fournir la pièce jointe (photo, document, etc.) en réponse à cet e-mail ?\n\nCordialement,\nL'équipe Maroc Sport Hub`;
-    const mailtoLink = `mailto:${request.userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailtoLink, '_blank');
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -126,20 +118,20 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                     )}
                 </div>
 
-                <Separator />
-                <div className="grid gap-2">
-                    <h3 className="font-semibold">Pièce Jointe</h3>
-                      <Button variant="outline" asChild className="w-fit" onClick={handleContactUser}>
-                        <a>
-                            <Mail className="mr-2 h-4 w-4" />
-                            Contacter l'utilisateur pour la pièce jointe
-                        </a>
-                    </Button>
-                    <p className="text-xs text-muted-foreground">
-                        Cliquez pour envoyer un e-mail à l'utilisateur et lui demander la pièce jointe.
-                    </p>
-                </div>
-
+                {request.attachmentUrl && (
+                    <>
+                        <Separator />
+                        <div className="grid gap-2">
+                            <h3 className="font-semibold">Pièce Jointe</h3>
+                            <Button variant="outline" asChild className="w-fit">
+                                <a href={request.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                    <Paperclip className="mr-2 h-4 w-4" />
+                                    Voir la pièce jointe
+                                </a>
+                            </Button>
+                        </div>
+                    </>
+                )}
 
                 {request.status === 'rejected' && request.rejectionReason && (
                     <>

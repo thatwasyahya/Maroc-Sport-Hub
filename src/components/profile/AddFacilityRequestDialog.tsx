@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser, useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Checkbox } from '../ui/checkbox';
@@ -53,6 +54,7 @@ const facilityRequestSchema = z.object({
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
+  attachment: z.instanceof(FileList).optional(),
 });
 
 type FacilityRequestFormValues = z.infer<typeof facilityRequestSchema>;
@@ -89,6 +91,9 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       accessible: false,
     },
   });
+  
+  const attachmentRef = form.register("attachment");
+
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -175,6 +180,16 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
+      let attachmentUrl: string | undefined = undefined;
+      const attachmentFile = data.attachment?.[0];
+      
+      if (attachmentFile) {
+        const storage = getStorage();
+        const storageRef = ref(storage, `facility-requests/${user.uid}/${Date.now()}_${attachmentFile.name}`);
+        const snapshot = await uploadBytes(storageRef, attachmentFile);
+        attachmentUrl = await getDownloadURL(snapshot.ref);
+      }
+
       const location = { lat, lng };
 
       const newRequestData: Omit<FacilityRequest, 'id'> = {
@@ -186,6 +201,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         location,
+        attachmentUrl,
       };
 
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
@@ -396,12 +412,24 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                   )}
                 />
 
-                 <FormItem>
-                    <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
-                    <FormDescription>
-                      Vous pourrez discuter de la pièce jointe avec un administrateur après avoir soumis la demande.
-                    </FormDescription>
-                  </FormItem>
+                <FormField
+                  control={form.control}
+                  name="attachment"
+                  render={({ field }) => {
+                    return (
+                      <FormItem>
+                        <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
+                        <FormDescription>
+                          Ajoutez une image ou un document (max 5MB).
+                        </FormDescription>
+                        <FormControl>
+                          <Input type="file" {...attachmentRef} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
 
                 <div className="flex gap-8 pt-4">
                     <FormField
