@@ -44,7 +44,7 @@ export async function geocodeAddressWithOpenCage(
   }
 
   const query = encodeURIComponent(address);
-  const url = `https://api.opencagedata.com/geocode/v1/json?q=${query}&key=${apiKey}&countrycode=MA&limit=1`;
+  const url = `https://api.opencagedata.com/geocode/v1/json?q=${query}&key=${apiKey}&countrycode=MA&limit=5`;
 
   try {
     const response = await fetch(url);
@@ -57,13 +57,25 @@ export async function geocodeAddressWithOpenCage(
     const data = await response.json();
 
     if (data.status.code === 200 && data.results && data.results.length > 0) {
-      const location = data.results[0].geometry;
+      // Find the best result based on confidence
+      let bestResult = data.results[0];
+      for (const result of data.results) {
+        if (result.confidence === 10) { // 10 is the highest confidence
+          bestResult = result;
+          break; // Found the best possible match
+        }
+        if (result.confidence > bestResult.confidence) {
+          bestResult = result;
+        }
+      }
+
+      const location = bestResult.geometry;
       const result: GeocodeAddressOutput = {
         lat: location.lat,
         lng: location.lng,
       };
 
-      // 2. Store the successful result in the cache
+      // Store the successful result in the cache
       geocodeCache.set(normalizedAddress, result);
 
       return result;
