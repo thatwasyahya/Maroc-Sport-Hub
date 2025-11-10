@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read access to everyone for all files.
+    match /{allPaths=**} {
+      allow read;
+    }
+    
+    // Allow write access only to authenticated users.
+    // They can only write to their own 'facility-requests' folder.
+    match /facility-requests/{userId}/{allPaths=**} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow admins to write to the 'facilities' folder.
+    // This is a placeholder; you should implement a proper role check (e.g., using custom claims).
+    // For now, we will allow any authenticated user to write here for simplicity.
+    match /facilities/{allPaths=**} {
+        allow write: if request.auth != null; 
+    }
+  }
+}

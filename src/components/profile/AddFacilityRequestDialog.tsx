@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser, useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Checkbox } from '../ui/checkbox';
@@ -37,7 +38,6 @@ import { PlusCircle, Trash2, Search, Loader2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
 import type { FacilityRequest } from '@/lib/types';
 import { geocodeAddress } from '@/services/nominatim';
-import { uploadFile } from '@/app/actions';
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -170,21 +170,18 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       setIsGeocoding(false);
     }
   };
-
+  
   const handleFileUpload = async (file: File, type: 'photo' | 'attachment'): Promise<string | undefined> => {
     if (!user) return undefined;
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('path', `facility-requests/${user.uid}/${Date.now()}_${type}_${file.name}`);
+    const storage = getStorage();
+    const filePath = `facility-requests/${user.uid}/${Date.now()}_${type}_${file.name}`;
+    const storageRef = ref(storage, filePath);
     
-    const result = await uploadFile(formData);
+    await uploadBytes(storageRef, file);
+    const downloadUrl = await getDownloadURL(storageRef);
 
-    if (result.success) {
-        return result.url;
-    } else {
-        throw new Error(result.error || 'File upload failed.');
-    }
+    return downloadUrl;
 };
 
   const onSubmit = async (data: FacilityRequestFormValues) => {
