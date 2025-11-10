@@ -39,6 +39,39 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import type { FacilityRequest } from '@/lib/types';
 import { geocodeAddress } from '@/services/nominatim';
 
+// This is a simple image compression utility that can be expanded.
+const compressImage = (file: File, quality = 0.7): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Canvas to Blob conversion failed'));
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
@@ -172,17 +205,28 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
   };
   
   const handleFileUpload = async (file: File, type: 'photo' | 'attachment'): Promise<string | undefined> => {
-    if (!user) return undefined;
+      if (!user) return undefined;
 
-    const storage = getStorage();
-    const filePath = `facility-requests/${user.uid}/${Date.now()}_${type}_${file.name}`;
-    const storageRef = ref(storage, filePath);
-    
-    await uploadBytes(storageRef, file);
-    const downloadUrl = await getDownloadURL(storageRef);
-
-    return downloadUrl;
-};
+      const storage = getStorage();
+      const filePath = `facility-requests/${user.uid}/${Date.now()}_${type}_${file.name}`;
+      const storageRef = ref(storage, filePath);
+      
+      // Compress image before uploading if it's a photo
+      if (type === 'photo' && file.type.startsWith('image/')) {
+        try {
+          const compressedBlob = await compressImage(file);
+          await uploadBytes(storageRef, compressedBlob, { contentType: 'image/jpeg' });
+        } catch (e) {
+          console.warn("Could not compress image, uploading original file. Error:", e);
+          await uploadBytes(storageRef, file);
+        }
+      } else {
+         await uploadBytes(storageRef, file);
+      }
+      
+      const downloadUrl = await getDownloadURL(storageRef);
+      return downloadUrl;
+  };
 
   const onSubmit = async (data: FacilityRequestFormValues) => {
     if (!user) {
@@ -198,15 +242,16 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       const photoFile = data.photo?.[0];
       const attachmentFile = data.attachment?.[0];
 
-      let photoUrl: string | undefined;
-      let attachmentUrl: string | undefined;
+      const uploadPromises: Promise<string | undefined>[] = [];
 
       if (photoFile) {
-        photoUrl = await handleFileUpload(photoFile, 'photo');
+        uploadPromises.push(handleFileUpload(photoFile, 'photo'));
       }
       if (attachmentFile) {
-        attachmentUrl = await handleFileUpload(attachmentFile, 'attachment');
+        uploadPromises.push(handleFileUpload(attachmentFile, 'attachment'));
       }
+      
+      const [photoUrl, attachmentUrl] = await Promise.all(uploadPromises);
 
       const location = { lat, lng };
 
@@ -219,8 +264,8 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         location,
-        photoUrl,
-        attachmentUrl,
+        photoUrl: photoUrl,
+        attachmentUrl: attachmentFile ? attachmentUrl : undefined,
       };
 
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
