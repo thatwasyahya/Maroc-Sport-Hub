@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Accessibility, Calendar, City, MapPin, Moon, Sun, User } from 'lucide-react';
+import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -68,7 +68,7 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                             </div>
                         </div>
                         <div className="flex items-start gap-2">
-                            <City className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                            <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
                             <div>
                                 <p className="font-medium">Ville & Région</p>
                                 <p className="text-muted-foreground">{request.city}, {request.region}</p>
