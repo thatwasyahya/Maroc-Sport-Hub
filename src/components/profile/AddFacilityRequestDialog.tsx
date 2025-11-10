@@ -110,7 +110,7 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
-      const { lat, lng } = await geocodeAddressWithOpenCage({ address: `${data.address}, ${data.city}, ${data.region}` });
+      const { lat, lng } = await geocodeAddressWithOpenCage({ address: `${data.address}, ${data.city}, Maroc` });
       
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
 
