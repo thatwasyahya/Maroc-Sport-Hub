@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Loader2, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -20,12 +20,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import RequestDetailsDialog from './RequestDetailsDialog';
 
 export default function RequestsList() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [processingId, setProcessingId] = useState<string | null>(null);
+    const [selectedRequest, setSelectedRequest] = useState<FacilityRequest | null>(null);
 
     const requestsCollectionRef = useMemoFirebase(
         () => collection(firestore, 'facilityRequests'),
@@ -144,137 +146,154 @@ export default function RequestsList() {
     const processedRequests = requests?.filter(r => r.status !== 'pending') || [];
 
     return (
-        <div className="space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Demandes en Attente</CardTitle>
-                    <CardDescription>Passez en revue et approuvez les nouvelles propositions d'installations.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Installation</TableHead>
-                                <TableHead>Utilisateur</TableHead>
-                                <TableHead>Ville</TableHead>
-                                <TableHead>Statut</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
+        <>
+            <div className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Demandes en Attente</CardTitle>
+                        <CardDescription>Passez en revue et approuvez les nouvelles propositions d'installations.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                                    </TableCell>
+                                    <TableHead>Installation</TableHead>
+                                    <TableHead>Utilisateur</TableHead>
+                                    <TableHead>Ville</TableHead>
+                                    <TableHead>Statut</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ) : pendingRequests.length > 0 ? (
-                                pendingRequests.map((request) => (
-                                    <TableRow key={request.id}>
-                                        <TableCell className="font-medium">{request.name}</TableCell>
-                                        <TableCell>{request.userName}</TableCell>
-                                        <TableCell>{request.city}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {processingId === request.id ? (
-                                                <Loader2 className="ml-auto h-5 w-5 animate-spin" />
-                                            ) : (
-                                                <div className="flex justify-end gap-2">
-                                                    <Button size="sm" variant="outline" onClick={() => handleApprove(request)}>
-                                                        <CheckCircle className="mr-2 h-4 w-4" /> Approuver
-                                                    </Button>
-                                                    <Button size="sm" variant="destructive" onClick={() => handleReject(request)}>
-                                                        <XCircle className="mr-2 h-4 w-4" /> Rejeter
-                                                    </Button>
-                                                </div>
-                                            )}
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        Aucune demande en attente.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Demandes Traitées</CardTitle>
-                    <CardDescription>Historique des demandes approuvées et rejetées.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Installation</TableHead>
-                                <TableHead>Utilisateur</TableHead>
-                                <TableHead>Statut</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
-                                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                                    </TableCell>
-                                </TableRow>
-                            ) : processedRequests.length > 0 ? (
-                                processedRequests.map((request) => (
-                                    <TableRow key={request.id}>
-                                        <TableCell className="font-medium">{request.name}</TableCell>
-                                        <TableCell>{request.userName}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {processingId === request.id ? (
-                                                 <Loader2 className="ml-auto h-5 w-5 animate-spin" />
-                                            ) : (
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="text-destructive">
-                                                            <Trash2 className="h-4 w-4" />
+                                ) : pendingRequests.length > 0 ? (
+                                    pendingRequests.map((request) => (
+                                        <TableRow key={request.id} className="cursor-pointer" onClick={() => setSelectedRequest(request)}>
+                                            <TableCell className="font-medium">{request.name}</TableCell>
+                                            <TableCell>{request.userName}</TableCell>
+                                            <TableCell>{request.city}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {processingId === request.id ? (
+                                                    <Loader2 className="ml-auto h-5 w-5 animate-spin" />
+                                                ) : (
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setSelectedRequest(request); }}>
+                                                            <Eye className="mr-2 h-4 w-4" /> Détails
                                                         </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                This will permanently delete the request. This action cannot be undone.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => handleDelete(request.id)}>
-                                                                Delete
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            )}
+                                                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleApprove(request); }}>
+                                                            <CheckCircle className="mr-2 h-4 w-4" /> Approuver
+                                                        </Button>
+                                                        <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); handleReject(request); }}>
+                                                            <XCircle className="mr-2 h-4 w-4" /> Rejeter
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            Aucune demande en attente.
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            ) : (
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Demandes Traitées</CardTitle>
+                        <CardDescription>Historique des demandes approuvées et rejetées.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
-                                        Aucune demande traitée.
-                                    </TableCell>
+                                    <TableHead>Installation</TableHead>
+                                    <TableHead>Utilisateur</TableHead>
+                                    <TableHead>Statut</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : processedRequests.length > 0 ? (
+                                    processedRequests.map((request) => (
+                                        <TableRow key={request.id} className="cursor-pointer" onClick={() => setSelectedRequest(request)}>
+                                            <TableCell className="font-medium">{request.name}</TableCell>
+                                            <TableCell>{request.userName}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {processingId === request.id ? (
+                                                    <Loader2 className="ml-auto h-5 w-5 animate-spin" />
+                                                ) : (
+                                                    <div className='flex items-center justify-end gap-2'>
+                                                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setSelectedRequest(request); }}>
+                                                            <Eye className="mr-2 h-4 w-4" /> Détails
+                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={(e) => e.stopPropagation()}>
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        This will permanently delete the request. This action cannot be undone.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => handleDelete(request.id)}>
+                                                                        Delete
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            Aucune demande traitée.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+            {selectedRequest && (
+                <RequestDetailsDialog 
+                    request={selectedRequest} 
+                    open={!!selectedRequest} 
+                    onOpenChange={(open) => { if (!open) setSelectedRequest(null); }}
+                />
+            )}
+        </>
     );
 }
