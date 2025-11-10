@@ -36,7 +36,7 @@ import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
-import { geocodeAddress } from '@/ai/flows/geocode-address-flow';
+import { geocodeAddressWithGoogle } from '@/services/google-maps';
 
 const facilitySchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -111,7 +111,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     }
     setIsSubmitting(true);
     try {
-      const { lat, lng } = await geocodeAddress({ address: `${data.address}, ${data.city}, ${data.region}, Morocco` });
+      const { lat, lng } = await geocodeAddressWithGoogle({ address: `${data.address}, ${data.city}, ${data.region}` });
       
       const facilitiesCollectionRef = collection(firestore, 'facilities');
       
