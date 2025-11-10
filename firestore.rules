@@ -65,9 +65,7 @@ service cloud.firestore {
      **************************************************/
     match /facilityRequests/{requestId} {
       allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      // Admins can list all requests.
-      // Users can list their own requests via a constrained query.
-      allow list: if isAdmin() || (request.query.limit <= 10 && request.query.filters.size() > 0 && request.query.filters[0].field == 'userId' && request.query.filters[0].value == request.auth.uid);
+      allow list: if isAdmin();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       // Admins can update a request to approve or reject it
       allow update: if isAdmin();
