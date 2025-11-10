@@ -1,6 +1,6 @@
 'use client';
 
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -34,8 +34,9 @@ import { ScrollArea } from '../ui/scroll-area';
 import { sports } from '@/lib/data';
 import { getRegions, getCities } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Search } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
+import { geocodeAddress } from '@/services/nominatim';
 
 const facilitySchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -68,6 +69,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   
   const regions = getRegions();
   const [cities, setCities] = useState<string[]>([]);
@@ -82,8 +84,8 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
       address: '',
       region: '',
       city: '',
-      lat: 33.5731, // Default to Casablanca
-      lng: -7.5898,
+      lat: 0,
+      lng: 0,
       sports: [],
       equipments: [],
       type: 'outdoor',
@@ -107,9 +109,57 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     }
   }, [selectedRegion, form]);
 
+  const handleGeocode = async () => {
+    const address = form.getValues("address");
+    const city = form.getValues("city");
+    const region = form.getValues("region");
+    
+    if (!address || !city || !region) {
+      toast({
+        variant: "destructive",
+        title: "Address Incomplete",
+        description: "Please fill in the address, city, and region fields before geocoding.",
+      });
+      return;
+    }
+
+    setIsGeocoding(true);
+    try {
+      const fullAddress = `${address}, ${city}, ${region}, Morocco`;
+      const location = await geocodeAddress(fullAddress);
+      if (location) {
+        form.setValue("lat", location.lat, { shouldValidate: true });
+        form.setValue("lng", location.lng, { shouldValidate: true });
+        toast({
+          title: "Location Found",
+          description: `Coordinates set to: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Location Not Found",
+          description: "Could not find coordinates for the entered address. Please check the address or enter coordinates manually.",
+        });
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      toast({
+        variant: "destructive",
+        title: "Geocoding Error",
+        description: "An error occurred while trying to find the address.",
+      });
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const onSubmit = async (data: FacilityFormValues) => {
     if (!user) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
+      return;
+    }
+     if (data.lat === 0 || data.lng === 0) {
+      toast({ variant: 'destructive', title: 'Coordinates Missing', description: 'Please geocode the address to get coordinates before submitting.' });
       return;
     }
     setIsSubmitting(true);
@@ -172,19 +222,6 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                       </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                          <Input placeholder="e.g., 123 Main St" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                />
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                       control={form.control}
@@ -231,6 +268,25 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                       )}
                   />
                 </div>
+                 <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Address</FormLabel>
+                        <div className="flex gap-2">
+                            <FormControl>
+                                <Input placeholder="e.g., 123 Main St" {...field} />
+                            </FormControl>
+                            <Button type="button" onClick={handleGeocode} disabled={isGeocoding}>
+                                <Search className="mr-2 h-4 w-4" />
+                                {isGeocoding ? 'Searching...' : 'Geocode'}
+                            </Button>
+                        </div>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
                  <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -241,7 +297,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                           <FormControl>
                             <Input type="number" step="any" placeholder="e.g., 33.5731" {...field} />
                           </FormControl>
-                           <FormDescription>Find with a right-click on Google Maps.</FormDescription>
+                           <FormDescription>Click Geocode to fill automatically.</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
