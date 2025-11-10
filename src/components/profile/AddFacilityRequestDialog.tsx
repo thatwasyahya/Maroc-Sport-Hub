@@ -65,6 +65,61 @@ interface AddFacilityRequestDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Utility to compress images
+const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1200;
+                const MAX_HEIGHT = 1200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    return reject(new Error('Failed to get canvas context'));
+                }
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob(
+                    (blob) => {
+                        if (!blob) {
+                            return reject(new Error('Canvas is empty'));
+                        }
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        resolve(compressedFile);
+                    },
+                    'image/jpeg',
+                    0.8
+                ); // 80% quality
+            };
+            img.onerror = reject;
+        };
+        reader.onerror = reject;
+    });
+};
+
+
 export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFacilityRequestDialogProps) {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -173,8 +228,17 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
 
   const uploadFile = async (file: File, path: string): Promise<string> => {
     const storage = getStorage();
+    let fileToUpload = file;
+    // Compress if it's an image
+    if (file.type.startsWith('image/')) {
+        try {
+            fileToUpload = await compressImage(file);
+        } catch (e) {
+            console.warn('Image compression failed, uploading original file.', e);
+        }
+    }
     const storageRef = ref(storage, path);
-    const snapshot = await uploadBytes(storageRef, file);
+    const snapshot = await uploadBytes(storageRef, fileToUpload);
     return getDownloadURL(snapshot.ref);
   };
 
@@ -189,17 +253,26 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
-      let photoUrl: string | undefined = undefined;
       const photoFile = data.photo?.[0];
-      if(photoFile){
-        photoUrl = await uploadFile(photoFile, `facility-requests/${user.uid}/${Date.now()}_photo_${photoFile.name}`);
+      const attachmentFile = data.attachment?.[0];
+
+      const uploadPromises: Promise<string | undefined>[] = [];
+
+      if (photoFile) {
+        const photoPath = `facility-requests/${user.uid}/${Date.now()}_photo_${photoFile.name}`;
+        uploadPromises.push(uploadFile(photoFile, photoPath));
+      } else {
+        uploadPromises.push(Promise.resolve(undefined));
+      }
+      
+      if (attachmentFile) {
+        const attachmentPath = `facility-requests/${user.uid}/${Date.now()}_attachment_${attachmentFile.name}`;
+        uploadPromises.push(uploadFile(attachmentFile, attachmentPath));
+      } else {
+        uploadPromises.push(Promise.resolve(undefined));
       }
 
-      let attachmentUrl: string | undefined = undefined;
-      const attachmentFile = data.attachment?.[0];
-      if (attachmentFile) {
-        attachmentUrl = await uploadFile(attachmentFile, `facility-requests/${user.uid}/${Date.now()}_attachment_${attachmentFile.name}`);
-      }
+      const [photoUrl, attachmentUrl] = await Promise.all(uploadPromises);
 
       const location = { lat, lng };
 
