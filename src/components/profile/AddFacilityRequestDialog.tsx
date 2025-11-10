@@ -116,12 +116,12 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
 
       await addDoc(requestsCollectionRef, {
         ...data,
-        location: { lat, lng },
         userId: user.uid,
         userName: user.displayName || user.email,
         status: 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        location: { lat, lng },
       });
 
       toast({
