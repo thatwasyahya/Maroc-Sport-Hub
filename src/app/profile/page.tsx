@@ -14,12 +14,56 @@ import { PlusCircle } from "lucide-react";
 import AddFacilityRequestDialog from "@/components/profile/AddFacilityRequestDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function ProfilePageSkeleton() {
+    return (
+        <div className="min-h-screen w-full flex flex-col">
+            <Header />
+            <main className="flex-1 bg-muted/20">
+                <div className="container mx-auto py-8 px-4">
+                    <Card className="mb-8">
+                        <CardContent className="p-6 flex items-center gap-6">
+                            <Skeleton className="h-24 w-24 rounded-full" />
+                            <div className="flex-1 space-y-2">
+                                <Skeleton className="h-8 w-48" />
+                                <Skeleton className="h-5 w-64" />
+                                <Skeleton className="h-6 w-20" />
+                            </div>
+                            <Skeleton className="h-10 w-48" />
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>My Facility Requests</CardTitle>
+                            <CardDescription>Track the status of your facility addition requests here.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </main>
+        </div>
+    );
+}
+
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const [isAddRequestDialogOpen, setIsAddRequestDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isUserLoading, router]);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -33,27 +77,16 @@ export default function ProfilePage() {
   );
   const { data: facilityRequests, isLoading: isRequestsLoading } = useCollection<FacilityRequest>(userRequestsQuery);
 
+  const isLoading = isUserLoading || isProfileLoading;
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push("/login");
-    }
-  }, [user, isUserLoading, router]);
-
-  if (isUserLoading || isProfileLoading || !user || !userProfile) {
-    return null; // or a loading spinner
+  if (isLoading || !user || !userProfile) {
+    return <ProfilePageSkeleton />;
   }
 
-  const getInitials = (firstName?: string, lastName?: string) => {
-    if (firstName && lastName) {
-      return `${firstName[0]}${lastName[0]}`;
-    }
-    if(firstName) {
-      return firstName.substring(0, 2);
-    }
-    if(user?.email){
-      return user.email.substring(0,2).toUpperCase();
-    }
+  const getInitials = (firstName?: string, lastName?: string, email?: string | null) => {
+    if (firstName && lastName) return `${firstName[0]}${lastName[0]}`;
+    if (firstName) return firstName.substring(0, 2);
+    if (email) return email.substring(0, 2).toUpperCase();
     return "";
   };
   
@@ -78,7 +111,7 @@ export default function ProfilePage() {
             <CardContent className="p-6 flex items-center gap-6">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={user.photoURL || undefined} alt={displayName || ""} />
-                <AvatarFallback className="text-3xl">{getInitials(userProfile.firstName, userProfile.lastName)}</AvatarFallback>
+                <AvatarFallback className="text-3xl">{getInitials(userProfile.firstName, userProfile.lastName, user.email)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold font-headline">{displayName}</h1>

@@ -44,7 +44,7 @@ service cloud.firestore {
      * Description: Manages sports facility data.
      **************************************************/
     match /facilities/{facilityId} {
-      allow get, list: if true; // Publicly readable
+      allow read: if true; // Publicly readable
       allow create: if isAdmin();
       // Only the facility admin or a super_admin can update/delete
       allow update, delete: if (isAdmin() && resource.data.adminId == request.auth.uid) || isSuperAdmin();
@@ -55,7 +55,7 @@ service cloud.firestore {
      * Description: Manages sports equipment data.
      **************************************************/
     match /equipments/{equipmentId} {
-      allow get, list: if true; // Publicly readable
+      allow read: if true; // Publicly readable
       allow create, update, delete: if isAdmin();
     }
     
@@ -65,27 +65,12 @@ service cloud.firestore {
      **************************************************/
     match /facilityRequests/{requestId} {
       allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isAdmin();
+      // Admins can list all requests.
+      // Users can list their own requests via a constrained query.
+      allow list: if isAdmin() || (request.query.limit <= 10 && request.query.filters.size() > 0 && request.query.filters[0].field == 'userId' && request.query.filters[0].value == request.auth.uid);
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       // Admins can update a request to approve or reject it
       allow update: if isAdmin();
-    }
-
-    /**************************************************
-     * Subcollection: imports
-     * Description: Manages data imports by admins.
-     **************************************************/
-    match /users/{adminId}/imports/{importId} {
-      allow read, write: if (isOwner(adminId) && isAdmin()) || isSuperAdmin();
-    }
-
-    /**************************************************
-     * Collection: audit_logs
-     * Description: Logs system actions.
-     **************************************************/
-    match /audit_logs/{auditLogId} {
-      allow read: if isSuperAdmin();
-      allow write: if false; // Logs should be created server-side
     }
   }
 }
