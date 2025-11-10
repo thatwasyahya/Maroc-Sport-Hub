@@ -174,7 +174,11 @@ export default function ProfilePage() {
                                                     requests.map((request) => (
                                                         <TableRow key={request.id}>
                                                             <TableCell className="font-medium">{request.name}</TableCell>
-                                                            <TableCell>{format(new Date(request.createdAt.seconds * 1000), 'dd/MM/yyyy')}</TableCell>
+                                                            <TableCell>
+                                                                {request.createdAt?.seconds 
+                                                                    ? format(new Date(request.createdAt.seconds * 1000), 'dd/MM/yyyy')
+                                                                    : '...'}
+                                                            </TableCell>
                                                             <TableCell>
                                                                 <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
                                                             </TableCell>
