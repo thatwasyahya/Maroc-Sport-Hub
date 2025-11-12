@@ -17,7 +17,7 @@ import type { Facility } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from "@/components/ui/button";
 import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter, SlidersHorizontal, Trash2, Activity } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 import Image from 'next/image';
@@ -135,7 +135,7 @@ export default function Home() {
     setSelectedFacility(facility);
   };
 
-  const handleSheetClose = () => {
+  const handleDialogClose = () => {
     setSelectedFacility(null);
   };
 
@@ -282,19 +282,21 @@ export default function Home() {
             </div>
           </div>
 
-            <Sheet open={!!selectedFacility} onOpenChange={(open) => !open && handleSheetClose()}>
-                <SheetContent className="w-full sm:max-w-xl p-0 overflow-y-auto bg-card/95 backdrop-blur-sm">
-                    {selectedFacility && (
-                        <>
-                            <SheetHeader className="p-6 border-b border-border">
-                                <SheetTitle className="font-headline text-3xl">{selectedFacility.name}</SheetTitle>
-                                <SheetDescription>{selectedFacility.commune}, {selectedFacility.province}, {selectedFacility.region}</SheetDescription>
-                            </SheetHeader>
+          <Dialog open={!!selectedFacility} onOpenChange={(open) => !open && handleDialogClose()}>
+              <DialogContent className="max-w-3xl p-0">
+                  {selectedFacility && (
+                      <>
+                          <DialogHeader className="p-6 pb-4">
+                              <DialogTitle className="font-headline text-3xl">{selectedFacility.name}</DialogTitle>
+                              <DialogDescription>{selectedFacility.address}</DialogDescription>
+                          </DialogHeader>
+                          <ScrollArea className="max-h-[70vh]">
                             <FacilityDetails facility={selectedFacility} />
-                        </>
-                    )}
-                </SheetContent>
-            </Sheet>
+                          </ScrollArea>
+                      </>
+                  )}
+              </DialogContent>
+          </Dialog>
         </section>
       </main>
 
