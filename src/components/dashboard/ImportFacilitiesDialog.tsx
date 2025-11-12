@@ -14,9 +14,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, writeBatch, serverTimestamp, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UploadCloud, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
 import type { Facility } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
@@ -27,7 +27,7 @@ interface ImportFacilitiesDialogProps {
 }
 
 // Flexible mapping to handle variations in Excel column names
-const columnMapping: { [key: string]: keyof Partial<Facility> } = {
+const columnMapping: { [key: string]: keyof Partial<Facility> | 'lat' | 'lng' } = {
   'reference_region': 'reference_region',
   'region': 'region',
   'province': 'province',
@@ -41,7 +41,9 @@ const columnMapping: { [key: string]: keyof Partial<Facility> } = {
   'localisation': 'address',
   'adresse': 'address',
   'longitude': 'lng',
+  'lon': 'lng',
   'latitude': 'lat',
+  'lat': 'lat',
   'propriete': 'ownership',
   'entite_gestionnaire': 'managing_entity',
   'date_derniere_renovation': 'last_renovation_date',
@@ -113,45 +115,54 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         const rows = jsonData.slice(1);
         
         const facilities: Partial<Facility>[] = rows.map((rowArray: any[]) => {
-          const row: Partial<Facility> = {};
-          let lat: number | undefined;
-          let lng: number | undefined;
+          const row: Partial<Facility> & { lat?: number, lng?: number } = {};
 
           headers.forEach((header, index) => {
             const mappedKey = columnMapping[header];
             if (mappedKey) {
               let value = rowArray[index];
               
+              if (value === undefined || value === null) return;
+              
               // Handle specific type conversions
-              if (mappedKey === 'lat') lat = parseFloat(value);
-              else if (mappedKey === 'lng') lng = parseFloat(value);
-              else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count', 'beneficiaries'].includes(mappedKey)) {
-                (row as any)[mappedKey] = value ? Number(value) : undefined;
+              if (mappedKey === 'lat' || mappedKey === 'lng') {
+                (row as any)[mappedKey] = parseFloat(value);
+              } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count'].includes(mappedKey)) {
+                (row as any)[mappedKey] = Number(value);
+              } else if (['beneficiaries'].includes(mappedKey)) {
+                 (row as any)[mappedKey] = parseInt(String(value), 10);
               } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space'].includes(mappedKey)) {
                  (row as any)[mappedKey] = ['true', 'vrai', 'oui', '1', 1].includes(String(value).toLowerCase());
               } else if (mappedKey === 'sports' && typeof value === 'string') {
-                 row.sports = value.split(',').map(s => s.trim());
+                 row.sports = value.split(',').map(s => s.trim()).filter(Boolean);
               } else if (value instanceof Date) {
                   (row as any)[mappedKey] = value;
-              } else if (value !== undefined && value !== null) {
+              } else {
                   (row as any)[mappedKey] = String(value);
               }
             }
           });
           
-          if (lat !== undefined && lng !== undefined) {
-             row.location = { lat, lng };
+          if (row.lat !== undefined && row.lng !== undefined && !isNaN(row.lat) && !isNaN(row.lng)) {
+             row.location = { lat: row.lat, lng: row.lng };
           }
+          delete row.lat;
+          delete row.lng;
+
           row.adminId = user.uid;
           
-          // Basic validation
+          // Basic validation: name and location are essential
           if (!row.name || !row.location) return null;
+          
+          // Set default values for required fields if not present
+          if (!row.sports) row.sports = [];
+
 
           return row;
         }).filter(Boolean) as Partial<Facility>[];
 
         if (facilities.length === 0) {
-            throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez que les colonnes 'nom_etablissement', 'latitude' et 'longitude' sont présentes et remplies.");
+            throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez que les colonnes 'nom_etablissement' (ou 'nom'), 'latitude' (ou 'lat') et 'longitude' (ou 'lon') sont présentes et remplies avec des données valides.");
         }
 
         setParsedData(facilities);
@@ -184,6 +195,12 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             const docRef = doc(facilitiesCollectionRef); // Auto-generates ID
             const payload = {
                 ...facilityData,
+                // Ensure required fields have defaults if somehow missed
+                sports: facilityData.sports || [],
+                type: facilityData.type || 'outdoor',
+                accessible: facilityData.accessible || false,
+                city: facilityData.city || '',
+
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -196,6 +213,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             title: 'Importation réussie',
             description: `${parsedData.length} installations ont été ajoutées à la base de données.`,
         });
+        resetState();
         onOpenChange(false);
     } catch (error: any) {
         console.error("Import error:", error);
@@ -209,8 +227,23 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     }
   };
 
+  const resetState = () => {
+    setFile(null);
+    setParsedData([]);
+    setError(null);
+    setIsParsing(false);
+    setIsImporting(false);
+  }
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      resetState();
+    }
+    onOpenChange(isOpen);
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Importer des Installations depuis Excel</DialogTitle>
@@ -229,7 +262,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
                         {isParsing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         {isParsing ? 'Analyse en cours...' : 'Analyser le fichier'}
                     </Button>
-                    {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+                    {error && <p className="text-sm text-destructive mt-2 max-w-md text-center">{error}</p>}
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -264,7 +297,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>
             Annuler
           </Button>
           <Button onClick={handleImport} disabled={parsedData.length === 0 || isImporting}>
@@ -276,3 +309,5 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     </Dialog>
   );
 }
+
+    
