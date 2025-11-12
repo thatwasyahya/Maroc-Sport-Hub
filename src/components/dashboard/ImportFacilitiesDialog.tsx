@@ -26,44 +26,74 @@ interface ImportFacilitiesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Flexible mapping to handle variations in Excel column names
-const columnMapping: { [key: string]: keyof Partial<Facility> | 'lat' | 'lng' } = {
-  'reference_region': 'reference_region',
-  'region': 'region',
-  'province': 'province',
-  'commune': 'commune',
-  'milieu_urbain_rural': 'milieu',
-  'milieu': 'milieu',
-  'installations_sportives': 'installations_sportives',
-  'categorie_abregee': 'categorie_abregee',
-  'nom_etablissement': 'name',
-  'nom': 'name',
-  'localisation': 'address',
-  'adresse': 'address',
-  'longitude': 'lng',
-  'lon': 'lng',
-  'latitude': 'lat',
-  'lat': 'lat',
-  'propriete': 'ownership',
-  'entite_gestionnaire': 'managing_entity',
-  'date_derniere_renovation': 'last_renovation_date',
-  'superficie': 'surface_area',
-  'capacite_accueil': 'capacity',
-  'effectif': 'staff_count',
-  'etat_etablissement': 'establishment_state',
-  'espace_amenage': 'developed_space',
-  'titre_foncier_numero': 'titre_foncier_numero',
-  'etat_batiment': 'building_state',
-  'etat_equipements': 'equipment_state',
-  'nombre_personnel_sport': 'sports_staff_count',
-  'besoin_rh': 'hr_needs',
-  'prise_en_compte_prog_rehabilitation_annee': 'rehabilitation_plan',
-  'besoin_amenagement': 'besoin_amenagement',
-  'besoin_equipements': 'besoin_equipements',
-  'observation_reouverture': 'observations',
-  'beneficiaires': 'beneficiaries',
-  'sports': 'sports', // Assuming sports are comma-separated in the Excel
+const normalizeHeader = (header: string): string => {
+  if (!header) return '';
+  return header.trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
 };
+
+const columnMapping: { [key: string]: keyof Partial<Facility> | 'lat' | 'lng' } = {
+  [normalizeHeader('reference region')]: 'reference_region',
+  [normalizeHeader('Réference région')]: 'reference_region',
+  [normalizeHeader('region')]: 'region',
+  [normalizeHeader('région')]: 'region',
+  [normalizeHeader('province')]: 'province',
+  [normalizeHeader('commune')]: 'commune',
+  [normalizeHeader('Milieu Urbain - Rural')]: 'milieu',
+  [normalizeHeader('milieu_urbain_rural')]: 'milieu',
+  [normalizeHeader('milieu')]: 'milieu',
+  [normalizeHeader('INSTALLATIONS SPORTIVES')]: 'installations_sportives',
+  [normalizeHeader('installations_sportives')]: 'installations_sportives',
+  [normalizeHeader('Catégorie abrégée')]: 'categorie_abregee',
+  [normalizeHeader('categorie_abregee')]: 'categorie_abregee',
+  [normalizeHeader('Nom de l\'établissement')]: 'name',
+  [normalizeHeader('nom_etablissement')]: 'name',
+  [normalizeHeader('nom')]: 'name',
+  [normalizeHeader('Localisation')]: 'address',
+  [normalizeHeader('localisation')]: 'address',
+  [normalizeHeader('adresse')]: 'address',
+  [normalizeHeader('longitude')]: 'lng',
+  [normalizeHeader('lon')]: 'lng',
+  [normalizeHeader('latitude')]: 'lat',
+  [normalizeHeader('lat')]: 'lat',
+  [normalizeHeader('Propriété')]: 'ownership',
+  [normalizeHeader('propriete')]: 'ownership',
+  [normalizeHeader('Entité Gestionnaire')]: 'managing_entity',
+  [normalizeHeader('entite_gestionnaire')]: 'managing_entity',
+  [normalizeHeader('date de dernière rénovation')]: 'last_renovation_date',
+  [normalizeHeader('date_derniere_renovation')]: 'last_renovation_date',
+  [normalizeHeader('Superficie')]: 'surface_area',
+  [normalizeHeader('superficie')]: 'surface_area',
+  [normalizeHeader('Capacité d\'accueil')]: 'capacity',
+  [normalizeHeader('capacite_accueil')]: 'capacity',
+  [normalizeHeader('Effectif')]: 'staff_count',
+  [normalizeHeader('effectif')]: 'staff_count',
+  [normalizeHeader('Etat de l\'établissement')]: 'establishment_state',
+  [normalizeHeader('etat_etablissement')]: 'establishment_state',
+  [normalizeHeader('Espace Aménagé')]: 'developed_space',
+  [normalizeHeader('espace_amenage')]: 'developed_space',
+  [normalizeHeader('Titre Foncier N')]: 'titre_foncier_numero',
+  [normalizeHeader('titre_foncier_numero')]: 'titre_foncier_numero',
+  [normalizeHeader('Etat du bâtiment')]: 'building_state',
+  [normalizeHeader('etat_batiment')]: 'building_state',
+  [normalizeHeader('Etat des équipements')]: 'equipment_state',
+  [normalizeHeader('etat_equipements')]: 'equipment_state',
+  [normalizeHeader('Nombre du personnel SECTEUR SPORT affecté')]: 'sports_staff_count',
+  [normalizeHeader('nombre_personnel_sport')]: 'sports_staff_count',
+  [normalizeHeader('Besoin RH')]: 'hr_needs',
+  [normalizeHeader('besoin_rh')]: 'hr_needs',
+  [normalizeHeader('Prise en compte dans le cadre du Prog de Réhabilitation Année')]: 'rehabilitation_plan',
+  [normalizeHeader('prise_en_compte_prog_rehabilitation_annee')]: 'rehabilitation_plan',
+  [normalizeHeader('Besoin d\'aménagement')]: 'besoin_amenagement',
+  [normalizeHeader('besoin_amenagement')]: 'besoin_amenagement',
+  [normalizeHeader('Besoin d\'équipements')]: 'besoin_equipements',
+  [normalizeHeader('besoin_equipements')]: 'besoin_equipements',
+  [normalizeHeader('Observation sur les Mesures à mettre en Place pour réouverture')]: 'observations',
+  [normalizeHeader('observation_reouverture')]: 'observations',
+  [normalizeHeader('Bénificiaires')]: 'beneficiaries',
+  [normalizeHeader('beneficiaires')]: 'beneficiaries',
+  [normalizeHeader('sports')]: 'sports',
+};
+
 
 export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFacilitiesDialogProps) {
   const { user } = useUser();
@@ -111,7 +141,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
           throw new Error('La feuille de calcul est vide ou ne contient que des en-têtes.');
         }
 
-        const headers = (jsonData[0] as string[]).map(h => h.trim().toLowerCase().replace(/ /g, '_'));
+        const headers = (jsonData[0] as string[]).map(normalizeHeader);
         const rows = jsonData.slice(1);
         
         const facilities: Partial<Facility>[] = rows.map((rowArray: any[]) => {
@@ -126,7 +156,6 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
               
               const valueStr = String(value).trim();
               
-              // Handle specific type conversions
               if (mappedKey === 'lat' || mappedKey === 'lng') {
                 const num = parseFloat(valueStr.replace(',', '.'));
                 if (!isNaN(num)) (row as any)[mappedKey] = num;
@@ -134,7 +163,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
                 const num = parseInt(valueStr, 10);
                 if (!isNaN(num)) (row as any)[mappedKey] = num;
               } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space'].includes(mappedKey)) {
-                 (row as any)[mappedKey] = ['true', 'vrai', 'oui', '1'].includes(valueStr.toLowerCase());
+                 (row as any)[mappedKey] = ['true', 'vrai', 'oui', '1', 'yes'].includes(valueStr.toLowerCase());
               } else if (mappedKey === 'sports' && typeof value === 'string') {
                  row.sports = value.split(',').map(s => s.trim()).filter(Boolean);
               } else if (value instanceof Date) {
@@ -153,11 +182,10 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
           row.adminId = user.uid;
           
-          // Basic validation: name and location are essential
           if (!row.name || !row.location) return null;
           
-          // Set default values for required fields if not present
           if (!row.sports) row.sports = [];
+          if (!row.region) row.region = '';
 
 
           return row;
@@ -194,10 +222,9 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         const facilitiesCollectionRef = collection(firestore, 'facilities');
 
         parsedData.forEach(facilityData => {
-            const docRef = doc(facilitiesCollectionRef); // Auto-generates ID
+            const docRef = doc(facilitiesCollectionRef); 
             const payload = {
                 ...facilityData,
-                // Ensure required fields have defaults if somehow missed
                 sports: facilityData.sports || [],
                 type: facilityData.type || 'outdoor',
                 accessible: facilityData.accessible || false,
@@ -250,7 +277,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         <DialogHeader>
           <DialogTitle>Importer des Installations depuis Excel</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx ou .csv. Assurez-vous que les en-têtes de colonne correspondent aux champs attendus.
+            Sélectionnez un fichier .xlsx ou .csv. Le système essaiera de faire correspondre automatiquement les colonnes.
           </DialogDescription>
         </DialogHeader>
 
