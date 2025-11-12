@@ -33,7 +33,7 @@ const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string,
     { key: 'region', label: 'Région', keywords: ['region'] },
     { key: 'province', label: 'Province', keywords: ['province'] },
     { key: 'commune', label: 'Commune', keywords: ['commune'] },
-    { key: 'milieu', label: 'Milieu (Urbain/Rural)', keywords: ['milieu_urbain___rural'] },
+    { key: 'milieu', label: 'Milieu (Urbain/Rural)', keywords: ['milieu_urbain___rural', 'milieu'] },
     { key: 'installations_sportives', label: 'Type d\'installation', keywords: ['installations_sportives'] },
     { key: 'categorie_abregee', label: 'Catégorie abrégée', keywords: ['categorie_abregee'] },
     { key: 'address', label: 'Adresse/Localisation', keywords: ['localisation', 'adresse'] },
@@ -41,7 +41,7 @@ const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string,
     { key: 'managing_entity', label: 'Entité gestionnaire', keywords: ['entite_gestionnaire'] },
     { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format AAAA-MM-JJ', keywords: ['date_derniere_renovation'] },
     { key: 'surface_area', label: 'Superficie (m²)', notes: 'Numérique', keywords: ['superficie'] },
-    { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique', keywords: ['capacite_daccueil'] },
+    { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique', keywords: ['capacite_daccueil', 'capacite'] },
     { key: 'staff_count', label: 'Effectif total', notes: 'Numérique', keywords: ['effectif'] },
     { key: 'establishment_state', label: 'État de l\'établissement', keywords: ['etat_de_letablissement'] },
     { key: 'developed_space', label: 'Espace aménagé', notes: 'Booléen (oui/non)', keywords: ['espace_amenage'] },
@@ -59,7 +59,6 @@ const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string,
 const cleanColumnName = (col: string): string => {
     if (!col) return '';
     return col.trim().toLowerCase()
-        .replace(/[\n\r\t]/g, ' ')
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
         .replace(/[^a-z0-9_]/g, '_') // Replace non-alphanumeric with underscore
         .replace(/_+/g, '_'); // Replace multiple underscores with a single one
@@ -156,7 +155,14 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     reader.readAsText(file, 'ISO-8859-1');
   }, [file]);
 
-
+  const toBoolean = (value: any): boolean => {
+    if (typeof value === 'string') {
+        const lowerValue = value.trim().toLowerCase();
+        return ['oui', 'yes', 'true', '1'].includes(lowerValue);
+    }
+    return !!value;
+  }
+  
   const processData = () => {
     if (!user) {
       setError('Vous devez être connecté pour importer des données.');
@@ -176,17 +182,24 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
       
       for (const dbField of dbFields) {
           const fileHeader = columnMap[dbField.key];
-          if (fileHeader && columnMap[dbField.key] !== 'ignore_column' && row[fileHeader] !== undefined) {
-             facilityData[dbField.key] = row[fileHeader];
+          if (fileHeader && columnMap[dbField.key] !== 'ignore_column' && row[fileHeader] !== undefined && row[fileHeader] !== null) {
+             const value = row[fileHeader];
+             if (typeof value === 'string' && value.trim() === '') continue;
+             facilityData[dbField.key] = value;
           }
       }
+      
+      // Use 'installations_sportives' as a fallback for 'name'
+      let name = facilityData.name ? String(facilityData.name).trim() : null;
+      if (!name && facilityData.installations_sportives) {
+        name = String(facilityData.installations_sportives).trim();
+      }
 
-      const name = facilityData.name ? String(facilityData.name).trim() : null;
       const latString = String(facilityData.latitude || '').replace(',', '.').trim();
       const lngString = String(facilityData.longitude || '').replace(',', '.').trim();
       
-      const lat = latString ? parseFloat(latString) : NaN;
-      const lng = lngString ? parseFloat(lngString) : NaN;
+      const lat = parseFloat(latString);
+      const lng = parseFloat(lngString);
       
       if (name && !isNaN(lat) && !isNaN(lng)) {
         return {
@@ -198,12 +211,12 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
           staff_count: facilityData.staff_count ? parseInt(String(facilityData.staff_count), 10) : undefined,
           sports_staff_count: facilityData.sports_staff_count ? parseInt(String(facilityData.sports_staff_count), 10) : undefined,
           beneficiaries: facilityData.beneficiaries ? parseInt(String(facilityData.beneficiaries), 10) : undefined,
-          hr_needs: ['oui', 'yes', 'true', '1'].includes(String(facilityData.hr_needs).toLowerCase()),
-          besoin_amenagement: ['oui', 'yes', 'true', '1'].includes(String(facilityData.besoin_amenagement).toLowerCase()),
-          besoin_equipements: ['oui', 'yes', 'true', '1'].includes(String(facilityData.besoin_equipements).toLowerCase()),
-          developed_space: ['oui', 'yes', 'true', '1'].includes(String(facilityData.developed_space).toLowerCase()),
-          sports: [],
-          equipments: [],
+          hr_needs: toBoolean(facilityData.hr_needs),
+          besoin_amenagement: toBoolean(facilityData.besoin_amenagement),
+          besoin_equipements: toBoolean(facilityData.besoin_equipements),
+          developed_space: toBoolean(facilityData.developed_space),
+          sports: [], // Default to empty array, can be populated later
+          equipments: [], // Default to empty array
         };
       }
       return null;
@@ -341,11 +354,9 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   );
 
   const renderContent = () => {
-    switch (step) {
-      case 'mapping': return renderMappingStep();
-      case 'preview': return renderPreviewStep();
-      default: return renderUploadStep();
-    }
+    if (step === 'mapping') return renderMappingStep();
+    if (step === 'preview') return renderPreviewStep();
+    return renderUploadStep();
   };
   
   const requiredMappingsMet = dbFields.filter(f => f.required).every(field => columnMap[field.key] && columnMap[field.key] !== 'ignore_column');
