@@ -9,6 +9,7 @@ export default createMiddleware({
 });
  
 export const config = {
-  // Match only internationalized pathnames
-  matcher: ['/', '/(ar|en|fr)/:path*']
+  // Skip all paths that should not be internationalized. This includes the
+  // folders containing files like robots.txt, sitemap.xml, etc.
+  matcher: ['/((?!api|_next|.*\\..*).*)']
 };
