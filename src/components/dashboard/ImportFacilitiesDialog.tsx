@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -26,56 +25,82 @@ interface ImportFacilitiesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const normalizeHeader = (header: string): string => {
-  if (!header) return '';
-  return header
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_'); // Replace spaces with underscores
-};
 
-// Keys are already normalized
 const columnMapping: { [key: string]: keyof Partial<Facility> | 'lat' | 'lng' } = {
-  'réference_région': 'reference_region',
-  'reference_region': 'reference_region',
+  'référence région': 'reference_region',
   'région': 'region',
-  'region': 'region',
   'province': 'province',
   'commune': 'commune',
-  'milieu_urbain_-_rural': 'milieu',
-  'milieu': 'milieu',
-  'installations_sportives': 'installations_sportives',
-  'catégorie_abrégée': 'categorie_abregee',
-  'nom_de_l\'établissement': 'name',
-  'nom_etablissement': 'name',
-  'nom': 'name',
+  'milieu urbain - rural': 'milieu',
+  'installations sportives': 'installations_sportives',
+  'catégorie abrégée': 'categorie_abregee',
+  "nom de l'établissement": 'name',
   'localisation': 'address',
-  'adresse': 'address',
   'longitude': 'lng',
-  'lon': 'lng',
   'latitude': 'lat',
-  'lat': 'lat',
   'propriété': 'ownership',
-  'entité_gestionnaire': 'managing_entity',
-  'date_de_dernière_rénovation': 'last_renovation_date',
+  'entité gestionnaire': 'managing_entity',
+  'date dernière rénovation': 'last_renovation_date',
   'superficie': 'surface_area',
-  'capacité_d\'accueil': 'capacity',
+  "capacité d'accueil": 'capacity',
   'effectif': 'staff_count',
-  'etat_de_l\'établissement': 'establishment_state',
-  'espace_aménagé': 'developed_space',
-  'titre_foncier_n': 'titre_foncier_numero',
-  'etat_du_bâtiment': 'building_state',
-  'etat_des_équipements': 'equipment_state',
-  'nombre_du_personnel_secteur_sport_affecté': 'sports_staff_count',
-  'besoin_rh': 'hr_needs',
-  'prise_en_compte_dans_le_cadre_du_prog_de_réhabilitation_année': 'rehabilitation_plan',
-  'besoin_d\'aménagement': 'besoin_amenagement',
-  'besoin_d\'équipements': 'besoin_equipements',
-  'observation_sur_les_mesures_à_mettre_en_place_pour_réouverture': 'observations',
+  "état de l'établissement": 'establishment_state',
+  "etat de l'etablissement": 'establishment_state',
+  'espace aménagé': 'developed_space',
+  'titre foncier n': 'titre_foncier_numero',
+  'etat du bâtiment': 'building_state',
+  'etat du batiment': 'building_state',
+  'etat des équipements': 'equipment_state',
+  'etat des equipements': 'equipment_state',
+  'nombre du personnel du secteur sport affecté': 'sports_staff_count',
+  'besoin rh': 'hr_needs',
+  "prise en compte dans le cadre du prog de réhabilitation année": 'rehabilitation_plan',
+  "besoin d'aménagement": 'besoin_amenagement',
+  "besoin d'équipements": 'besoin_equipements',
+  'observation sur les mesures à mettre en place pour réouverture': 'observations',
   'bénificiaires': 'beneficiaries',
   'sports': 'sports',
 };
 
+
+const normalizeHeader = (header: string): string => {
+  return header
+    .trim()
+    .toLowerCase()
+    .replace(/\n/g, ' ') // Replace newlines with spaces
+    .replace(/:/g, '')   // Remove colons
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .trim();
+};
+
+const toBoolean = (value: any): boolean => {
+    if (typeof value === 'boolean') return value;
+    if (value === null || value === undefined) return false;
+    const strValue = String(value).toLowerCase().trim();
+    return ['true', 'vrai', 'oui', 'yes', '1', 'x'].includes(strValue);
+};
+
+const toFloat = (value: any): number | undefined => {
+    if (value === null || value === undefined) return undefined;
+    const strValue = String(value).replace(',', '.').trim();
+    const num = parseFloat(strValue);
+    return isNaN(num) ? undefined : num;
+};
+
+const toInteger = (value: any): number | undefined => {
+    if (value === null || value === undefined) return undefined;
+    const num = parseInt(String(value).trim(), 10);
+    return isNaN(num) ? undefined : num;
+};
+
+const stateMappings = {
+    establishment_state: {
+        '1': 'Opérationnel', '2': 'En arrêt', '3': 'Prêt',
+        '4': 'En cours de transformation', '5': 'En cours de construction'
+    },
+    building_state: {'1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre'},
+    equipment_state: {'0': 'Non équipé', '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre'}
+};
 
 export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFacilitiesDialogProps) {
   const { user } = useUser();
@@ -117,41 +142,48 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         const workbook = XLSX.read(data, { type: 'array', cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, { header: 1, defval: null });
 
         if (jsonData.length < 2) {
           throw new Error('La feuille de calcul est vide ou ne contient que des en-têtes.');
         }
 
-        const headers = (jsonData[0] as string[]).map(normalizeHeader);
+        const rawHeaders = jsonData[0] as string[];
+        const normalizedHeaders = rawHeaders.map(h => normalizeHeader(h || ''));
         const rows = jsonData.slice(1);
         
         const facilities: Partial<Facility>[] = rows.map((rowArray: any[]) => {
           const row: Partial<Facility> & { lat?: number, lng?: number } = {};
 
-          headers.forEach((header, index) => {
+          normalizedHeaders.forEach((header, index) => {
             const mappedKey = columnMapping[header];
             if (mappedKey) {
               let value = rowArray[index];
-              
-              if (value === undefined || value === null || value === '') return;
-              
-              const valueStr = String(value).trim();
+              if (value === null || value === undefined || String(value).trim() === '') return;
               
               if (mappedKey === 'lat' || mappedKey === 'lng') {
-                const num = parseFloat(valueStr.replace(',', '.'));
-                if (!isNaN(num)) (row as any)[mappedKey] = num;
+                const num = toFloat(value);
+                if (num !== undefined) (row as any)[mappedKey] = num;
               } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count', 'beneficiaries'].includes(mappedKey)) {
-                const num = parseInt(valueStr, 10);
-                if (!isNaN(num)) (row as any)[mappedKey] = num;
+                const num = toInteger(value);
+                if (num !== undefined) (row as any)[mappedKey] = num;
               } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space'].includes(mappedKey)) {
-                 (row as any)[mappedKey] = ['true', 'vrai', 'oui', '1', 'yes'].includes(valueStr.toLowerCase());
+                 (row as any)[mappedKey] = toBoolean(value);
               } else if (mappedKey === 'sports' && typeof value === 'string') {
-                 row.sports = value.split(',').map(s => s.trim()).filter(Boolean);
+                 row.sports = value.split(/[,;]/).map(s => s.trim()).filter(Boolean);
               } else if (value instanceof Date) {
                   (row as any)[mappedKey] = value;
-              } else {
-                  (row as any)[mappedKey] = valueStr;
+              } else if (Object.keys(stateMappings).includes(mappedKey)) {
+                const key = mappedKey as keyof typeof stateMappings;
+                const code = String(value).trim();
+                if (stateMappings[key] && (stateMappings[key] as any)[code]) {
+                    (row as any)[key] = (stateMappings[key] as any)[code];
+                } else {
+                    (row as any)[key] = String(value); // fallback to raw value
+                }
+              }
+              else {
+                  (row as any)[mappedKey] = String(value).trim();
               }
             }
           });
@@ -164,12 +196,13 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
           row.adminId = user.uid;
           
+          // Validate required fields for a row to be considered valid
           if (!row.name || !row.location) return null;
           
           if (!row.sports) row.sports = [];
 
           return row;
-        }).filter(Boolean) as Partial<Facility>[];
+        }).filter((f): f is Facility => f !== null);
 
         if (facilities.length === 0) {
             throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez que les colonnes 'nom_etablissement' (ou 'nom'), 'latitude' (ou 'lat') et 'longitude' (ou 'lon') sont présentes et remplies avec des données valides.");
@@ -319,5 +352,3 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     </Dialog>
   );
 }
-
-    
