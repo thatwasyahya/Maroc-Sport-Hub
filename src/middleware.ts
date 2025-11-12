@@ -9,6 +9,8 @@ export default createMiddleware({
 });
  
 export const config = {
-  // Match only internationalized pathnames
-  matcher: ['/', '/(ar|en|fr)/:path*']
+  // Skip all paths that should not be internationalized. This includes public
+  // files, as well as Next.js-specific assets, like solids.
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
 };
+    
