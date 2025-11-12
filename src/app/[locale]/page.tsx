@@ -16,7 +16,7 @@ import HomeMapContainer from "@/components/home-map-container";
 import type { Facility } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from "@/components/ui/button";
-import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter, SlidersHorizontal, Trash2, Activity } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
@@ -26,8 +26,10 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
+import {useTranslations} from 'next-intl';
 
 export default function Home() {
+  const t = useTranslations('Home');
   const firestore = useFirestore();
   const facilitiesCollectionRef = useMemoFirebase(
     () => collection(firestore, 'facilities'),
@@ -111,10 +113,10 @@ export default function Home() {
         setMapCenter([position.coords.latitude, position.coords.longitude]);
         setMapZoom(13);
       }, () => {
-        alert("Impossible de récupérer votre position.");
+        alert(t('locateError'));
       });
     } else {
-      alert("La géolocalisation n'est pas supportée par ce navigateur.");
+      alert(t('geolocationNotSupported'));
     }
   };
   
@@ -149,7 +151,7 @@ export default function Home() {
           <div className="absolute inset-0 z-0">
             <Image
               src="https://picsum.photos/seed/herofootball/1800/1000"
-              alt="Terrain de sport éclairé la nuit"
+              alt={t('heroAlt')}
               fill
               className="object-cover opacity-10"
               priority
@@ -159,13 +161,13 @@ export default function Home() {
           </div>
           <div className="relative z-10 max-w-4xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold font-headline tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
-              Le Hub Sportif du Maroc
+              {t('heroTitle')}
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Découvrez, explorez et trouvez l'installation parfaite pour votre prochaine activité sportive avec notre carte interactive.
+              {t('heroSubtitle')}
             </p>
             <Button size="lg" onClick={scrollToMap} className="transition-transform duration-300 hover:scale-105">
-              Explorer la Carte
+              {t('exploreMap')}
               <ArrowDown className="ml-2 h-5 w-5 animate-bounce" />
             </Button>
           </div>
@@ -177,7 +179,7 @@ export default function Home() {
                 <SidebarProvider>
                     <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card/80 backdrop-blur-sm border-border/50 shadow-lg rounded-xl">
                         <SidebarHeader className="flex items-center justify-between p-4 border-b border-border/50">
-                            <h2 className="text-lg font-bold font-headline flex items-center gap-2"><SlidersHorizontal className="w-5 h-5"/> Filtres</h2>
+                            <h2 className="text-lg font-bold font-headline flex items-center gap-2"><SlidersHorizontal className="w-5 h-5"/> {t('filtersTitle')}</h2>
                             <Button onClick={handleLocateMe} variant="ghost" size="icon" className="h-8 w-8">
                                 <LocateFixed className="h-4 w-4" />
                             </Button>
@@ -187,7 +189,7 @@ export default function Home() {
                             <SidebarContent className="p-0">
                                 <Accordion type="multiple" defaultValue={['sport', 'region']} className="w-full">
                                     <AccordionItem value="sport">
-                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">Sport</AccordionTrigger>
+                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">{t('filterSport')}</AccordionTrigger>
                                         <AccordionContent className="px-4">
                                         {allSports.map(sport => {
                                             const Icon = sportsIconsMap[sport];
@@ -205,7 +207,7 @@ export default function Home() {
                                     </AccordionItem>
                                     
                                     <AccordionItem value="region">
-                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">Région</AccordionTrigger>
+                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">{t('filterRegion')}</AccordionTrigger>
                                         <AccordionContent className="px-4">
                                         {allRegions.map(region => (
                                             <div key={region} className="flex items-center space-x-3 my-3">
@@ -217,7 +219,7 @@ export default function Home() {
                                     </AccordionItem>
 
                                     <AccordionItem value="equipment">
-                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">Équipement</AccordionTrigger>
+                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">{t('filterEquipment')}</AccordionTrigger>
                                         <AccordionContent className="px-4">
                                         {allEquipments.map(equip => {
                                             const Icon = equipmentIconsMap[equip];
@@ -235,19 +237,19 @@ export default function Home() {
                                     </AccordionItem>
                                     
                                     <AccordionItem value="other">
-                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">Autres</AccordionTrigger>
+                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">{t('filterOther')}</AccordionTrigger>
                                         <AccordionContent className="px-4">
                                         <div className="flex items-center space-x-3 my-3">
                                             <Checkbox id="type-indoor" checked={isIndoor} onCheckedChange={(checked) => setIsIndoor(!!checked)} />
-                                            <Label htmlFor="type-indoor" className="font-normal cursor-pointer">Intérieur</Label>
+                                            <Label htmlFor="type-indoor" className="font-normal cursor-pointer">{t('filterIndoor')}</Label>
                                             </div>
                                             <div className="flex items-center space-x-3 my-3">
                                             <Checkbox id="type-outdoor" checked={isOutdoor} onCheckedChange={(checked) => setIsOutdoor(!!checked)} />
-                                            <Label htmlFor="type-outdoor" className="font-normal cursor-pointer">Extérieur</Label>
+                                            <Label htmlFor="type-outdoor" className="font-normal cursor-pointer">{t('filterOutdoor')}</Label>
                                             </div>
                                             <div className="flex items-center space-x-3 my-3">
                                             <Checkbox id="accessible" checked={isAccessible} onCheckedChange={(checked) => setIsAccessible(!!checked)} />
-                                            <Label htmlFor="accessible" className="font-normal cursor-pointer">Accès PMR</Label>
+                                            <Label htmlFor="accessible" className="font-normal cursor-pointer">{t('filterAccessible')}</Label>
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>
@@ -257,7 +259,7 @@ export default function Home() {
                         <SidebarFooter className="p-4 border-t border-border/50">
                             <Button onClick={clearFilters} variant="ghost" className="w-full">
                               <Trash2 className="w-4 h-4 mr-2"/>
-                              Effacer les filtres
+                              {t('clearFilters')}
                             </Button>
                         </SidebarFooter>
                     </Sidebar>
@@ -302,20 +304,20 @@ export default function Home() {
             <div className="space-y-4 col-span-1 md:col-span-2">
               <h3 className="text-xl font-headline font-semibold flex items-center gap-2">
                 <Activity className="text-primary"/>
-                Maroc Sport Hub
+                {t('appName')}
               </h3>
-              <p className="text-muted-foreground text-sm max-w-md">Votre portail unique pour trouver et explorer des installations sportives à travers le Maroc.</p>
+              <p className="text-muted-foreground text-sm max-w-md">{t('footerDescription')}</p>
             </div>
             <div className="space-y-4">
-              <h4 className="font-semibold text-card-foreground/90">Navigation</h4>
+              <h4 className="font-semibold text-card-foreground/90">{t('footerNavigation')}</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Accueil</Link></li>
-                <li><Link href="/profile" className="text-muted-foreground hover:text-primary transition-colors">Profil</Link></li>
-                 <li><Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">Dashboard</Link></li>
+                <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">{t('footerHome')}</Link></li>
+                <li><Link href="/profile" className="text-muted-foreground hover:text-primary transition-colors">{t('footerProfile')}</Link></li>
+                 <li><Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">{t('footerDashboard')}</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="font-semibold text-card-foreground/90">Suivez-nous</h4>
+              <h4 className="font-semibold text-card-foreground/90">{t('footerFollowUs')}</h4>
               <div className="flex space-x-4">
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Facebook className="h-6 w-6" /></a>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Instagram className="h-6 w-6" /></a>
@@ -324,7 +326,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Maroc Sport Hub. Tous droits réservés.</p>
+            <p>&copy; {new Date().getFullYear()} {t('appName')}. {t('footerRights')}</p>
           </div>
         </div>
       </footer>
