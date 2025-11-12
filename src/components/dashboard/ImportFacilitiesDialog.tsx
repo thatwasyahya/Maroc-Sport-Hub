@@ -16,7 +16,7 @@ import { useFirestore, useUser } from '@/firebase';
 import { collection, writeBatch, serverTimestamp, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
-import type { Facility } from '@/lib/types';
+import type { Facility, EstablishmentState, BuildingState, EquipmentState } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
@@ -25,53 +25,54 @@ interface ImportFacilitiesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-
+// Maps normalized headers to the keys of our Facility object
 const columnMapping: { [key: string]: keyof Partial<Facility> | 'lat' | 'lng' } = {
-  'référence région': 'reference_region',
-  'région': 'region',
+  'référenceregion': 'reference_region',
+  'region': 'region',
   'province': 'province',
   'commune': 'commune',
-  'milieu urbain - rural': 'milieu',
-  'installations sportives': 'installations_sportives',
-  'catégorie abrégée': 'categorie_abregee',
-  "nom de l'établissement": 'name',
+  'milieuurbain-rural': 'milieu',
+  'installationssportives': 'installations_sportives',
+  'catégorieabregée': 'category', // Assuming this maps to category
+  'nomdel\'établissement': 'name',
   'localisation': 'address',
   'longitude': 'lng',
   'latitude': 'lat',
   'propriété': 'ownership',
-  'entité gestionnaire': 'managing_entity',
-  'date dernière rénovation': 'last_renovation_date',
+  'entitégestionnaire': 'managing_entity',
+  'datedernièrerénovation': 'last_renovation_date',
   'superficie': 'surface_area',
-  "capacité d'accueil": 'capacity',
+  'capacitéd\'accueil': 'capacity',
   'effectif': 'staff_count',
-  "état de l'établissement": 'establishment_state',
-  "etat de l'etablissement": 'establishment_state',
-  'espace aménagé': 'developed_space',
-  'titre foncier n': 'titre_foncier_numero',
-  'etat du bâtiment': 'building_state',
-  'etat du batiment': 'building_state',
-  'etat des équipements': 'equipment_state',
-  'etat des equipements': 'equipment_state',
-  'nombre du personnel du secteur sport affecté': 'sports_staff_count',
-  'besoin rh': 'hr_needs',
-  "prise en compte dans le cadre du prog de réhabilitation année": 'rehabilitation_plan',
-  "besoin d'aménagement": 'besoin_amenagement',
-  "besoin d'équipements": 'besoin_equipements',
-  'observation sur les mesures à mettre en place pour réouverture': 'observations',
+  'étatdel\'établissement': 'establishment_state',
+  'etablissement': 'establishment_state',
+  'espaceaménagé': 'developed_space',
+  'titrefonciern': 'titre_foncier_numero',
+  'etbatiment': 'building_state',
+  'etatdubâtiment': 'building_state',
+  'etatequipements': 'equipment_state',
+  'etatdeséquipements': 'equipment_state',
+  'nombredepersonneldusecteursportaffecté': 'sports_staff_count',
+  'besoinrh': 'hr_needs',
+  'priseencomptedanslecadreduprogderéhabilitationannée': 'rehabilitation_plan',
+  'besoind\'aménagement': 'besoin_amenagement',
+  'besoind\'équipements': 'besoin_equipements',
+  'observationsurlesmesuresàmettreenplacepourréouverture': 'observations',
   'bénificiaires': 'beneficiaries',
+  'beneficiaires': 'beneficiaries', // alternate spelling
   'sports': 'sports',
 };
 
 
 const normalizeHeader = (header: string): string => {
+  if (!header) return '';
   return header
     .trim()
     .toLowerCase()
-    .replace(/\n/g, ' ') // Replace newlines with spaces
-    .replace(/:/g, '')   // Remove colons
-    .replace(/\s+/g, ' ') // Collapse multiple spaces
-    .trim();
+    .replace(/\s+/g, '') // Remove all whitespace
+    .replace(/[^a-z0-9]/gi, ''); // Remove non-alphanumeric chars
 };
+
 
 const toBoolean = (value: any): boolean => {
     if (typeof value === 'boolean') return value;
@@ -81,14 +82,14 @@ const toBoolean = (value: any): boolean => {
 };
 
 const toFloat = (value: any): number | undefined => {
-    if (value === null || value === undefined) return undefined;
+    if (value === null || value === undefined || String(value).trim() === '') return undefined;
     const strValue = String(value).replace(',', '.').trim();
     const num = parseFloat(strValue);
     return isNaN(num) ? undefined : num;
 };
 
 const toInteger = (value: any): number | undefined => {
-    if (value === null || value === undefined) return undefined;
+    if (value === null || value === undefined || String(value).trim() === '') return undefined;
     const num = parseInt(String(value).trim(), 10);
     return isNaN(num) ? undefined : num;
 };
@@ -153,10 +154,13 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         const rows = jsonData.slice(1);
         
         const facilities: Partial<Facility>[] = rows.map((rowArray: any[]) => {
-          const row: Partial<Facility> & { lat?: number, lng?: number } = {};
+          let row: Partial<Facility> & { lat?: number, lng?: number } = {};
 
           normalizedHeaders.forEach((header, index) => {
-            const mappedKey = columnMapping[header];
+            // Find a matching key in our mapping
+             const matchingKey = Object.keys(columnMapping).find(key => header.includes(key));
+             const mappedKey = matchingKey ? columnMapping[matchingKey] : null;
+
             if (mappedKey) {
               let value = rowArray[index];
               if (value === null || value === undefined || String(value).trim() === '') return;
@@ -205,7 +209,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         }).filter((f): f is Facility => f !== null);
 
         if (facilities.length === 0) {
-            throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez que les colonnes 'nom_etablissement' (ou 'nom'), 'latitude' (ou 'lat') et 'longitude' (ou 'lon') sont présentes et remplies avec des données valides.");
+            throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez que les colonnes 'nom de l'établissement' (ou 'nom'), 'latitude' et 'longitude' sont présentes et remplies avec des données valides.");
         }
 
         setParsedData(facilities);
