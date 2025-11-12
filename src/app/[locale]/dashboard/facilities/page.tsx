@@ -1,27 +1,78 @@
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useState } from 'react';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
 import type { Facility } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import { useState } from 'react';
+import { PlusCircle, Edit, Trash2, Loader2, Upload } from 'lucide-react';
 import AddFacilityDialog from '@/components/dashboard/AddFacilityDialog';
+import ImportFacilitiesDialog from '@/components/dashboard/ImportFacilitiesDialog';
 import { useTranslations } from 'next-intl';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 
 export default function FacilitiesPage() {
   const firestore = useFirestore();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { user } = useUser();
+  const { toast } = useToast();
   const t = useTranslations('Dashboard.Facilities');
   
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
   const facilitiesCollectionRef = useMemoFirebase(
     () => collection(firestore, 'facilities'),
     [firestore]
   );
   const { data: facilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
+
+  const handleAddNew = () => {
+    setSelectedFacility(null);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleEdit = (facility: Facility) => {
+    setSelectedFacility(facility);
+    setIsAddDialogOpen(true);
+  };
+  
+  const handleDelete = async (facilityId: string) => {
+    if (!firestore || !user) return;
+    setProcessingId(facilityId);
+    try {
+      await deleteDoc(doc(firestore, 'facilities', facilityId));
+      toast({
+        title: "Installation supprimée",
+        description: "L'installation a été supprimée avec succès.",
+      });
+    } catch (error: any) {
+      console.error("Error deleting facility: ", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur de suppression",
+        description: error.message,
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
 
   return (
     <>
@@ -31,10 +82,16 @@ export default function FacilitiesPage() {
             <CardTitle>{t('title')}</CardTitle>
             <CardDescription>{t('description')}</CardDescription>
           </div>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            {t('addButton')}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleAddNew}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              {t('addButton')}
+            </Button>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Importer
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -45,12 +102,13 @@ export default function FacilitiesPage() {
                 <TableHead>Commune</TableHead>
                 <TableHead>État</TableHead>
                 <TableHead>{t('tableHeaderSports')}</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {facilitiesLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     {t('loading')}
                   </TableCell>
                 </TableRow>
@@ -70,11 +128,41 @@ export default function FacilitiesPage() {
                         ))}
                       </div>
                     </TableCell>
+                    <TableCell className="text-right">
+                        {processingId === facility.id ? (
+                           <Loader2 className="ml-auto h-5 w-5 animate-spin" />
+                        ) : (
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(facility)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                                        <AlertDialogDescription>Cette action est irréversible. L'installation sera définitivement supprimée.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDelete(facility.id)} className="bg-destructive hover:bg-destructive/90">
+                                            Supprimer
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        )}
+                      </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     {t('noFacilities')}
                   </TableCell>
                 </TableRow>
@@ -83,7 +171,19 @@ export default function FacilitiesPage() {
           </Table>
         </CardContent>
       </Card>
-      <AddFacilityDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
+      {isAddDialogOpen && (
+        <AddFacilityDialog 
+          open={isAddDialogOpen} 
+          onOpenChange={setIsAddDialogOpen} 
+          facility={selectedFacility}
+        />
+      )}
+       {isImportDialogOpen && (
+        <ImportFacilitiesDialog
+            open={isImportDialogOpen}
+            onOpenChange={setIsImportDialogOpen}
+        />
+       )}
     </>
   );
 }

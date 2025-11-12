@@ -24,71 +24,61 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser, useFirestore } from '@/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import type { Facility, EstablishmentState, BuildingState, EquipmentState } from '@/lib/types';
-import { Checkbox } from '../ui/checkbox';
 import { ScrollArea } from '../ui/scroll-area';
 import { sports } from '@/lib/data';
-import { getRegions, getCities } from '@/lib/maroc-api';
+import { getRegions } from '@/lib/maroc-api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlusCircle, Trash2, Search, CalendarIcon } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { geocodeAddress } from '@/services/nominatim';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Calendar } from '../ui/calendar';
 import { Switch } from '../ui/switch';
 
 const facilitySchema = z.object({
-  name: z.string().min(1, 'Nom est requis.'), // nom_etablissement
-  address: z.string().min(1, 'Adresse est requise.'), // localisation
+  name: z.string().min(1, 'Nom est requis.'),
+  address: z.string().min(1, 'Adresse est requise.'), 
   
-  lat: z.coerce.number().optional(), // latitude
-  lng: z.coerce.number().optional(), // longitude
+  lat: z.coerce.number().optional(),
+  lng: z.coerce.number().optional(),
 
-  // Location fields
   region: z.string().min(1, "Région est requise."),
   province: z.string().optional(),
   commune: z.string().optional(),
   milieu: z.enum(['Urbain', 'Rural']).optional(),
 
-  // Classification
   installations_sportives: z.string().optional(),
   categorie_abregee: z.string().optional(),
   
-  // Ownership and Management
-  ownership: z.string().optional(), // propriete
-  managing_entity: z.string().optional(), // entite_gestionnaire
+  ownership: z.string().optional(),
+  managing_entity: z.string().optional(),
   titre_foncier_numero: z.string().optional(),
 
-  // Dates
-  last_renovation_date: z.date().optional(), // date_derniere_renovation
+  last_renovation_date: z.date().optional(),
 
-  // Specs
-  surface_area: z.coerce.number().optional(), // superficie
-  capacity: z.coerce.number().optional(), // capacite_accueil
-  staff_count: z.coerce.number().optional(), // effectif
-  sports_staff_count: z.coerce.number().optional(), // nombre_personnel_sport
+  surface_area: z.coerce.number().optional(),
+  capacity: z.coerce.number().optional(),
+  staff_count: z.coerce.number().optional(),
+  sports_staff_count: z.coerce.number().optional(),
   beneficiaries: z.coerce.number().optional(),
 
-  // State
-  establishment_state: z.enum(['Operationnel', 'En_arret', 'Pret', 'En_cours_operationnalisation', 'En_cours_construction', 'Non défini']).optional(),
-  building_state: z.enum(['Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini']).optional(),
-  equipment_state: z.enum(['Non_equipe', 'Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini']).optional(),
+  establishment_state: z.enum(['Opérationnel', 'En arrêt', 'Prêt', 'En cours de transformation', 'En cours de construction', 'Non défini']).optional(),
+  building_state: z.enum(['Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini']).optional(),
+  equipment_state: z.enum(['Non équipé', 'Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini']).optional(),
 
-  // Needs
-  hr_needs: z.boolean().default(false), // besoin_rh
+  hr_needs: z.boolean().default(false),
   besoin_amenagement: z.boolean().default(false),
   besoin_equipements: z.boolean().default(false),
 
-  // Other
-  rehabilitation_plan: z.string().optional(), // prise_en_compte_prog_rehabilitation_annee
-  observations: z.string().optional(), // observation_reouverture
+  rehabilitation_plan: z.string().optional(),
+  observations: z.string().optional(),
   
-  // Legacy/simplified fields
   description: z.string().optional(),
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "Vous devez sélectionner au moins un sport.",
@@ -99,7 +89,7 @@ const facilitySchema = z.object({
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
-  developed_space: z.boolean().default(false), // espace_amenage
+  developed_space: z.boolean().default(false),
 });
 
 type FacilityFormValues = z.infer<typeof facilitySchema>;
@@ -107,15 +97,18 @@ type FacilityFormValues = z.infer<typeof facilitySchema>;
 interface AddFacilityDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  facility: Facility | null;
 }
 
-export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDialogProps) {
+export default function AddFacilityDialog({ open, onOpenChange, facility }: AddFacilityDialogProps) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const isEditing = !!facility;
   
   const regions = getRegions();
   
@@ -138,6 +131,34 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     },
   });
 
+  useEffect(() => {
+    if (facility && open) {
+      const facilityData = { ...facility };
+      
+      // Convert server timestamp or string date to Date object
+      if (facilityData.last_renovation_date) {
+        if (typeof facilityData.last_renovation_date === 'string') {
+          facilityData.last_renovation_date = parseISO(facilityData.last_renovation_date);
+        } else if (facilityData.last_renovation_date.seconds) { // Firebase Timestamp
+          facilityData.last_renovation_date = new Date(facilityData.last_renovation_date.seconds * 1000);
+        }
+      }
+
+      form.reset({
+        ...facilityData,
+        lat: facility.location.lat,
+        lng: facility.location.lng,
+      });
+      if (facility.location.lat && facility.location.lng) {
+        setGeocodingStatus('success');
+      }
+    } else if (!facility && open) {
+      form.reset();
+      setGeocodingStatus('idle');
+    }
+  }, [facility, open, form]);
+
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "equipments",
@@ -147,7 +168,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
 
   useEffect(() => {
     setGeocodingStatus('idle');
-  }, [selectedRegion, form]);
+  }, [selectedRegion]);
   
   const addressWatched = form.watch('address');
   useEffect(() => {
@@ -213,8 +234,6 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     }
     setIsSubmitting(true);
     try {
-      const facilitiesCollectionRef = collection(firestore, 'facilities');
-      
       const location = {
         lat: data.lat,
         lng: data.lng,
@@ -222,46 +241,55 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
 
       const { lat, lng, ...restOfData } = data;
       
-      const newFacilityData: Partial<Facility> = {
+      const facilityPayload: Partial<Facility> = {
         ...restOfData,
-        adminId: user.uid,
+        adminId: facility?.adminId || user.uid, // Keep original admin on edit
         location,
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
       
-      await addDoc(facilitiesCollectionRef, newFacilityData);
+      if (isEditing && facility) {
+        const facilityRef = doc(firestore, 'facilities', facility.id);
+        await setDoc(facilityRef, facilityPayload, { merge: true });
+        toast({
+          title: 'Installation mise à jour',
+          description: `L'installation "${data.name}" a été mise à jour avec succès.`,
+        });
+      } else {
+        const facilitiesCollectionRef = collection(firestore, 'facilities');
+        await addDoc(facilitiesCollectionRef, { ...facilityPayload, createdAt: serverTimestamp() });
+        toast({
+          title: 'Installation ajoutée',
+          description: `L'installation "${data.name}" a été créée avec succès.`,
+        });
+      }
 
-      toast({
-        title: 'Installation ajoutée',
-        description: `L'installation "${data.name}" a été créée avec succès.`,
-      });
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      console.error('Erreur lors de l\'ajout:', error);
+      console.error('Erreur lors de la sauvegarde:', error);
       toast({
         variant: 'destructive',
         title: 'Erreur',
-        description: 'Une erreur inattendue est survenue lors de l\'ajout de l\'installation.',
+        description: 'Une erreur inattendue est survenue lors de la sauvegarde de l\'installation.',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  const establishmentStates: EstablishmentState[] = ['Operationnel', 'En_arret', 'Pret', 'En_cours_operationnalisation', 'En_cours_construction', 'Non défini'];
-  const buildingStates: BuildingState[] = ['Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini'];
-  const equipmentStates: EquipmentState[] = ['Non_equipe', 'Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini'];
+  const establishmentStates: EstablishmentState[] = ['Opérationnel', 'En arrêt', 'Prêt', 'En cours de transformation', 'En cours de construction', 'Non défini'];
+  const buildingStates: BuildingState[] = ['Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini'];
+  const equipmentStates: EquipmentState[] = ['Non équipé', 'Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini'];
 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Ajouter une nouvelle installation</DialogTitle>
+          <DialogTitle>{isEditing ? "Modifier l'installation" : 'Ajouter une nouvelle installation'}</DialogTitle>
           <DialogDescription>
-            Remplissez les détails ci-dessous pour ajouter une nouvelle installation sportive.
+            Remplissez les détails ci-dessous.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -282,14 +310,14 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                   <FormField control={form.control} name="installations_sportives" render={({ field }) => (
                       <FormItem>
                           <FormLabel>Type d'installation</FormLabel>
-                          <FormControl><Input placeholder="ex: Stade, Salle couverte" {...field} /></FormControl>
+                          <FormControl><Input placeholder="ex: Stade, Salle couverte" {...field} value={field.value || ''}/></FormControl>
                           <FormMessage />
                       </FormItem>
                   )}/>
                   <FormField control={form.control} name="categorie_abregee" render={({ field }) => (
                       <FormItem>
                           <FormLabel>Catégorie abrégée</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
+                          <FormControl><Input {...field} value={field.value || ''} /></FormControl>
                           <FormMessage />
                       </FormItem>
                   )}/>
@@ -300,7 +328,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                     <FormField control={form.control} name="region" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Région*</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner une région" /></SelectTrigger></FormControl>
                                 <SelectContent>{regions.map((region) => (<SelectItem key={region.name} value={region.name}>{region.name}</SelectItem>))}</SelectContent>
                             </Select>
@@ -310,21 +338,21 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                     <FormField control={form.control} name="province" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Province</FormLabel>
-                            <FormControl><Input placeholder="Province" {...field} /></FormControl>
+                            <FormControl><Input placeholder="Province" {...field} value={field.value || ''} /></FormControl>
                              <FormMessage />
                         </FormItem>
                     )}/>
                      <FormField control={form.control} name="commune" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Commune</FormLabel>
-                            <FormControl><Input placeholder="Commune" {...field} /></FormControl>
+                            <FormControl><Input placeholder="Commune" {...field} value={field.value || ''}/></FormControl>
                              <FormMessage />
                         </FormItem>
                     )}/>
                     <FormField control={form.control} name="milieu" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Milieu</FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner un milieu" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     <SelectItem value="Urbain">Urbain</SelectItem>
@@ -359,21 +387,21 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                     <FormField control={form.control} name="ownership" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Propriété</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
+                            <FormControl><Input {...field} value={field.value || ''}/></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
                     <FormField control={form.control} name="managing_entity" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Entité gestionnaire</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
+                            <FormControl><Input {...field} value={field.value || ''}/></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
                     <FormField control={form.control} name="titre_foncier_numero" render={({ field }) => (
                         <FormItem>
                             <FormLabel>N° Titre Foncier</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
+                            <FormControl><Input {...field} value={field.value || ''}/></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
@@ -404,14 +432,14 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                     <FormField control={form.control} name="surface_area" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Superficie (m²)</FormLabel>
-                            <FormControl><Input type="number" {...field} /></FormControl>
+                            <FormControl><Input type="number" {...field} value={field.value || ''}/></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
                      <FormField control={form.control} name="capacity" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Capacité d'accueil</FormLabel>
-                            <FormControl><Input type="number" {...field} /></FormControl>
+                            <FormControl><Input type="number" {...field} value={field.value || ''}/></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
@@ -422,7 +450,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                        <FormField control={form.control} name="establishment_state" render={({ field }) => (
                            <FormItem><FormLabel>État de l'établissement</FormLabel>
-                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                               <Select onValueChange={field.onChange} value={field.value}>
                                    <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger></FormControl>
                                    <SelectContent>{establishmentStates.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
                                </Select>
@@ -430,7 +458,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                        )}/>
                        <FormField control={form.control} name="building_state" render={({ field }) => (
                            <FormItem><FormLabel>État du bâtiment</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                    <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger></FormControl>
                                    <SelectContent>{buildingStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                                </Select>
@@ -438,7 +466,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                        )}/>
                        <FormField control={form.control} name="equipment_state" render={({ field }) => (
                            <FormItem><FormLabel>État des équipements</FormLabel>
-                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                               <Select onValueChange={field.onChange} value={field.value}>
                                    <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger></FormControl>
                                    <SelectContent>{equipmentStates.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
                                </Select>
@@ -453,14 +481,14 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                         <FormField control={form.control} name="staff_count" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Effectif total</FormLabel>
-                                <FormControl><Input type="number" {...field} /></FormControl>
+                                <FormControl><Input type="number" {...field} value={field.value || ''}/></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}/>
                         <FormField control={form.control} name="sports_staff_count" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Personnel du secteur sport</FormLabel>
-                                <FormControl><Input type="number" {...field} /></FormControl>
+                                <FormControl><Input type="number" {...field} value={field.value || ''}/></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}/>
@@ -480,7 +508,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                      <FormField control={form.control} name="rehabilitation_plan" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Prise en compte (prog. réhabilitation)</FormLabel>
-                            <FormControl><Input placeholder="Année ou détails" {...field} /></FormControl>
+                            <FormControl><Input placeholder="Année ou détails" {...field} value={field.value || ''}/></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
@@ -538,14 +566,14 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                  <FormField control={form.control} name="observations" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Observations / Mesures pour réouverture</FormLabel>
-                        <FormControl><Textarea {...field}/></FormControl>
+                        <FormControl><Textarea {...field} value={field.value || ''}/></FormControl>
                         <FormMessage />
                     </FormItem>
                 )}/>
                 <FormField control={form.control} name="description" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Description (simplifiée)</FormLabel>
-                        <FormControl><Textarea placeholder="Décrivez l'installation, ses caractéristiques et ses règles." className="resize-none" {...field}/></FormControl>
+                        <FormControl><Textarea placeholder="Décrivez l'installation, ses caractéristiques et ses règles." className="resize-none" {...field} value={field.value || ''}/></FormControl>
                         <FormMessage />
                     </FormItem>
                 )}/>
@@ -554,7 +582,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
             <DialogFooter className="pt-4">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Ajout en cours...' : 'Ajouter Installation'}
+                {isSubmitting ? (isEditing ? 'Mise à jour...' : 'Ajout en cours...') : (isEditing ? 'Mettre à jour' : 'Ajouter Installation')}
               </Button>
             </DialogFooter>
           </form>
