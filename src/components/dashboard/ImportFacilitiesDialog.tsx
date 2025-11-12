@@ -27,43 +27,44 @@ interface ImportFacilitiesDialogProps {
 }
 
 const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string, notes?: string, required?: boolean, keywords: string[] }[] = [
-    { key: 'name', label: 'Nom de l\'établissement', required: true, keywords: ['nom', 'etablissement'] },
+    { key: 'name', label: 'Nom de l\'établissement', required: true, keywords: ['nom_de_letablissement', 'nom'] },
     { key: 'latitude', label: 'Latitude', required: true, keywords: ['latitude'] },
     { key: 'longitude', label: 'Longitude', required: true, keywords: ['longitude'] },
     { key: 'region', label: 'Région', keywords: ['region'] },
     { key: 'province', label: 'Province', keywords: ['province'] },
     { key: 'commune', label: 'Commune', keywords: ['commune'] },
-    { key: 'milieu', label: 'Milieu (Urbain/Rural)', keywords: ['milieu'] },
-    { key: 'installations_sportives', label: 'Type d\'installation', keywords: ['installations', 'sportives'] },
-    { key: 'categorie_abregee', label: 'Catégorie abrégée', keywords: ['categorie'] },
+    { key: 'milieu', label: 'Milieu (Urbain/Rural)', keywords: ['milieu_urbain___rural'] },
+    { key: 'installations_sportives', label: 'Type d\'installation', keywords: ['installations_sportives'] },
+    { key: 'categorie_abregee', label: 'Catégorie abrégée', keywords: ['categorie_abregee'] },
     { key: 'address', label: 'Adresse/Localisation', keywords: ['localisation', 'adresse'] },
     { key: 'ownership', label: 'Propriété', keywords: ['propriete'] },
-    { key: 'managing_entity', label: 'Entité gestionnaire', keywords: ['entite', 'gestionnaire'] },
-    { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format AAAA-MM-JJ', keywords: ['date', 'renovation'] },
+    { key: 'managing_entity', label: 'Entité gestionnaire', keywords: ['entite_gestionnaire'] },
+    { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format AAAA-MM-JJ', keywords: ['date_derniere_renovation'] },
     { key: 'surface_area', label: 'Superficie (m²)', notes: 'Numérique', keywords: ['superficie'] },
-    { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique', keywords: ['capacite'] },
+    { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique', keywords: ['capacite_daccueil'] },
     { key: 'staff_count', label: 'Effectif total', notes: 'Numérique', keywords: ['effectif'] },
-    { key: 'establishment_state', label: 'État de l\'établissement', keywords: ['etat', 'etablissement'] },
-    { key: 'developed_space', label: 'Espace aménagé', notes: 'Booléen (oui/non)', keywords: ['espace', 'amenage'] },
-    { key: 'titre_foncier_numero', label: 'N° Titre Foncier', keywords: ['foncier'] },
-    { key: 'building_state', label: 'État du bâtiment', keywords: ['etat', 'batiment'] },
-    { key: 'equipment_state', label: 'État des équipements', keywords: ['etat', 'equipements'] },
-    { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique', keywords: ['personnel', 'sport'] },
-    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Booléen (oui/non)', keywords: ['besoin', 'rh'] },
-    { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)', keywords: ['besoin', 'amenagement'] },
-    { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)', keywords: ['besoin', 'equipements'] },
-    { key: 'observations', label: 'Observations', keywords: ['observation'] },
-    { key: 'beneficiaries', label: 'Bénéficiaires', notes: 'Numérique', keywords: ['beneficiaires'] },
+    { key: 'establishment_state', label: 'État de l\'établissement', keywords: ['etat_de_letablissement'] },
+    { key: 'developed_space', label: 'Espace aménagé', notes: 'Booléen (oui/non)', keywords: ['espace_amenage'] },
+    { key: 'titre_foncier_numero', label: 'N° Titre Foncier', keywords: ['titre_foncier_n'] },
+    { key: 'building_state', label: 'État du bâtiment', keywords: ['etat_du_batiment'] },
+    { key: 'equipment_state', label: 'État des équipements', keywords: ['etat_des_equipements'] },
+    { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique', keywords: ['nombre_du_personnel_du_secteur_sport_affecte'] },
+    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Booléen (oui/non)', keywords: ['besoin__rh'] },
+    { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)', keywords: ['besoin_damenagement'] },
+    { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)', keywords: ['besoin_dequipements'] },
+    { key: 'observations', label: 'Observations', keywords: ['observation_sur__les_mesures'] },
+    { key: 'beneficiaries', label: 'Bénéficiaires', notes: 'Numérique', keywords: ['benificiares', 'beneficiaires'] },
 ];
 
 const cleanColumnName = (col: string): string => {
     if (!col) return '';
     return col.trim().toLowerCase()
         .replace(/[\n\r\t]/g, ' ')
-        .replace(/\s+/g, ' ')
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
-        .replace(/[^a-z0-9 ]/g, ' '); // Keep only letters, numbers, and spaces
+        .replace(/[^a-z0-9_]/g, '_') // Replace non-alphanumeric with underscore
+        .replace(/_+/g, '_'); // Replace multiple underscores with a single one
 };
+
 
 export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFacilitiesDialogProps) {
   const { user } = useUser();
@@ -91,7 +92,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     setError(null);
     setStep('upload');
   }, []);
-  
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     const selectedFile = event.target.files?.[0];
@@ -107,50 +108,54 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     setFile(selectedFile);
   };
   
-  useEffect(() => {
+ useEffect(() => {
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        const text = e.target?.result as string;
-        Papa.parse(text, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-                if (results.errors.length) {
-                    setError(`Erreur lors de la lecture du CSV : ${results.errors[0].message}`);
-                    return;
-                }
-                if (!results.meta.fields || results.meta.fields.length === 0) {
-                    setError("Le fichier CSV est vide ou les en-têtes sont manquants.");
-                    return;
-                }
-                const originalHeaders = results.meta.fields;
-                setFileHeaders(originalHeaders);
-                setFileData(results.data);
-
-                // Auto-map columns with keyword matching
-                const newColumnMap: Record<string, string> = {};
-                const cleanedFileHeaders = originalHeaders.map(h => ({ original: h, cleaned: cleanColumnName(h) }));
-
-                for (const dbField of dbFields) {
-                    const foundHeader = cleanedFileHeaders.find(header => 
-                        dbField.keywords.every(kw => header.cleaned.includes(kw))
-                    );
-                    if (foundHeader) {
-                        newColumnMap[dbField.key] = foundHeader.original;
+        try {
+            const text = e.target?.result as string;
+            Papa.parse(text, {
+                header: true,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    if (results.errors.length) {
+                        setError(`Erreur lors de la lecture du CSV : ${results.errors[0].message}`);
+                        return;
                     }
+                    if (!results.meta.fields || results.meta.fields.length === 0) {
+                        setError("Le fichier CSV est vide ou les en-têtes sont manquants.");
+                        return;
+                    }
+                    const originalHeaders = results.meta.fields;
+                    setFileHeaders(originalHeaders);
+                    setFileData(results.data);
+
+                    const newColumnMap: Record<string, string> = {};
+                    const cleanedFileHeaders = originalHeaders.map(h => ({ original: h, cleaned: cleanColumnName(h) }));
+
+                    for (const dbField of dbFields) {
+                        const foundHeader = cleanedFileHeaders.find(header => 
+                            dbField.keywords.some(kw => header.cleaned.includes(kw))
+                        );
+                        if (foundHeader) {
+                            newColumnMap[dbField.key] = foundHeader.original;
+                        }
+                    }
+                    setColumnMap(newColumnMap);
+                    setStep('mapping');
+                },
+                error: (err: any) => {
+                    setError(`Erreur PapaParse : ${err.message}`);
                 }
-                setColumnMap(newColumnMap);
-                setStep('mapping');
-            },
-            error: (err: any) => {
-                setError(`Erreur PapaParse : ${err.message}`);
-            }
-        });
+            });
+        } catch (err: any) {
+            setError(`Une erreur inattendue est survenue: ${err.message}`);
+        }
     };
-    reader.readAsText(file, 'ISO-8859-1'); // Try a different encoding
+    reader.readAsText(file, 'ISO-8859-1');
   }, [file]);
+
 
   const processData = () => {
     if (!user) {
@@ -158,7 +163,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
       return;
     }
 
-    const requiredMappingsMet = dbFields.filter(f => f.required).every(field => columnMap[field.key]);
+    const requiredMappingsMet = dbFields.filter(f => f.required).every(field => columnMap[field.key] && columnMap[field.key] !== 'ignore_column');
     if (!requiredMappingsMet) {
         setError("Le mappage des champs obligatoires (Nom, Latitude, Longitude) est requis.");
         return;
@@ -167,39 +172,38 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     setError(null);
 
     const facilities: Partial<Facility>[] = fileData.map((row) => {
-      const facility: Partial<any> = { adminId: user.uid, sports: [], equipments: [] };
-      let mappedData: Record<string, any> = {};
+      let facilityData: Partial<any> = { adminId: user.uid, sports: [], equipments: [] };
       
       for (const dbField of dbFields) {
           const fileHeader = columnMap[dbField.key];
           if (fileHeader && columnMap[dbField.key] !== 'ignore_column' && row[fileHeader] !== undefined) {
-             mappedData[dbField.key] = row[fileHeader];
+             facilityData[dbField.key] = row[fileHeader];
           }
       }
 
-      const name = mappedData.name ? String(mappedData.name).trim() : null;
-      const latString = String(mappedData.latitude || '').replace(',', '.').trim();
-      const lngString = String(mappedData.longitude || '').replace(',', '.').trim();
-
-      const lat = latString ? parseFloat(latString) : null;
-      const lng = lngString ? parseFloat(lngString) : null;
-
-      if (name && lat !== null && !isNaN(lat) && lng !== null && !isNaN(lng)) {
+      const name = facilityData.name ? String(facilityData.name).trim() : null;
+      const latString = String(facilityData.latitude || '').replace(',', '.').trim();
+      const lngString = String(facilityData.longitude || '').replace(',', '.').trim();
+      
+      const lat = latString ? parseFloat(latString) : NaN;
+      const lng = lngString ? parseFloat(lngString) : NaN;
+      
+      if (name && !isNaN(lat) && !isNaN(lng)) {
         return {
-          ...mappedData,
+          ...facilityData,
           name,
           location: { lat, lng },
-          surface_area: mappedData.surface_area ? parseFloat(String(mappedData.surface_area).replace(',', '.')) : undefined,
-          capacity: mappedData.capacity ? parseInt(String(mappedData.capacity), 10) : undefined,
-          staff_count: mappedData.staff_count ? parseInt(String(mappedData.staff_count), 10) : undefined,
-          sports_staff_count: mappedData.sports_staff_count ? parseInt(String(mappedData.sports_staff_count), 10) : undefined,
-          beneficiaries: mappedData.beneficiaries ? parseInt(String(mappedData.beneficiaries), 10) : undefined,
-          hr_needs: ['oui', 'yes', 'true', '1'].includes(String(mappedData.hr_needs).toLowerCase()),
-          besoin_amenagement: ['oui', 'yes', 'true', '1'].includes(String(mappedData.besoin_amenagement).toLowerCase()),
-          besoin_equipements: ['oui', 'yes', 'true', '1'].includes(String(mappedData.besoin_equipements).toLowerCase()),
-          developed_space: ['oui', 'yes', 'true', '1'].includes(String(mappedData.developed_space).toLowerCase()),
-          sports: [], // Default value, can be populated if sports column is mapped
-          equipments: [], // Default value
+          surface_area: facilityData.surface_area ? parseFloat(String(facilityData.surface_area).replace(',', '.')) : undefined,
+          capacity: facilityData.capacity ? parseInt(String(facilityData.capacity), 10) : undefined,
+          staff_count: facilityData.staff_count ? parseInt(String(facilityData.staff_count), 10) : undefined,
+          sports_staff_count: facilityData.sports_staff_count ? parseInt(String(facilityData.sports_staff_count), 10) : undefined,
+          beneficiaries: facilityData.beneficiaries ? parseInt(String(facilityData.beneficiaries), 10) : undefined,
+          hr_needs: ['oui', 'yes', 'true', '1'].includes(String(facilityData.hr_needs).toLowerCase()),
+          besoin_amenagement: ['oui', 'yes', 'true', '1'].includes(String(facilityData.besoin_amenagement).toLowerCase()),
+          besoin_equipements: ['oui', 'yes', 'true', '1'].includes(String(facilityData.besoin_equipements).toLowerCase()),
+          developed_space: ['oui', 'yes', 'true', '1'].includes(String(facilityData.developed_space).toLowerCase()),
+          sports: [],
+          equipments: [],
         };
       }
       return null;
@@ -337,9 +341,11 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   );
 
   const renderContent = () => {
-    if (step === 'mapping') return renderMappingStep();
-    if (step === 'preview') return renderPreviewStep();
-    return renderUploadStep();
+    switch (step) {
+      case 'mapping': return renderMappingStep();
+      case 'preview': return renderPreviewStep();
+      default: return renderUploadStep();
+    }
   };
   
   const requiredMappingsMet = dbFields.filter(f => f.required).every(field => columnMap[field.key] && columnMap[field.key] !== 'ignore_column');
