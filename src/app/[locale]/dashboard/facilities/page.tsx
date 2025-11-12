@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trash2, Loader2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2, Upload } from 'lucide-react';
 import AddFacilityDialog from '@/components/dashboard/AddFacilityDialog';
+import ImportFacilitiesDialog from '@/components/dashboard/ImportFacilitiesDialog';
 import { useTranslations } from 'next-intl';
 import {
   AlertDialog,
@@ -31,6 +32,7 @@ export default function FacilitiesPage() {
   const t = useTranslations('Dashboard.Facilities');
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -81,6 +83,10 @@ export default function FacilitiesPage() {
             <CardDescription>{t('description')}</CardDescription>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Importer
+            </Button>
             <Button onClick={handleAddNew}>
               <PlusCircle className="mr-2 h-4 w-4" />
               {t('addButton')}
@@ -170,6 +176,12 @@ export default function FacilitiesPage() {
           open={isAddDialogOpen} 
           onOpenChange={setIsAddDialogOpen} 
           facility={selectedFacility}
+        />
+      )}
+       {isImportDialogOpen && (
+        <ImportFacilitiesDialog 
+          open={isImportDialogOpen} 
+          onOpenChange={setIsImportDialogOpen} 
         />
       )}
     </>
