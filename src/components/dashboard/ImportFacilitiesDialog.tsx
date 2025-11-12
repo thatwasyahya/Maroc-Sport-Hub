@@ -26,7 +26,7 @@ interface ImportFacilitiesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const dbFields: { key: keyof Facility, label: string, notes?: string, required?: boolean, keywords: string[] }[] = [
+const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string, notes?: string, required?: boolean, keywords: string[] }[] = [
     { key: 'name', label: 'Nom de l\'établissement', required: true, keywords: ['nom', 'etablissement'] },
     { key: 'latitude', label: 'Latitude', required: true, keywords: ['latitude'] },
     { key: 'longitude', label: 'Longitude', required: true, keywords: ['longitude'] },
@@ -53,7 +53,7 @@ const dbFields: { key: keyof Facility, label: string, notes?: string, required?:
     { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)', keywords: ['besoin', 'amenagement'] },
     { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)', keywords: ['besoin', 'equipements'] },
     { key: 'observations', label: 'Observations', keywords: ['observation'] },
-    { key: 'beneficiaries', label: 'Bénéficiaires', notes: 'Numérique', keywords: ['benificiares'] },
+    { key: 'beneficiaries', label: 'Bénéficiaires', notes: 'Numérique', keywords: ['beneficiaires'] },
 ];
 
 const cleanColumnName = (col: string): string => {
@@ -101,7 +101,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     };
      if (!selectedFile.name.endsWith('.csv')) {
       setError('Veuillez sélectionner un fichier au format .csv');
-      resetState();
+      setFile(null);
       return;
     }
     setFile(selectedFile);
@@ -171,7 +171,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
       
       for (const dbFieldKey in columnMap) {
         const fileHeader = columnMap[dbFieldKey as keyof Facility];
-        if (fileHeader && row[fileHeader] !== undefined && row[fileHeader] !== null && String(row[fileHeader]).trim() !== '') {
+        if (fileHeader && columnMap[dbFieldKey] !== 'ignore_column' && row[fileHeader] !== undefined && row[fileHeader] !== null && String(row[fileHeader]).trim() !== '') {
           const value = String(row[fileHeader]).trim();
           facility[dbFieldKey] = value;
         }
@@ -281,7 +281,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
                         <SelectValue placeholder="Choisir une colonne..." />
                       </SelectTrigger>
                       <SelectContent>
-                          <SelectItem value="">-- Ignorer --</SelectItem>
+                          <SelectItem value="ignore_column">-- Ignorer --</SelectItem>
                           {fileHeaders.map(header => (
                               <SelectItem key={header} value={header}>{header}</SelectItem>
                           ))}
@@ -334,15 +334,12 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   );
 
   const renderContent = () => {
-    switch (step) {
-        case 'upload': return renderUploadStep();
-        case 'mapping': return renderMappingStep();
-        case 'preview': return renderPreviewStep();
-        default: return renderUploadStep();
-    }
+    if (step === 'mapping') return renderMappingStep();
+    if (step === 'preview') return renderPreviewStep();
+    return renderUploadStep();
   };
   
-  const requiredMappingsMet = dbFields.filter(f => f.required).every(field => columnMap[field.key] && columnMap[field.key] !== '');
+  const requiredMappingsMet = dbFields.filter(f => f.required).every(field => columnMap[field.key] && columnMap[field.key] !== 'ignore_column');
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) resetState(); onOpenChange(isOpen); }}>
@@ -370,8 +367,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         </div>
 
         <DialogFooter>
-          {step === 'mapping' && <Button variant="outline" onClick={() => setStep('upload')}>Précédent</Button>}
-          {step === 'preview' && <Button variant="outline" onClick={() => setStep('mapping')}>Précédent</Button>}
+          {step !== 'upload' && <Button variant="outline" onClick={() => setStep(step === 'preview' ? 'mapping' : 'upload')}>Précédent</Button>}
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
           {step === 'mapping' && 
             <Button onClick={processData} disabled={!requiredMappingsMet}>
