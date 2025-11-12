@@ -168,35 +168,38 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
     const facilities: Partial<Facility>[] = fileData.map((row) => {
       const facility: Partial<any> = { adminId: user.uid, sports: [], equipments: [] };
+      let mappedData: Record<string, any> = {};
       
-      for (const dbFieldKey in columnMap) {
-        const fileHeader = columnMap[dbFieldKey as keyof Facility];
-        if (fileHeader && columnMap[dbFieldKey] !== 'ignore_column' && row[fileHeader] !== undefined && row[fileHeader] !== null && String(row[fileHeader]).trim() !== '') {
-          const value = String(row[fileHeader]).trim();
-          facility[dbFieldKey] = value;
-        }
+      for (const dbField of dbFields) {
+          const fileHeader = columnMap[dbField.key];
+          if (fileHeader && columnMap[dbField.key] !== 'ignore_column' && row[fileHeader] !== undefined) {
+             mappedData[dbField.key] = row[fileHeader];
+          }
       }
-      
-      const name = facility.name;
-      const latString = String(facility.latitude || '').replace(',', '.');
-      const lngString = String(facility.longitude || '').replace(',', '.');
-      const lat = !isNaN(parseFloat(latString)) ? parseFloat(latString) : null;
-      const lng = !isNaN(parseFloat(lngString)) ? parseFloat(lngString) : null;
 
-      if (name && lat !== null && lng !== null) {
+      const name = mappedData.name ? String(mappedData.name).trim() : null;
+      const latString = String(mappedData.latitude || '').replace(',', '.').trim();
+      const lngString = String(mappedData.longitude || '').replace(',', '.').trim();
+
+      const lat = latString ? parseFloat(latString) : null;
+      const lng = lngString ? parseFloat(lngString) : null;
+
+      if (name && lat !== null && !isNaN(lat) && lng !== null && !isNaN(lng)) {
         return {
-          ...facility,
+          ...mappedData,
           name,
           location: { lat, lng },
-          surface_area: facility.surface_area ? parseFloat(String(facility.surface_area).replace(',', '.')) : undefined,
-          capacity: facility.capacity ? parseInt(String(facility.capacity), 10) : undefined,
-          staff_count: facility.staff_count ? parseInt(String(facility.staff_count), 10) : undefined,
-          sports_staff_count: facility.sports_staff_count ? parseInt(String(facility.sports_staff_count), 10) : undefined,
-          beneficiaries: facility.beneficiaries ? parseInt(String(facility.beneficiaries), 10) : undefined,
-          hr_needs: ['oui', 'yes', 'true', '1'].includes(String(facility.hr_needs).toLowerCase()),
-          besoin_amenagement: ['oui', 'yes', 'true', '1'].includes(String(facility.besoin_amenagement).toLowerCase()),
-          besoin_equipements: ['oui', 'yes', 'true', '1'].includes(String(facility.besoin_equipements).toLowerCase()),
-          developed_space: ['oui', 'yes', 'true', '1'].includes(String(facility.developed_space).toLowerCase()),
+          surface_area: mappedData.surface_area ? parseFloat(String(mappedData.surface_area).replace(',', '.')) : undefined,
+          capacity: mappedData.capacity ? parseInt(String(mappedData.capacity), 10) : undefined,
+          staff_count: mappedData.staff_count ? parseInt(String(mappedData.staff_count), 10) : undefined,
+          sports_staff_count: mappedData.sports_staff_count ? parseInt(String(mappedData.sports_staff_count), 10) : undefined,
+          beneficiaries: mappedData.beneficiaries ? parseInt(String(mappedData.beneficiaries), 10) : undefined,
+          hr_needs: ['oui', 'yes', 'true', '1'].includes(String(mappedData.hr_needs).toLowerCase()),
+          besoin_amenagement: ['oui', 'yes', 'true', '1'].includes(String(mappedData.besoin_amenagement).toLowerCase()),
+          besoin_equipements: ['oui', 'yes', 'true', '1'].includes(String(mappedData.besoin_equipements).toLowerCase()),
+          developed_space: ['oui', 'yes', 'true', '1'].includes(String(mappedData.developed_space).toLowerCase()),
+          sports: [], // Default value, can be populated if sports column is mapped
+          equipments: [], // Default value
         };
       }
       return null;
@@ -368,7 +371,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
         <DialogFooter>
           {step !== 'upload' && <Button variant="outline" onClick={() => setStep(step === 'preview' ? 'mapping' : 'upload')}>Précédent</Button>}
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <Button variant="ghost" onClick={() => { onOpenChange(false); resetState(); }}>Annuler</Button>
           {step === 'mapping' && 
             <Button onClick={processData} disabled={!requiredMappingsMet}>
                 Étape suivante : Prévisualiser
