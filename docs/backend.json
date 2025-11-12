@@ -46,8 +46,31 @@
             "properties": {
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
-            }
-        }
+            },
+            "required": ["lat", "lng"]
+        },
+        "reference_region": { "type": "string" },
+        "province": { "type": "string" },
+        "commune": { "type": "string" },
+        "milieu": { "type": "string", "enum": ["Urbain", "Rural"] },
+        "category": { "type": "string" },
+        "ownership": { "type": "string" },
+        "managing_entity": { "type": "string" },
+        "last_renovation_date": { "type": "string", "format": "date" },
+        "surface_area": { "type": "number" },
+        "capacity": { "type": "number" },
+        "staff_count": { "type": "number" },
+        "establishment_state": { "type": "string", "enum": ["Opérationnel", "En arrêt", "Prêt", "En cours de transformation", "En cours de construction", "Non défini"] },
+        "developed_space": { "type": "string" },
+        "building_state": { "type": "string", "enum": ["Bon", "Moyen", "Mauvais", "Médiocre", "Non défini"] },
+        "equipment_state": { "type": "string", "enum": ["Non équipé", "Bon", "Moyen", "Mauvais", "Médiocre", "Non défini"] },
+        "sports_staff_count": { "type": "number" },
+        "hr_needs": { "type": "string" },
+        "rehabilitation_plan": { "type": "string" },
+        "development_basin": { "type": "string" },
+        "equipment_basin": { "type": "string" },
+        "beneficiaries": { "type": "string" },
+        "observations": { "type": "string" }
       },
       "required": ["id", "name", "location"]
     },
@@ -80,8 +103,31 @@
             "properties": {
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
-            }
-        }
+            },
+            "required": ["lat", "lng"]
+        },
+        "reference_region": { "type": "string" },
+        "province": { "type": "string" },
+        "commune": { "type": "string" },
+        "milieu": { "type": "string", "enum": ["Urbain", "Rural"] },
+        "category": { "type": "string" },
+        "ownership": { "type": "string" },
+        "managing_entity": { "type": "string" },
+        "last_renovation_date": { "type": "string", "format": "date" },
+        "surface_area": { "type": "number" },
+        "capacity": { "type": "number" },
+        "staff_count": { "type": "number" },
+        "establishment_state": { "type": "string", "enum": ["Opérationnel", "En arrêt", "Prêt", "En cours de transformation", "En cours de construction", "Non défini"] },
+        "developed_space": { "type": "string" },
+        "building_state": { "type": "string", "enum": ["Bon", "Moyen", "Mauvais", "Médiocre", "Non défini"] },
+        "equipment_state": { "type": "string", "enum": ["Non équipé", "Bon", "Moyen", "Mauvais", "Médiocre", "Non défini"] },
+        "sports_staff_count": { "type": "number" },
+        "hr_needs": { "type": "string" },
+        "rehabilitation_plan": { "type": "string" },
+        "development_basin": { "type": "string" },
+        "equipment_basin": { "type": "string" },
+        "beneficiaries": { "type": "string" },
+        "observations": { "type": "string" }
       },
       "required": ["userId", "userName", "userEmail", "status", "name", "region", "city", "sports", "type", "createdAt", "location"]
     }

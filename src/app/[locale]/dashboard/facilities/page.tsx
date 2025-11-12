@@ -41,15 +41,16 @@ export default function FacilitiesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>{t('tableHeaderName')}</TableHead>
-                <TableHead>{t('tableHeaderRegion')}</TableHead>
-                <TableHead>{t('tableHeaderEquipments')}</TableHead>
+                <TableHead>Province</TableHead>
+                <TableHead>Commune</TableHead>
+                <TableHead>État</TableHead>
                 <TableHead>{t('tableHeaderSports')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {facilitiesLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     {t('loading')}
                   </TableCell>
                 </TableRow>
@@ -57,12 +58,15 @@ export default function FacilitiesPage() {
                 facilities.map((facility) => (
                   <TableRow key={facility.id}>
                     <TableCell className="font-medium">{facility.name}</TableCell>
-                    <TableCell>{facility.region}</TableCell>
-                    <TableCell>{facility.equipments?.length || 0}</TableCell>
+                    <TableCell>{facility.province}</TableCell>
+                    <TableCell>{facility.commune}</TableCell>
+                    <TableCell>
+                        {facility.establishment_state && <Badge variant="secondary">{facility.establishment_state}</Badge>}
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {facility.sports.map((sport) => (
-                          <Badge key={sport} variant="secondary">{sport}</Badge>
+                          <Badge key={sport} variant="outline">{sport}</Badge>
                         ))}
                       </div>
                     </TableCell>
@@ -70,7 +74,7 @@ export default function FacilitiesPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     {t('noFacilities')}
                   </TableCell>
                 </TableRow>

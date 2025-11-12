@@ -43,18 +43,12 @@ export default function RequestsList() {
         const batch = writeBatch(firestore);
         const newFacilityRef = doc(collection(firestore, 'facilities'));
         
-        const newFacilityData: Omit<Facility, 'id'> & { createdAt: any, updatedAt: any } = {
+        // Remove user-specific and request-specific fields before creating the facility
+        const { id, userId, userName, userEmail, status, rejectionReason, ...facilityData } = request;
+
+        const newFacilityData: Partial<Facility> = {
+            ...facilityData,
             adminId: request.userId,
-            name: request.name,
-            description: request.description,
-            address: request.address,
-            region: request.region,
-            city: request.city,
-            sports: request.sports,
-            type: request.type,
-            accessible: request.accessible,
-            equipments: request.equipments || [],
-            location: request.location,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         };

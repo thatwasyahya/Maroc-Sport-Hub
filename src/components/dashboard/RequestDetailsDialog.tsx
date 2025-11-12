@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Accessibility, Calendar, Building2, MapPin, Moon, Sun } from 'lucide-react';
+import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Users, HardHat, ClipboardList, Package, Building, ShieldQuestion, UserCheck, BarChart, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -33,6 +33,19 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
             default: return 'outline';
         }
     };
+    
+  const detailItem = (Icon: React.ElementType, label: string, value: React.ReactNode) => {
+    if (!value && typeof value !== 'number') return null;
+    return (
+      <div className="flex items-start gap-3">
+        <Icon className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+        <div>
+          <p className="font-medium text-sm">{label}</p>
+          <p className="text-muted-foreground text-sm">{String(value)}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -44,7 +57,7 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-6">
-            <div className="space-y-4 py-4">
+            <div className="space-y-6 py-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
@@ -58,44 +71,36 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                 <Separator />
 
                 <div className="grid gap-2">
-                    <h3 className="font-semibold">Informations Générales</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-start gap-2">
-                            <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                            <div>
-                                <p className="font-medium">Adresse</p>
-                                <p className="text-muted-foreground">{request.address}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                            <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                            <div>
-                                <p className="font-medium">Ville & Région</p>
-                                <p className="text-muted-foreground">{request.city}, {request.region}</p>
-                            </div>
-                        </div>
-                         <div className="flex items-start gap-2">
-                            {request.type === 'indoor' ? <Moon className="h-4 w-4 mt-0.5 text-muted-foreground" /> : <Sun className="h-4 w-4 mt-0.5 text-muted-foreground" />}
-                            <div>
-                                <p className="font-medium">Type</p>
-                                <p className="text-muted-foreground">{request.type}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                            <Accessibility className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                            <div>
-                                <p className="font-medium">Accessibilité</p>
-                                <p className="text-muted-foreground">{request.accessible ? 'Oui' : 'Non'}</p>
-                            </div>
-                        </div>
+                    <h3 className="font-semibold text-lg mb-2">Informations Générales</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {detailItem(MapPin, "Adresse", request.address)}
+                        {detailItem(Building2, "Ville, Province", `${request.city}, ${request.province || 'N/A'}`)}
+                        {detailItem(ShieldQuestion, "Propriété", request.ownership)}
+                        {detailItem(UserCheck, "Entité Gestionnaire", request.managing_entity)}
+                        {detailItem(request.type === 'indoor' ? Moon : Sun, "Type", request.type)}
+                        {detailItem(Accessibility, "Accessibilité", request.accessible ? 'Oui' : 'Non')}
                     </div>
                 </div>
 
                 <Separator />
 
                 <div className="grid gap-2">
+                    <h3 className="font-semibold text-lg mb-2">Détails de l'Établissement</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {detailItem(BarChart, "État Établissement", request.establishment_state)}
+                        {detailItem(Building, "État Bâtiment", request.building_state)}
+                        {detailItem(Package, "État Équipements", request.equipment_state)}
+                        {detailItem(Users, "Capacité d'accueil", request.capacity)}
+                        {detailItem(HardHat, "Effectif", request.staff_count)}
+                        {detailItem(Calendar, "Dernière rénovation", request.last_renovation_date ? format(new Date(request.last_renovation_date), 'PPP') : 'N/A')}
+                    </div>
+                </div>
+
+                <Separator />
+
+                 <div className="grid gap-2">
                     <h3 className="font-semibold">Description</h3>
-                    <p className="text-sm text-muted-foreground">{request.description}</p>
+                    <p className="text-sm text-muted-foreground">{request.description || "Aucune description fournie."}</p>
                 </div>
 
                 <Separator />
@@ -117,6 +122,17 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                         </div>
                     )}
                 </div>
+                 
+                {request.observations && (
+                   <>
+                    <Separator />
+                    <div className="grid gap-2">
+                        <h3 className="font-semibold">Observations</h3>
+                        <p className="text-sm text-muted-foreground">{request.observations}</p>
+                    </div>
+                   </>
+                )}
+
 
                 {request.status === 'rejected' && request.rejectionReason && (
                     <>
