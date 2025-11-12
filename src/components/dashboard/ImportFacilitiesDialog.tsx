@@ -15,9 +15,10 @@ import { useFirestore, useUser } from '@/firebase';
 import { collection, writeBatch, serverTimestamp, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
-import type { Facility, EstablishmentState, BuildingState, EquipmentState } from '@/lib/types';
+import type { Facility } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { convertFile } from '@/services/conversion';
 
 // Functions to safely convert data types from the parsed JSON
 const toBoolean = (value: any): boolean => {
@@ -42,6 +43,10 @@ const toInteger = (value: any): number | undefined => {
 
 const toDate = (value: any): Date | undefined => {
     if (!value) return undefined;
+    // Handle Excel serial date number
+    if (typeof value === 'number' && value > 1) {
+        return new Date(Math.round((value - 25569) * 86400 * 1000));
+    }
     const date = new Date(value);
     return isNaN(date.getTime()) ? undefined : date;
 };
@@ -55,6 +60,7 @@ const headerMappings: { [key: string]: keyof Facility | 'lat' | 'lng' } = {
     'province': 'province',
     'commune': 'commune',
     'milieu urbain - rural': 'milieu',
+    'milieu': 'milieu',
     'installations sportives': 'installations_sportives',
     'catégorie abrégée': 'category',
     "nom de l'établissement": 'name',
@@ -88,13 +94,11 @@ const headerMappings: { [key: string]: keyof Facility | 'lat' | 'lng' } = {
     'sports': 'sports',
 };
 
-
 const stateMappings = {
-    establishment_state: { '1': 'Opérationnel', '2': 'En arrêt', '3': 'Prêt', '4': 'En cours de transformation', '5': 'En cours de construction' },
-    building_state: { '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre' },
-    equipment_state: { '0': 'Non équipé', '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre' }
+    establishment_state: { '1': 'Opérationnel', '2': 'En arrêt', '3': 'Prêt', '4': 'En cours de transformation', '5': 'En cours de construction', 'non défini': 'Non défini' },
+    building_state: { '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre', 'non défini': 'Non défini' },
+    equipment_state: { '0': 'Non équipé', '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre', 'non défini': 'Non défini' }
 };
-
 
 interface ImportFacilitiesDialogProps {
   open: boolean;
@@ -138,38 +142,25 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     formData.append('file', file);
 
     try {
-      // Use a reliable external API to convert XLS/XLSX to JSON
-      const response = await fetch('https://api2.docconversion.online/v1/convert/xls-to-json', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erreur du service de conversion: ${response.statusText}`);
-      }
-
-      const jsonResult = await response.json();
+      const jsonResult = await convertFile(formData);
 
       if (!jsonResult || !Array.isArray(jsonResult) || jsonResult.length === 0) {
         throw new Error('Le fichier est vide ou dans un format non reconnu par le service de conversion.');
       }
 
-      // Now, map the clean JSON to our data model
       const facilities = jsonResult.map((rawRow: any) => {
         let facility: Partial<Facility> & { lat?: number, lng?: number } = {};
         
         for (const rawHeader in rawRow) {
-            const normalizedHeader = rawHeader.toLowerCase().trim();
-            
-            // Find a matching key in our mappings
-            const modelField = Object.keys(headerMappings).find(key => normalizedHeader.includes(key));
-            
-            if (modelField) {
-                 const targetField = headerMappings[modelField];
-                 (facility as any)[targetField] = rawRow[rawHeader];
+            if (rawRow.hasOwnProperty(rawHeader)) {
+                const normalizedHeader = rawHeader.toLowerCase().replace(/\s+/g, ' ').trim();
+                const targetField = headerMappings[normalizedHeader as keyof typeof headerMappings];
+                if (targetField) {
+                    (facility as any)[targetField] = rawRow[rawHeader];
+                }
             }
         }
-
+        
         // --- Data Type Conversions ---
         facility.lat = toFloat(facility.lat);
         facility.lng = toFloat(facility.lng);
@@ -182,8 +173,11 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         facility.capacity = toInteger(facility.capacity);
         facility.staff_count = toInteger(facility.staff_count);
         facility.sports_staff_count = toInteger(facility.sports_staff_count);
-        facility.beneficiaries = toInteger(facility.beneficiaries);
         
+        const beneficiariesRaw = (facility as any).beneficiaries;
+        facility.beneficiaries = toInteger(beneficiariesRaw);
+
+
         facility.hr_needs = toBoolean(facility.hr_needs);
         facility.besoin_amenagement = toBoolean(facility.besoin_amenagement);
         facility.besoin_equipements = toBoolean(facility.besoin_equipements);
@@ -197,12 +191,21 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             facility.sports = [];
         }
 
-        // Map state fields
         Object.keys(stateMappings).forEach(key => {
             const field = key as keyof typeof stateMappings;
-            const code = String(facility[field]).trim();
-            if (stateMappings[field] && (stateMappings[field] as any)[code]) {
-                (facility as any)[field] = (stateMappings[field] as any)[code];
+            const rawValue = (facility as any)[field];
+            if (rawValue !== undefined && rawValue !== null) {
+                const code = String(rawValue).trim();
+                const mappedValue = (stateMappings[field] as any)[code];
+                if (mappedValue) {
+                    (facility as any)[field] = mappedValue;
+                } else {
+                    // if no mapping found, try to use the raw value if it's one of the allowed enum values
+                    const allowedValues = Object.values(stateMappings[field]);
+                    if (!allowedValues.includes(rawValue)) {
+                        (facility as any)[field] = 'Non défini';
+                    }
+                }
             }
         });
         
@@ -354,5 +357,4 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     </Dialog>
   );
 }
-
     
