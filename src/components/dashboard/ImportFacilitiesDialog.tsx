@@ -20,7 +20,6 @@ import type { Facility, EstablishmentState, BuildingState, EquipmentState } from
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
-
 const headerMappings: { [key: string]: (keyof Facility | 'lat' | 'lng') } = {
   'reference region': 'reference_region',
   'référence région': 'reference_region',
@@ -31,7 +30,7 @@ const headerMappings: { [key: string]: (keyof Facility | 'lat' | 'lng') } = {
   'milieu': 'milieu',
   'installations sportives': 'installations_sportives',
   'catégorie abrégée': 'category',
-  'nom de l\'établissement': 'name',
+  "nom de l'établissement": 'name',
   'nom': 'name',
   'localisation': 'address',
   'adresse': 'address',
@@ -41,9 +40,9 @@ const headerMappings: { [key: string]: (keyof Facility | 'lat' | 'lng') } = {
   'entité gestionnaire': 'managing_entity',
   'date dernière rénovation': 'last_renovation_date',
   'superficie': 'surface_area',
-  'capacité d\'accueil': 'capacity',
+  "capacité d'accueil": 'capacity',
   'effectif': 'staff_count',
-  'état de l\'établissement': 'establishment_state',
+  "état de l'établissement": 'establishment_state',
   'espace aménagé': 'developed_space',
   'titre foncier': 'titre_foncier_numero',
   'etat du bâtiment': 'building_state',
@@ -51,8 +50,8 @@ const headerMappings: { [key: string]: (keyof Facility | 'lat' | 'lng') } = {
   'nombre du personnel du secteur sport affecté': 'sports_staff_count',
   'besoin rh': 'hr_needs',
   'prise en compte': 'rehabilitation_plan',
-  'besoin d\'aménagement': 'besoin_amenagement',
-  'besoin d\'équipements': 'besoin_equipements',
+  "besoin d'aménagement": 'besoin_amenagement',
+  "besoin d'équipements": 'besoin_equipements',
   'observation': 'observations',
   'bénificiaires': 'beneficiaries',
   'beneficiaires': 'beneficiaries',
@@ -126,34 +125,37 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary', cellDates: true, cellNF: false, cellText:false });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, { header: 1, defval: "" });
-
+        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, { header: 1, defval: "", raw: false });
+        
         if (jsonData.length < 2) {
           throw new Error('La feuille de calcul est vide ou ne contient que des en-têtes.');
         }
 
-        const headers: string[] = jsonData[0];
+        const rawHeaders: string[] = jsonData[0];
         const rows = jsonData.slice(1);
         
-        const columnIndexMap: { [key in (keyof Facility | 'lat' | 'lng')]?: number } = {};
+        const columnIndexMap: { [key: string]: number } = {};
 
-        headers.forEach((header, index) => {
+        const normalizedHeaderKeys = Object.keys(headerMappings).map(key => key.toLowerCase().trim());
+        
+        rawHeaders.forEach((header, index) => {
             if (typeof header !== 'string') return;
-            const normalizedHeader = header.trim().toLowerCase().replace(/\s\s+/g, ' ');
-            for (const key in headerMappings) {
-                if (normalizedHeader.includes(key)) {
-                    const mappedField = headerMappings[key];
-                    if (!columnIndexMap[mappedField]) {
+            const normalizedHeader = header.toLowerCase().trim();
+            
+            for (const mappingKey in headerMappings) {
+                if (normalizedHeader.includes(mappingKey)) {
+                    const mappedField = headerMappings[mappingKey];
+                    if (!columnIndexMap[mappedField]) { 
                         columnIndexMap[mappedField] = index;
                     }
                 }
             }
         });
-
+        
         const facilities: Partial<Facility>[] = rows.map((rowArray: any[]) => {
           let row: Partial<Facility> & { lat?: number, lng?: number } = {};
           
@@ -221,7 +223,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         setIsParsing(false);
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
   };
 
   const handleImport = async () => {
