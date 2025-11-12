@@ -16,7 +16,7 @@ import HomeMapContainer from "@/components/home-map-container";
 import type { Facility } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from "@/components/ui/button";
-import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter } from 'lucide-react';
+import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { getRegions } from '@/lib/maroc-api';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const firestore = useFirestore();
@@ -144,57 +145,56 @@ export default function Home() {
     <div className="min-h-screen w-full flex flex-col bg-background">
       <Header />
       <main className="flex-1">
-        <section className="relative text-center py-20 px-4 sm:py-32 flex flex-col items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 z-0">
-                <Image
-                src="https://picsum.photos/seed/hero/1800/1000"
-                alt="Ambiance de stade"
-                fill
-                className="object-cover opacity-20"
-                priority
-                data-ai-hint="stadium lights"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
-            </div>
-            <div className="relative z-10 max-w-4xl mx-auto">
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tight mb-4">
-                Le Hub Complet pour les Sportifs au Maroc
-                </h1>
-                <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Découvrez des infos détaillées, explorez une carte interactive et trouvez tout ce dont vous avez besoin pour votre prochaine activité sportive.
-                </p>
-                <Button size="lg" onClick={scrollToMap}>
-                Explorer la carte
-                <ArrowDown className="ml-2 h-5 w-5" />
-                </Button>
-            </div>
+        <section className="relative text-center py-24 px-4 sm:py-40 flex flex-col items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            <Image
+              src="https://picsum.photos/seed/herofootball/1800/1000"
+              alt="Terrain de sport éclairé la nuit"
+              fill
+              className="object-cover opacity-10"
+              priority
+              data-ai-hint="stadium lights football"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/90 to-transparent"></div>
+          </div>
+          <div className="relative z-10 max-w-4xl mx-auto">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold font-headline tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
+              Le Hub Sportif du Maroc
+            </h1>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+              Découvrez, explorez et trouvez l'installation parfaite pour votre prochaine activité sportive avec notre carte interactive.
+            </p>
+            <Button size="lg" onClick={scrollToMap} className="transition-transform duration-300 hover:scale-105">
+              Explorer la Carte
+              <ArrowDown className="ml-2 h-5 w-5 animate-bounce" />
+            </Button>
+          </div>
         </section>
 
-        <section ref={mapRef} id="map-section" className="py-12 md:py-20 bg-muted/50">
-          <div className="w-[90vw] mx-auto">
-            <div className="relative h-[85vh] rounded-lg overflow-hidden shadow-lg">
+        <section ref={mapRef} id="map-section" className="py-16 md:py-24 bg-muted/30">
+          <div className="container mx-auto">
+            <div className="relative h-[85vh] rounded-xl overflow-hidden shadow-2xl border border-border/50">
                 <SidebarProvider>
-                    <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card border shadow-lg rounded-lg">
-                        <SidebarHeader className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold font-headline">Filtres</h2>
-                            <Button onClick={handleLocateMe} variant="ghost" size="sm">
-                                <LocateFixed className="h-5 w-5 mr-2" />
-                                <span>Me localiser</span>
+                    <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card/80 backdrop-blur-sm border-border/50 shadow-lg rounded-xl">
+                        <SidebarHeader className="flex items-center justify-between p-4 border-b border-border/50">
+                            <h2 className="text-lg font-bold font-headline flex items-center gap-2"><SlidersHorizontal className="w-5 h-5"/> Filtres</h2>
+                            <Button onClick={handleLocateMe} variant="ghost" size="icon" className="h-8 w-8">
+                                <LocateFixed className="h-4 w-4" />
                             </Button>
                         </SidebarHeader>
                         
                         <ScrollArea className="h-full">
-                            <SidebarContent>
+                            <SidebarContent className="p-0">
                                 <Accordion type="multiple" defaultValue={['sport', 'region']} className="w-full">
                                     <AccordionItem value="sport">
-                                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Sport</AccordionTrigger>
+                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">Sport</AccordionTrigger>
                                         <AccordionContent className="px-4">
                                         {allSports.map(sport => {
                                             const Icon = sportsIconsMap[sport];
                                             return (
-                                            <div key={sport} className="flex items-center space-x-3 my-2">
+                                            <div key={sport} className="flex items-center space-x-3 my-3">
                                                 <Checkbox id={`sport-${sport}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedSports, sport, !!checked)} />
-                                                <Label htmlFor={`sport-${sport}`} className="font-normal flex items-center gap-2">
+                                                <Label htmlFor={`sport-${sport}`} className="font-normal flex items-center gap-2 cursor-pointer">
                                                 {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
                                                 {sport}
                                                 </Label>
@@ -205,26 +205,26 @@ export default function Home() {
                                     </AccordionItem>
                                     
                                     <AccordionItem value="region">
-                                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Région</AccordionTrigger>
+                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">Région</AccordionTrigger>
                                         <AccordionContent className="px-4">
                                         {allRegions.map(region => (
-                                            <div key={region} className="flex items-center space-x-3 my-2">
+                                            <div key={region} className="flex items-center space-x-3 my-3">
                                             <Checkbox id={`region-${region}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedRegions, region, !!checked)} />
-                                            <Label htmlFor={`region-${region}`} className="font-normal">{region}</Label>
+                                            <Label htmlFor={`region-${region}`} className="font-normal cursor-pointer">{region}</Label>
                                             </div>
                                         ))}
                                         </AccordionContent>
                                     </AccordionItem>
 
                                     <AccordionItem value="equipment">
-                                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Équipement</AccordionTrigger>
+                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">Équipement</AccordionTrigger>
                                         <AccordionContent className="px-4">
                                         {allEquipments.map(equip => {
                                             const Icon = equipmentIconsMap[equip];
                                             return (
-                                            <div key={equip} className="flex items-center space-x-3 my-2">
+                                            <div key={equip} className="flex items-center space-x-3 my-3">
                                                 <Checkbox id={`equip-${equip}`} onCheckedChange={(checked) => handleCheckboxChange(setSelectedEquipment, equip, !!checked)} />
-                                                <Label htmlFor={`equip-${equip}`} className="font-normal flex items-center gap-2">
+                                                <Label htmlFor={`equip-${equip}`} className="font-normal flex items-center gap-2 cursor-pointer">
                                                 {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
                                                 {equip}
                                                 </Label>
@@ -235,47 +235,56 @@ export default function Home() {
                                     </AccordionItem>
                                     
                                     <AccordionItem value="other">
-                                        <AccordionTrigger className="px-4 py-2 text-base font-semibold">Autres</AccordionTrigger>
+                                        <AccordionTrigger className="px-4 py-3 text-base font-semibold">Autres</AccordionTrigger>
                                         <AccordionContent className="px-4">
-                                        <div className="flex items-center space-x-3 my-2">
+                                        <div className="flex items-center space-x-3 my-3">
                                             <Checkbox id="type-indoor" checked={isIndoor} onCheckedChange={(checked) => setIsIndoor(!!checked)} />
-                                            <Label htmlFor="type-indoor" className="font-normal">Intérieur</Label>
+                                            <Label htmlFor="type-indoor" className="font-normal cursor-pointer">Intérieur</Label>
                                             </div>
-                                            <div className="flex items-center space-x-3 my-2">
+                                            <div className="flex items-center space-x-3 my-3">
                                             <Checkbox id="type-outdoor" checked={isOutdoor} onCheckedChange={(checked) => setIsOutdoor(!!checked)} />
-                                            <Label htmlFor="type-outdoor" className="font-normal">Extérieur</Label>
+                                            <Label htmlFor="type-outdoor" className="font-normal cursor-pointer">Extérieur</Label>
                                             </div>
-                                            <div className="flex items-center space-x-3 my-2">
+                                            <div className="flex items-center space-x-3 my-3">
                                             <Checkbox id="accessible" checked={isAccessible} onCheckedChange={(checked) => setIsAccessible(!!checked)} />
-                                            <Label htmlFor="accessible" className="font-normal">Accès PMR</Label>
+                                            <Label htmlFor="accessible" className="font-normal cursor-pointer">Accès PMR</Label>
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>
                                 </Accordion>
                             </SidebarContent>
                         </ScrollArea>
-                        <SidebarFooter>
-                            <Button onClick={clearFilters} variant="ghost">Effacer les filtres</Button>
+                        <SidebarFooter className="p-4 border-t border-border/50">
+                            <Button onClick={clearFilters} variant="ghost" className="w-full">
+                              <Trash2 className="w-4 h-4 mr-2"/>
+                              Effacer les filtres
+                            </Button>
                         </SidebarFooter>
                     </Sidebar>
                     
                     <div className="absolute inset-0 z-10 w-full h-full">
-                        <HomeMapContainer 
-                            facilities={filteredFacilities} 
-                            center={mapCenter} 
-                            zoom={mapZoom} 
-                            onMarkerClick={handleMarkerClick}
-                        />
+                        {facilitiesLoading ? (
+                          <div className="w-full h-full flex items-center justify-center bg-muted">
+                            <Skeleton className="w-full h-full" />
+                          </div>
+                        ) : (
+                          <HomeMapContainer 
+                              facilities={filteredFacilities} 
+                              center={mapCenter} 
+                              zoom={mapZoom} 
+                              onMarkerClick={handleMarkerClick}
+                          />
+                        )}
                     </div>
                 </SidebarProvider>
             </div>
           </div>
 
             <Sheet open={!!selectedFacility} onOpenChange={(open) => !open && handleSheetClose()}>
-                <SheetContent className="w-full sm:max-w-xl p-0 overflow-y-auto">
+                <SheetContent className="w-full sm:max-w-xl p-0 overflow-y-auto bg-card/95 backdrop-blur-sm">
                     {selectedFacility && (
                         <>
-                            <SheetHeader className="p-6">
+                            <SheetHeader className="p-6 border-b border-border">
                                 <SheetTitle className="font-headline text-3xl">{selectedFacility.name}</SheetTitle>
                                 <SheetDescription>{selectedFacility.city}, {selectedFacility.region}</SheetDescription>
                             </SheetHeader>
@@ -287,37 +296,34 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-card border-t">
-        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-card border-t border-border/50">
+        <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-headline font-semibold">Maroc Sport Hub</h3>
-              <p className="text-muted-foreground text-sm">Votre portail unique pour trouver et réserver des installations sportives à travers le Maroc.</p>
+            <div className="space-y-4 col-span-1 md:col-span-2">
+              <h3 className="text-xl font-headline font-semibold flex items-center gap-2">
+                <Activity className="text-primary"/>
+                Maroc Sport Hub
+              </h3>
+              <p className="text-muted-foreground text-sm max-w-md">Votre portail unique pour trouver et explorer des installations sportives à travers le Maroc.</p>
             </div>
             <div className="space-y-4">
               <h4 className="font-semibold text-card-foreground/90">Navigation</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/" className="text-muted-foreground hover:text-primary">Accueil</Link></li>
-                <li><Link href="/profile" className="text-muted-foreground hover:text-primary">Profil</Link></li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h4 className="font-semibold text-card-foreground/90">Légal</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Conditions d'utilisation</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Politique de confidentialité</a></li>
+                <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Accueil</Link></li>
+                <li><Link href="/profile" className="text-muted-foreground hover:text-primary transition-colors">Profil</Link></li>
+                 <li><Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">Dashboard</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
               <h4 className="font-semibold text-card-foreground/90">Suivez-nous</h4>
               <div className="flex space-x-4">
-                <a href="#" className="text-muted-foreground hover:text-primary"><Facebook className="h-6 w-6" /></a>
-                <a href="#" className="text-muted-foreground hover:text-primary"><Instagram className="h-6 w-6" /></a>
-                <a href="#" className="text-muted-foreground hover:text-primary"><Twitter className="h-6 w-6" /></a>
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Facebook className="h-6 w-6" /></a>
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Instagram className="h-6 w-6" /></a>
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Twitter className="h-6 w-6" /></a>
               </div>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
+          <div className="mt-8 pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
             <p>&copy; {new Date().getFullYear()} Maroc Sport Hub. Tous droits réservés.</p>
           </div>
         </div>

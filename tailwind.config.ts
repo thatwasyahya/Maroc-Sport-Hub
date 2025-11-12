@@ -1,5 +1,7 @@
 import type {Config} from 'tailwindcss';
 
+const { fontFamily } = require("tailwindcss/defaultTheme")
+
 export default {
   darkMode: ['class'],
   content: [
@@ -8,11 +10,17 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "1.5rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
-        headline: ['"PT Sans"', 'sans-serif'],
-        code: ['monospace'],
+        body: ["var(--font-inter)", ...fontFamily.sans],
+        headline: ["var(--font-poppins)", ...fontFamily.sans],
       },
       colors: {
         background: 'hsl(var(--background))',

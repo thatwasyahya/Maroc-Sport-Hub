@@ -6,22 +6,23 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser, useAuth, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, getFirestore } from 'firebase/firestore';
-import { Activity, LayoutDashboard, LogOut, User as UserIcon } from "lucide-react";
+import { Activity, LayoutDashboard, LogOut, User as UserIcon, LogIn, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import type { User } from "@/lib/types";
+import { Skeleton } from "./ui/skeleton";
 
 export default function Header() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
 
-  const firestore = getFirestore();
+  const firestore = useMemo(() => getFirestore(), []);
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
-  const { data: userProfile } = useDoc<User>(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
 
   const handleLogout = async () => {
@@ -43,25 +44,25 @@ export default function Header() {
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
+      <div className="container flex h-16 max-w-screen-2xl items-center">
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Activity className="h-6 w-6 text-primary" />
-            <span className="font-bold sm:inline-block font-headline">
+            <span className="font-bold sm:inline-block font-headline text-lg">
               Maroc Sport Hub
             </span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
-          {isUserLoading ? (
-            <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-          ) : user ? (
+          {(isUserLoading || isProfileLoading) ? (
+            <Skeleton className="h-10 w-10 rounded-full" />
+          ) : user && userProfile ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={undefined} alt={displayName || ""} />
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={userProfile?.avatarUrl} alt={displayName || ""} />
                     <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -93,17 +94,17 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>Se déconnecter</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <nav className="flex items-center gap-2">
               <Button asChild variant="ghost">
-                <Link href="/login">Login</Link>
+                <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Se connecter</Link>
               </Button>
               <Button asChild>
-                <Link href="/signup">Sign Up</Link>
+                <Link href="/signup"><UserPlus className="mr-2 h-4 w-4"/>S'inscrire</Link>
               </Button>
             </nav>
           )}
@@ -112,5 +113,3 @@ export default function Header() {
     </header>
   );
 }
-
-    
