@@ -7,28 +7,39 @@ import { MapPin, Accessibility, Sun, Sprout, Building, Users, HardHat, Calendar,
 import { Separator } from '@/components/ui/separator';
 import { sportsIconsMap } from '@/lib/icons';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function FacilityDetails({ facility }: { facility: Facility }) {
 
   const detailItem = (Icon: React.ElementType, label: string, value: React.ReactNode) => {
-    if (!value && typeof value !== 'number' && typeof value !== 'boolean') return null;
-     let displayValue = String(value);
+    if (value === null || value === undefined || value === '') return null;
+    
+    let displayValue: React.ReactNode;
     if (typeof value === 'boolean') {
-        displayValue = value ? 'Oui' : 'Non';
+        displayValue = (
+            <Badge variant={value ? 'default' : 'destructive'} className={cn(value ? 'bg-green-600 hover:bg-green-600/90' : 'bg-red-600 hover:bg-red-600/90', "text-white")}>
+                {value ? 'Oui' : 'Non'}
+            </Badge>
+        );
+    } else if (value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value)))) {
+        displayValue = format(new Date(value), 'dd/MM/yyyy');
     }
+     else {
+        displayValue = String(value);
+    }
+
     return (
-      <div className="flex items-start gap-3">
-        <Icon className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+      <div className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50">
+        <Icon className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
         <div>
           <p className="font-medium text-sm text-foreground">{label}</p>
-          <p className="text-muted-foreground text-sm">{displayValue}</p>
+          <div className="text-muted-foreground text-sm mt-0.5">{displayValue}</div>
         </div>
       </div>
     );
   }
 
   const renderSection = (title: string, children: React.ReactNode) => {
-    // A helper to only render a section if it has visible children
     const childArray = React.Children.toArray(children);
     if (childArray.every(child => child === null)) {
       return null;
@@ -36,9 +47,9 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
     return (
       <>
         <Separator />
-        <div className="px-6 space-y-4">
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-4">
+        <div className="px-6 space-y-2">
+          <h3 className="text-lg font-semibold text-foreground/90">{title}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
             {children}
           </div>
         </div>
@@ -75,7 +86,7 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
             {detailItem(FileText, "Type d'installation", facility.installations_sportives)}
             {detailItem(Badge, "Catégorie", facility.categorie_abregee)}
             {detailItem(Sun, "Milieu", facility.milieu)}
-            {detailItem(Accessibility, "Accès PMR", facility.accessible ? "Oui" : "Non")}
+            {detailItem(Accessibility, "Accès PMR", facility.accessible)}
         </>
       )}
       
@@ -94,7 +105,7 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
             {detailItem(Package, "État Équipements", facility.equipment_state?.replace(/_/g, ' '))}
             {detailItem(LandPlot, "Superficie (m²)", facility.surface_area)}
             {detailItem(Users, "Capacité", facility.capacity)}
-            {detailItem(Calendar, "Dernière Rénovation", facility.last_renovation_date ? format(new Date(facility.last_renovation_date), 'PPP') : 'N/A')}
+            {detailItem(Calendar, "Dernière Rénovation", facility.last_renovation_date)}
             {detailItem(CheckCircle, "Espace Aménagé", facility.developed_space)}
         </>
       )}
@@ -104,9 +115,9 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
             {detailItem(Users, "Effectif Total", facility.staff_count)}
             {detailItem(User, "Personnel Sport", facility.sports_staff_count)}
             {detailItem(Users, "Bénéficiaires", facility.beneficiaries)}
-            {detailItem(AlertTriangle, "Besoin RH", facility.hr_needs)}
-            {detailItem(Wrench, "Besoin Aménagement", facility.besoin_amenagement)}
-            {detailItem(Syringe, "Besoin Équipements", facility.besoin_equipements)}
+            {detailItem(AlertTriangle, "Besoin en RH", facility.hr_needs)}
+            {detailItem(Wrench, "Besoin en Aménagement", facility.besoin_amenagement)}
+            {detailItem(Syringe, "Besoin en Équipements", facility.besoin_equipements)}
         </>
       )}
 
@@ -115,9 +126,9 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
           <Separator />
           <div className="px-6">
             <h3 className="text-lg font-semibold mb-3">Équipements Inclus</h3>
-            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 pl-2">
               {facility.equipments.map(item => (
-                <li key={item.name}>{item.name} (Qté: {item.quantity})</li>
+                <li key={item.name}>{item.name} (Quantité : {item.quantity})</li>
               ))}
             </ul>
           </div>
@@ -129,7 +140,7 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
           <Separator />
           <div className="px-6">
             <h3 className="text-lg font-semibold mb-2">Observations</h3>
-            <p className="text-sm text-muted-foreground">{facility.observations}</p>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{facility.observations}</p>
           </div>
         </>
       )}
