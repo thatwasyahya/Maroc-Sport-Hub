@@ -1,8 +1,8 @@
 
 {
   "Home": {
-    "heroTitle": "Explorez, Réservez, Jouez",
-    "heroSubtitle": "La plateforme ultime pour trouver et réserver des installations sportives à travers le Maroc. Que vous soyez un athlète solo ou une équipe, votre prochain match commence ici.",
+    "heroTitle": "Explorez et Trouvez",
+    "heroSubtitle": "La plateforme ultime pour trouver des installations sportives à travers le Maroc. Que vous soyez un athlète solo ou une équipe, votre prochain entraînement commence ici.",
     "exploreMap": "Explorer la Carte",
     "filtersTitle": "Filtres",
     "filterSport": "Sport",
@@ -16,7 +16,7 @@
     "locateError": "Erreur de localisation. Veuillez autoriser l'accès à votre position.",
     "geolocationNotSupported": "La géolocalisation n'est pas prise en charge par votre navigateur.",
     "appName": "Maroc Sport Hub",
-    "footerDescription": "Votre source unique pour cartographier, organiser et réserver des installations sportives à travers le Maroc.",
+    "footerDescription": "Votre source unique pour cartographier et organiser des installations sportives à travers le Maroc.",
     "footerNavigation": "Navigation",
     "footerHome": "Accueil",
     "footerProfile": "Profil",

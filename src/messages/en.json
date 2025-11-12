@@ -1,8 +1,8 @@
 
 {
   "Home": {
-    "heroTitle": "Explore, Book, Play",
-    "heroSubtitle": "The ultimate platform to find and book sports facilities across Morocco. Whether you're a solo athlete or a team, your next game starts here.",
+    "heroTitle": "Explore & Find",
+    "heroSubtitle": "The ultimate platform to find sports facilities across Morocco. Whether you're a solo athlete or a team, your next practice starts here.",
     "exploreMap": "Explore Map",
     "filtersTitle": "Filters",
     "filterSport": "Sport",
@@ -16,7 +16,7 @@
     "locateError": "Location error. Please allow access to your position.",
     "geolocationNotSupported": "Geolocation is not supported by your browser.",
     "appName": "Maroc Sport Hub",
-    "footerDescription": "Your one-stop source for mapping, organizing, and booking sports facilities across Morocco.",
+    "footerDescription": "Your one-stop source for mapping and organizing sports facilities across Morocco.",
     "footerNavigation": "Navigation",
     "footerHome": "Home",
     "footerProfile": "Profile",
