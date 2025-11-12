@@ -25,54 +25,44 @@ interface ImportFacilitiesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Maps normalized headers to the keys of our Facility object
-const columnMapping: { [key: string]: keyof Partial<Facility> | 'lat' | 'lng' } = {
-  'référenceregion': 'reference_region',
+const columnMapping: { [key: string]: keyof Facility | 'lat' | 'lng' } = {
+  'reference region': 'reference_region',
+  'référence région': 'reference_region',
   'region': 'region',
+  'région': 'region',
   'province': 'province',
   'commune': 'commune',
-  'milieuurbain-rural': 'milieu',
-  'installationssportives': 'installations_sportives',
-  'catégorieabregée': 'category', // Assuming this maps to category
-  'nomdel\'établissement': 'name',
+  'milieu urbain - rural': 'milieu',
+  'milieu': 'milieu',
+  'installations sportives': 'installations_sportives',
+  'catégorie abrégée': 'category',
+  'nom de l\'établissement': 'name',
+  'nom': 'name',
   'localisation': 'address',
+  'adresse': 'address',
   'longitude': 'lng',
   'latitude': 'lat',
   'propriété': 'ownership',
-  'entitégestionnaire': 'managing_entity',
-  'datedernièrerénovation': 'last_renovation_date',
+  'entité gestionnaire': 'managing_entity',
+  'date dernière rénovation': 'last_renovation_date',
   'superficie': 'surface_area',
-  'capacitéd\'accueil': 'capacity',
+  'capacité d\'accueil': 'capacity',
   'effectif': 'staff_count',
-  'étatdel\'établissement': 'establishment_state',
-  'etablissement': 'establishment_state',
-  'espaceaménagé': 'developed_space',
-  'titrefonciern': 'titre_foncier_numero',
-  'etbatiment': 'building_state',
-  'etatdubâtiment': 'building_state',
-  'etatequipements': 'equipment_state',
-  'etatdeséquipements': 'equipment_state',
-  'nombredepersonneldusecteursportaffecté': 'sports_staff_count',
-  'besoinrh': 'hr_needs',
-  'priseencomptedanslecadreduprogderéhabilitationannée': 'rehabilitation_plan',
-  'besoind\'aménagement': 'besoin_amenagement',
-  'besoind\'équipements': 'besoin_equipements',
-  'observationsurlesmesuresàmettreenplacepourréouverture': 'observations',
+  'état de l\'établissement': 'establishment_state',
+  'espace aménagé': 'developed_space',
+  'titre foncier n': 'titre_foncier_numero',
+  'etat du bâtiment': 'building_state',
+  'etat des équipements': 'equipment_state',
+  'nombre du personnel du secteur sport affecté': 'sports_staff_count',
+  'besoin rh': 'hr_needs',
+  'prise en compte dans le cadre du prog de réhabilitation': 'rehabilitation_plan',
+  'besoin d\'aménagement': 'besoin_amenagement',
+  'besoin d\'équipements': 'besoin_equipements',
+  'observation': 'observations',
   'bénificiaires': 'beneficiaries',
-  'beneficiaires': 'beneficiaries', // alternate spelling
+  'beneficiaires': 'beneficiaries',
   'sports': 'sports',
 };
-
-
-const normalizeHeader = (header: string): string => {
-  if (!header) return '';
-  return header
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '') // Remove all whitespace
-    .replace(/[^a-z0-9]/gi, ''); // Remove non-alphanumeric chars
-};
-
 
 const toBoolean = (value: any): boolean => {
     if (typeof value === 'boolean') return value;
@@ -149,16 +139,17 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
           throw new Error('La feuille de calcul est vide ou ne contient que des en-têtes.');
         }
 
-        const rawHeaders = jsonData[0] as string[];
-        const normalizedHeaders = rawHeaders.map(h => normalizeHeader(h || ''));
+        const headers = jsonData[0] as string[];
         const rows = jsonData.slice(1);
         
         const facilities: Partial<Facility>[] = rows.map((rowArray: any[]) => {
           let row: Partial<Facility> & { lat?: number, lng?: number } = {};
 
-          normalizedHeaders.forEach((header, index) => {
-            // Find a matching key in our mapping
-             const matchingKey = Object.keys(columnMapping).find(key => header.includes(key));
+          headers.forEach((header, index) => {
+             if (!header) return;
+             const normalizedHeader = header.toLowerCase().replace(/\s+/g, ' ').trim();
+
+             const matchingKey = Object.keys(columnMapping).find(key => normalizedHeader.includes(key));
              const mappedKey = matchingKey ? columnMapping[matchingKey] : null;
 
             if (mappedKey) {
@@ -183,7 +174,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
                 if (stateMappings[key] && (stateMappings[key] as any)[code]) {
                     (row as any)[key] = (stateMappings[key] as any)[code];
                 } else {
-                    (row as any)[key] = String(value); // fallback to raw value
+                    (row as any)[key] = String(value);
                 }
               }
               else {
@@ -200,7 +191,6 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
           row.adminId = user.uid;
           
-          // Validate required fields for a row to be considered valid
           if (!row.name || !row.location) return null;
           
           if (!row.sports) row.sports = [];
@@ -242,11 +232,10 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             const docRef = doc(facilitiesCollectionRef); 
             const payload = {
                 ...facilityData,
-                // Ensure required fields have defaults if somehow missing
                 sports: facilityData.sports || [],
                 type: facilityData.type || 'outdoor',
                 accessible: facilityData.accessible || false,
-                city: facilityData.commune || '', // Use commune as city if available
+                city: facilityData.commune || '', 
                 
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
