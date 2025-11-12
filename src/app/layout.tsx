@@ -27,6 +27,7 @@ export const metadata: Metadata = {
   description: 'Map, organize, and book sports facilities in Morocco.',
 };
 
+// Even though this is the root layout, the middleware ensures that `locale` will always be present.
 export default async function RootLayout({
   children,
   params: { locale },
@@ -34,8 +35,12 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  unstable_setRequestLocale(locale);
+  // Providing all messages to the client
+  // side is the easiest way to get started
   const messages = await getMessages();
+  
+  // Enable static rendering
+  unstable_setRequestLocale(locale);
 
   return (
     <html lang={locale} className={`${inter.variable} ${poppins.variable} dark`} style={{ scrollBehavior: 'smooth' }}>
