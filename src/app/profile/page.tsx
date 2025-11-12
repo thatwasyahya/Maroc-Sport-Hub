@@ -121,7 +121,7 @@ export default function ProfilePage() {
                                 <Card>
                                     <CardContent className="pt-6 flex flex-col items-center text-center">
                                         <Avatar className="h-24 w-24 mb-4">
-                                            <AvatarImage src={undefined} alt={userProfile.name} />
+                                            <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
                                             <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
                                         </Avatar>
                                         <h2 className="text-2xl font-bold">{userProfile.name}</h2>
