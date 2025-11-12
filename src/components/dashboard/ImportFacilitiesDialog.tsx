@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,7 +19,6 @@ import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
 import type { Facility } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { convertFile } from '@/services/conversion';
 
 // Functions to safely convert data types from the parsed JSON
 const toBoolean = (value: any): boolean => {
@@ -51,7 +51,6 @@ const toDate = (value: any): Date | undefined => {
     return isNaN(date.getTime()) ? undefined : date;
 };
 
-// Simplified mapping of potential keys from a generic conversion API to our model
 const headerMappings: { [key: string]: keyof Facility | 'lat' | 'lng' } = {
     'reference region': 'reference_region',
     'référence région': 'reference_region',
@@ -59,11 +58,10 @@ const headerMappings: { [key: string]: keyof Facility | 'lat' | 'lng' } = {
     'région': 'region',
     'province': 'province',
     'commune': 'commune',
-    'milieu urbain - rural': 'milieu',
     'milieu': 'milieu',
     'installations sportives': 'installations_sportives',
     'catégorie abrégée': 'category',
-    "nom de l'établissement": 'name',
+    'nom de l\'établissement': 'name',
     'nom': 'name',
     'localisation': 'address',
     'adresse': 'address',
@@ -76,7 +74,7 @@ const headerMappings: { [key: string]: keyof Facility | 'lat' | 'lng' } = {
     'superficie': 'surface_area',
     "capacité d'accueil": 'capacity',
     'effectif': 'staff_count',
-    "état de l'établissement": 'establishment_state',
+    'état de l\'établissement': 'establishment_state',
     'espace aménagé': 'developed_space',
     'titre foncier': 'titre_foncier_numero',
     'etat du bâtiment': 'building_state',
@@ -137,99 +135,102 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     setIsParsing(true);
     setError(null);
     setParsedData([]);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = e.target?.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonResult = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const jsonResult = await convertFile(formData);
-
-      if (!jsonResult || !Array.isArray(jsonResult) || jsonResult.length === 0) {
-        throw new Error('Le fichier est vide ou dans un format non reconnu par le service de conversion.');
-      }
-
-      const facilities = jsonResult.map((rawRow: any) => {
-        let facility: Partial<Facility> & { lat?: number, lng?: number } = {};
-        
-        for (const rawHeader in rawRow) {
-            if (rawRow.hasOwnProperty(rawHeader)) {
-                const normalizedHeader = rawHeader.toLowerCase().replace(/\s+/g, ' ').trim();
-                const targetField = headerMappings[normalizedHeader as keyof typeof headerMappings];
-                if (targetField) {
-                    (facility as any)[targetField] = rawRow[rawHeader];
-                }
+            if (jsonResult.length < 2) {
+                 throw new Error("Le fichier est vide ou ne contient pas de lignes de données.");
             }
-        }
-        
-        // --- Data Type Conversions ---
-        facility.lat = toFloat(facility.lat);
-        facility.lng = toFloat(facility.lng);
-
-        if (facility.lat && facility.lng) {
-            facility.location = { lat: facility.lat, lng: facility.lng };
-        }
-
-        facility.surface_area = toInteger(facility.surface_area);
-        facility.capacity = toInteger(facility.capacity);
-        facility.staff_count = toInteger(facility.staff_count);
-        facility.sports_staff_count = toInteger(facility.sports_staff_count);
-        
-        const beneficiariesRaw = (facility as any).beneficiaries;
-        facility.beneficiaries = toInteger(beneficiariesRaw);
-
-
-        facility.hr_needs = toBoolean(facility.hr_needs);
-        facility.besoin_amenagement = toBoolean(facility.besoin_amenagement);
-        facility.besoin_equipements = toBoolean(facility.besoin_equipements);
-        facility.developed_space = toBoolean(facility.developed_space);
-
-        facility.last_renovation_date = toDate(facility.last_renovation_date);
-        
-        if (typeof facility.sports === 'string') {
-            facility.sports = facility.sports.split(/[,;]/).map(s => s.trim()).filter(Boolean);
-        } else {
-            facility.sports = [];
-        }
-
-        Object.keys(stateMappings).forEach(key => {
-            const field = key as keyof typeof stateMappings;
-            const rawValue = (facility as any)[field];
-            if (rawValue !== undefined && rawValue !== null) {
-                const code = String(rawValue).trim();
-                const mappedValue = (stateMappings[field] as any)[code];
-                if (mappedValue) {
-                    (facility as any)[field] = mappedValue;
-                } else {
-                    // if no mapping found, try to use the raw value if it's one of the allowed enum values
-                    const allowedValues = Object.values(stateMappings[field]);
-                    if (!allowedValues.includes(rawValue)) {
-                        (facility as any)[field] = 'Non défini';
+            
+            const headers: string[] = (jsonResult[0] as string[]).map(h => h.toLowerCase().trim());
+            const rows = jsonResult.slice(1);
+            
+            const facilities = rows.map((rowArray: any) => {
+                let facility: Partial<Facility> & { lat?: number, lng?: number } = {};
+                
+                headers.forEach((header, index) => {
+                    const targetField = headerMappings[header];
+                    if (targetField) {
+                       (facility as any)[targetField] = rowArray[index];
                     }
+                });
+
+                // --- Data Type Conversions ---
+                facility.lat = toFloat(facility.lat);
+                facility.lng = toFloat(facility.lng);
+
+                if (facility.lat && facility.lng) {
+                    facility.location = { lat: facility.lat, lng: facility.lng };
                 }
+
+                facility.surface_area = toInteger(facility.surface_area);
+                facility.capacity = toInteger(facility.capacity);
+                facility.staff_count = toInteger(facility.staff_count);
+                facility.sports_staff_count = toInteger(facility.sports_staff_count);
+                facility.beneficiaries = toInteger(facility.beneficiaries);
+
+
+                facility.hr_needs = toBoolean(facility.hr_needs);
+                facility.besoin_amenagement = toBoolean(facility.besoin_amenagement);
+                facility.besoin_equipements = toBoolean(facility.besoin_equipements);
+                facility.developed_space = toBoolean(facility.developed_space);
+
+                facility.last_renovation_date = toDate(facility.last_renovation_date);
+                
+                if (typeof facility.sports === 'string') {
+                    facility.sports = facility.sports.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+                } else {
+                    facility.sports = [];
+                }
+
+                Object.keys(stateMappings).forEach(key => {
+                    const field = key as keyof typeof stateMappings;
+                    const rawValue = (facility as any)[field];
+                    if (rawValue !== undefined && rawValue !== null) {
+                        const code = String(rawValue).trim();
+                        const mappedValue = (stateMappings[field] as any)[code];
+                        if (mappedValue) {
+                            (facility as any)[field] = mappedValue;
+                        } else {
+                            const allowedValues = Object.values(stateMappings[field]);
+                            if (!allowedValues.includes(rawValue as any)) {
+                                (facility as any)[field] = 'Non défini';
+                            }
+                        }
+                    }
+                });
+                
+                if (!facility.name || !facility.location) {
+                    return null;
+                }
+                
+                facility.adminId = user.uid;
+
+                return facility;
+
+            }).filter((f): f is Facility => f !== null);
+
+            if (facilities.length === 0) {
+                 throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez que les colonnes 'nom de l'établissement' (ou 'nom'), 'latitude' et 'longitude' sont présentes et remplies avec des données valides.");
             }
-        });
-        
-        if (!facility.name || !facility.location) {
-             return null;
+
+            setParsedData(facilities);
+        } catch (err: any) {
+            console.error("Parsing error:", err);
+            setError(`Erreur lors de l'analyse du fichier : ${err.message}`);
+        } finally {
+            setIsParsing(false);
         }
-          
-        facility.adminId = user.uid;
-
-        return facility;
-
-      }).filter((f): f is Facility => f !== null);
-
-      if (facilities.length === 0) {
-        throw new Error("Aucune ligne valide n'a pu être lue après conversion. Vérifiez que le fichier contient bien les colonnes 'nom', 'latitude', et 'longitude' avec des données valides.");
-      }
-
-      setParsedData(facilities);
-    } catch (err: any) {
-      console.error("Parsing error:", err);
-      setError(`Erreur lors de l'analyse du fichier : ${err.message}`);
-    } finally {
-      setIsParsing(false);
-    }
+    };
+    
+    reader.readAsBinaryString(file);
   };
 
   const handleImport = async () => {
@@ -296,7 +297,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         <DialogHeader>
           <DialogTitle>Importer des Installations depuis un Fichier</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx ou .csv. Le système le convertira et essaiera de mapper les colonnes.
+            Sélectionnez un fichier .xlsx ou .csv. Le système essaiera de mapper les colonnes.
           </DialogDescription>
         </DialogHeader>
 
@@ -357,4 +358,3 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     </Dialog>
   );
 }
-    
