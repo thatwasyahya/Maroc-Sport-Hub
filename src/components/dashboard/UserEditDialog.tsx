@@ -52,6 +52,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
   const firestore = useFirestore();
   const { toast } = useToast();
   const t = useTranslations('Dashboard.Users.form');
+  const tUsers = useTranslations('Dashboard.Users');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!user;
 
@@ -201,7 +202,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
                     </FormControl>
                     <SelectContent>
                       {(['user', 'admin', 'super_admin'] as UserRole[]).map(role => (
-                          <SelectItem key={role} value={role}>{t(`../roles.${role}`)}</SelectItem>
+                          <SelectItem key={role} value={role}>{tUsers(`roles.${role}`)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -210,7 +211,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t('../cancel')}</Button>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{tUsers('cancel')}</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting 
                     ? (isEditing ? t('updatingButton') : t('addingButton'))
