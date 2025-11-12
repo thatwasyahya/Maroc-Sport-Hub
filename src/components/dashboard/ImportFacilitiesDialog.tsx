@@ -28,70 +28,52 @@ interface ImportFacilitiesDialogProps {
 
 const normalizeHeader = (header: string): string => {
   if (!header) return '';
-  return header.trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
+  return header
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_'); // Replace spaces with underscores
 };
 
+// Keys are already normalized
 const columnMapping: { [key: string]: keyof Partial<Facility> | 'lat' | 'lng' } = {
-  [normalizeHeader('reference region')]: 'reference_region',
-  [normalizeHeader('Réference région')]: 'reference_region',
-  [normalizeHeader('region')]: 'region',
-  [normalizeHeader('région')]: 'region',
-  [normalizeHeader('province')]: 'province',
-  [normalizeHeader('commune')]: 'commune',
-  [normalizeHeader('Milieu Urbain - Rural')]: 'milieu',
-  [normalizeHeader('milieu_urbain_rural')]: 'milieu',
-  [normalizeHeader('milieu')]: 'milieu',
-  [normalizeHeader('INSTALLATIONS SPORTIVES')]: 'installations_sportives',
-  [normalizeHeader('installations_sportives')]: 'installations_sportives',
-  [normalizeHeader('Catégorie abrégée')]: 'categorie_abregee',
-  [normalizeHeader('categorie_abregee')]: 'categorie_abregee',
-  [normalizeHeader('Nom de l\'établissement')]: 'name',
-  [normalizeHeader('nom_etablissement')]: 'name',
-  [normalizeHeader('nom')]: 'name',
-  [normalizeHeader('Localisation')]: 'address',
-  [normalizeHeader('localisation')]: 'address',
-  [normalizeHeader('adresse')]: 'address',
-  [normalizeHeader('longitude')]: 'lng',
-  [normalizeHeader('lon')]: 'lng',
-  [normalizeHeader('latitude')]: 'lat',
-  [normalizeHeader('lat')]: 'lat',
-  [normalizeHeader('Propriété')]: 'ownership',
-  [normalizeHeader('propriete')]: 'ownership',
-  [normalizeHeader('Entité Gestionnaire')]: 'managing_entity',
-  [normalizeHeader('entite_gestionnaire')]: 'managing_entity',
-  [normalizeHeader('date de dernière rénovation')]: 'last_renovation_date',
-  [normalizeHeader('date_derniere_renovation')]: 'last_renovation_date',
-  [normalizeHeader('Superficie')]: 'surface_area',
-  [normalizeHeader('superficie')]: 'surface_area',
-  [normalizeHeader('Capacité d\'accueil')]: 'capacity',
-  [normalizeHeader('capacite_accueil')]: 'capacity',
-  [normalizeHeader('Effectif')]: 'staff_count',
-  [normalizeHeader('effectif')]: 'staff_count',
-  [normalizeHeader('Etat de l\'établissement')]: 'establishment_state',
-  [normalizeHeader('etat_etablissement')]: 'establishment_state',
-  [normalizeHeader('Espace Aménagé')]: 'developed_space',
-  [normalizeHeader('espace_amenage')]: 'developed_space',
-  [normalizeHeader('Titre Foncier N')]: 'titre_foncier_numero',
-  [normalizeHeader('titre_foncier_numero')]: 'titre_foncier_numero',
-  [normalizeHeader('Etat du bâtiment')]: 'building_state',
-  [normalizeHeader('etat_batiment')]: 'building_state',
-  [normalizeHeader('Etat des équipements')]: 'equipment_state',
-  [normalizeHeader('etat_equipements')]: 'equipment_state',
-  [normalizeHeader('Nombre du personnel SECTEUR SPORT affecté')]: 'sports_staff_count',
-  [normalizeHeader('nombre_personnel_sport')]: 'sports_staff_count',
-  [normalizeHeader('Besoin RH')]: 'hr_needs',
-  [normalizeHeader('besoin_rh')]: 'hr_needs',
-  [normalizeHeader('Prise en compte dans le cadre du Prog de Réhabilitation Année')]: 'rehabilitation_plan',
-  [normalizeHeader('prise_en_compte_prog_rehabilitation_annee')]: 'rehabilitation_plan',
-  [normalizeHeader('Besoin d\'aménagement')]: 'besoin_amenagement',
-  [normalizeHeader('besoin_amenagement')]: 'besoin_amenagement',
-  [normalizeHeader('Besoin d\'équipements')]: 'besoin_equipements',
-  [normalizeHeader('besoin_equipements')]: 'besoin_equipements',
-  [normalizeHeader('Observation sur les Mesures à mettre en Place pour réouverture')]: 'observations',
-  [normalizeHeader('observation_reouverture')]: 'observations',
-  [normalizeHeader('Bénificiaires')]: 'beneficiaries',
-  [normalizeHeader('beneficiaires')]: 'beneficiaries',
-  [normalizeHeader('sports')]: 'sports',
+  'réference_région': 'reference_region',
+  'reference_region': 'reference_region',
+  'région': 'region',
+  'region': 'region',
+  'province': 'province',
+  'commune': 'commune',
+  'milieu_urbain_-_rural': 'milieu',
+  'milieu': 'milieu',
+  'installations_sportives': 'installations_sportives',
+  'catégorie_abrégée': 'categorie_abregee',
+  'nom_de_l\'établissement': 'name',
+  'nom_etablissement': 'name',
+  'nom': 'name',
+  'localisation': 'address',
+  'adresse': 'address',
+  'longitude': 'lng',
+  'lon': 'lng',
+  'latitude': 'lat',
+  'lat': 'lat',
+  'propriété': 'ownership',
+  'entité_gestionnaire': 'managing_entity',
+  'date_de_dernière_rénovation': 'last_renovation_date',
+  'superficie': 'surface_area',
+  'capacité_d\'accueil': 'capacity',
+  'effectif': 'staff_count',
+  'etat_de_l\'établissement': 'establishment_state',
+  'espace_aménagé': 'developed_space',
+  'titre_foncier_n': 'titre_foncier_numero',
+  'etat_du_bâtiment': 'building_state',
+  'etat_des_équipements': 'equipment_state',
+  'nombre_du_personnel_secteur_sport_affecté': 'sports_staff_count',
+  'besoin_rh': 'hr_needs',
+  'prise_en_compte_dans_le_cadre_du_prog_de_réhabilitation_année': 'rehabilitation_plan',
+  'besoin_d\'aménagement': 'besoin_amenagement',
+  'besoin_d\'équipements': 'besoin_equipements',
+  'observation_sur_les_mesures_à_mettre_en_place_pour_réouverture': 'observations',
+  'bénificiaires': 'beneficiaries',
+  'sports': 'sports',
 };
 
 
@@ -174,7 +156,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             }
           });
           
-          if (row.lat !== undefined && row.lng !== undefined && !isNaN(row.lat) && !isNaN(row.lng)) {
+          if (typeof row.lat === 'number' && typeof row.lng === 'number') {
              row.location = { lat: row.lat, lng: row.lng };
           }
           delete row.lat;
@@ -185,8 +167,6 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
           if (!row.name || !row.location) return null;
           
           if (!row.sports) row.sports = [];
-          if (!row.region) row.region = '';
-
 
           return row;
         }).filter(Boolean) as Partial<Facility>[];
@@ -225,11 +205,12 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             const docRef = doc(facilitiesCollectionRef); 
             const payload = {
                 ...facilityData,
+                // Ensure required fields have defaults if somehow missing
                 sports: facilityData.sports || [],
                 type: facilityData.type || 'outdoor',
                 accessible: facilityData.accessible || false,
-                city: facilityData.city || '',
-
+                city: facilityData.commune || '', // Use commune as city if available
+                
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
