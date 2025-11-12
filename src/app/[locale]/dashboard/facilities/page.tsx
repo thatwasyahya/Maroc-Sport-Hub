@@ -10,10 +10,12 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 import AddFacilityDialog from '@/components/dashboard/AddFacilityDialog';
+import { useTranslations } from 'next-intl';
 
 export default function FacilitiesPage() {
   const firestore = useFirestore();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const t = useTranslations('Dashboard.Facilities');
   
   const facilitiesCollectionRef = useMemoFirebase(
     () => collection(firestore, 'facilities'),
@@ -26,29 +28,29 @@ export default function FacilitiesPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Facilities</CardTitle>
-            <CardDescription>Manage your sports facilities.</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </div>
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Facility
+            {t('addButton')}
           </Button>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Region</TableHead>
-                <TableHead>Equipments</TableHead>
-                <TableHead>Sports</TableHead>
+                <TableHead>{t('tableHeaderName')}</TableHead>
+                <TableHead>{t('tableHeaderRegion')}</TableHead>
+                <TableHead>{t('tableHeaderEquipments')}</TableHead>
+                <TableHead>{t('tableHeaderSports')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {facilitiesLoading ? (
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center">
-                    Loading...
+                    {t('loading')}
                   </TableCell>
                 </TableRow>
               ) : facilities && facilities.length > 0 ? (
@@ -69,7 +71,7 @@ export default function FacilitiesPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center">
-                    No facilities found.
+                    {t('noFacilities')}
                   </TableCell>
                 </TableRow>
               )}

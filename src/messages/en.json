@@ -58,5 +58,60 @@
     "successTitle": "Account Created",
     "successDescription": "You have been successfully signed up.",
     "failTitle": "Sign Up Failed"
+  },
+  "Dashboard": {
+    "Navigation": {
+      "adminPanel": "Admin Panel",
+      "overview": "Overview",
+      "requests": "Requests",
+      "facilities": "Facilities",
+      "equipments": "Equipments",
+      "users": "Users",
+      "dashboard": "Dashboard",
+      "backToSite": "Back to Site"
+    },
+    "NoPermission": {
+      "title": "Access Denied",
+      "description": "You do not have permission to view this page.",
+      "homeButton": "Go to Homepage"
+    },
+    "Overview": {
+      "welcome": "Welcome, {name}!",
+      "totalFacilities": "Total Facilities",
+      "totalFacilitiesDescription": "Number of managed sports facilities.",
+      "overviewTitle": "Overview",
+      "overviewDescription": "This is your main dashboard. From here, you can manage all aspects of the Maroc Sport Hub platform. Use the navigation on the left to manage facilities."
+    },
+    "Facilities": {
+      "title": "Facilities",
+      "description": "Manage your sports facilities.",
+      "addButton": "Add Facility",
+      "tableHeaderName": "Name",
+      "tableHeaderRegion": "Region",
+      "tableHeaderEquipments": "Equipments",
+      "tableHeaderSports": "Sports",
+      "loading": "Loading...",
+      "noFacilities": "No facilities found."
+    },
+    "Equipments": {
+      "title": "Equipments",
+      "description": "Manage your sports equipments.",
+      "addButton": "Add Equipment",
+      "tableHeaderName": "Name",
+      "tableHeaderRentalCost": "Rental Cost",
+      "tableHeaderDepositCost": "Deposit Cost",
+      "currency": "MAD/hr",
+      "loading": "Loading...",
+      "noEquipments": "No equipments found."
+    },
+     "Users": {
+      "title": "Users",
+      "description": "Manage all users of the platform.",
+      "tableHeaderUser": "User",
+      "tableHeaderRole": "Role",
+      "tableHeaderJoined": "Joined On",
+      "loading": "Loading users...",
+      "noUsers": "No users found."
+    }
   }
 }

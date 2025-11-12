@@ -9,10 +9,12 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 import AddEquipmentDialog from '@/components/dashboard/AddEquipmentDialog';
+import { useTranslations } from 'next-intl';
 
 export default function EquipmentsPage() {
   const firestore = useFirestore();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const t = useTranslations('Dashboard.Equipments');
   
   const equipmentsCollectionRef = useMemoFirebase(
     () => collection(firestore, 'equipments'),
@@ -25,42 +27,42 @@ export default function EquipmentsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Equipments</CardTitle>
-            <CardDescription>Manage your sports equipments.</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </div>
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Equipment
+            {t('addButton')}
           </Button>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Rental Cost</TableHead>
-                <TableHead>Deposit Cost</TableHead>
+                <TableHead>{t('tableHeaderName')}</TableHead>
+                <TableHead>{t('tableHeaderRentalCost')}</TableHead>
+                <TableHead>{t('tableHeaderDepositCost')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {equipmentsLoading ? (
                 <TableRow>
                   <TableCell colSpan={3} className="h-24 text-center">
-                    Loading...
+                    {t('loading')}
                   </TableCell>
                 </TableRow>
               ) : equipments && equipments.length > 0 ? (
                 equipments.map((equipment) => (
                   <TableRow key={equipment.id}>
                     <TableCell className="font-medium">{equipment.name}</TableCell>
-                    <TableCell>{equipment.rentalCost} MAD/hr</TableCell>
-                    <TableCell>{equipment.depositCost} MAD</TableCell>
+                    <TableCell>{equipment.rentalCost} {t('currency')}</TableCell>
+                    <TableCell>{equipment.depositCost} {t('currency')}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="h-24 text-center">
-                    No equipments found.
+                    {t('noEquipments')}
                   </TableCell>
                 </TableRow>
               )}

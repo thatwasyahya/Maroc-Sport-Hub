@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Building, Users, Home, Loader, ShieldAlert, FileText } from 'lucide-react';
+import { Activity, Building, Users, Home, Loader, ShieldAlert, FileText, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 import { useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 
 function DashboardLayoutSkeleton() {
   return (
@@ -45,19 +46,20 @@ function DashboardLayoutSkeleton() {
 }
 
 function NoPermission() {
+    const t = useTranslations('Dashboard.NoPermission');
     return (
         <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
             <Card className="max-w-md text-center">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-center gap-2">
                         <ShieldAlert className="h-6 w-6 text-destructive" />
-                        Access Denied
+                        {t('title')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">You do not have permission to view this page.</p>
+                    <p className="text-muted-foreground">{t('description')}</p>
                     <Button asChild className="mt-4">
-                        <Link href="/">Go to Homepage</Link>
+                        <Link href="/">{t('homeButton')}</Link>
                     </Button>
                 </CardContent>
             </Card>
@@ -69,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const pathname = usePathname();
+  const t = useTranslations('Dashboard.Navigation');
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -78,15 +81,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navLinks = useMemo(() => {
     const links = [
-      { href: '/dashboard', label: 'Overview', icon: Activity },
-      { href: '/dashboard/requests', label: 'Requests', icon: FileText },
-      { href: '/dashboard/facilities', label: 'Facilities', icon: Building },
+      { href: '/dashboard', label: t('overview'), icon: Activity },
+      { href: '/dashboard/requests', label: t('requests'), icon: FileText },
+      { href: '/dashboard/facilities', label: t('facilities'), icon: Building },
+      { href: '/dashboard/equipments', label: t('equipments'), icon: ShoppingCart },
     ];
     if (userProfile?.role === 'super_admin') {
-        links.push({ href: '/dashboard/users', label: 'Users', icon: Users });
+        links.push({ href: '/dashboard/users', label: t('users'), icon: Users });
     }
     return links;
-  }, [userProfile?.role]);
+  }, [userProfile?.role, t]);
 
   const hasPermission = userProfile && (userProfile.role === 'admin' || userProfile.role === 'super_admin');
   const isLoading = isUserLoading || isProfileLoading;
@@ -105,7 +109,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex h-16 items-center border-b px-6">
             <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
               <Activity className="h-6 w-6 text-primary" />
-              <span>Admin Panel</span>
+              <span>{t('adminPanel')}</span>
             </Link>
           </div>
           <nav className="flex-1 p-4">
@@ -129,10 +133,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
         <div className="flex flex-1 flex-col">
           <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-6">
-              <div className="font-semibold text-lg">Dashboard</div>
+              <div className="font-semibold text-lg">{t('dashboard')}</div>
               <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                   <Home className="h-4 w-4" />
-                  Back to Site
+                  {t('backToSite')}
               </Link>
           </header>
           <main className="flex-1 p-6">{children}</main>

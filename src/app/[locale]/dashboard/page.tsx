@@ -6,6 +6,7 @@ import type { Facility } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslations } from 'next-intl';
 
 function DashboardSkeleton() {
   return (
@@ -41,6 +42,7 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const t = useTranslations('Dashboard.Overview');
 
   const facilitiesCollectionRef = useMemoFirebase(
     () => collection(firestore, 'facilities'),
@@ -49,18 +51,16 @@ export default function DashboardPage() {
   const { data: facilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
   
   if (!user) {
-    // This should technically not be reached due to AuthorizationProvider,
-    // but it's good practice for safety.
     return <DashboardSkeleton />;
   }
 
   return (
     <div className="grid gap-6">
-      <h1 className="text-2xl font-bold">Welcome, {user.displayName || user.email}!</h1>
+      <h1 className="text-2xl font-bold">{t('welcome', { name: user.displayName || user.email })}</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Facilities</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalFacilities')}</CardTitle>
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -68,19 +68,18 @@ export default function DashboardPage() {
               {facilitiesLoading ? '...' : facilities?.length ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Number of managed sports facilities.
+              {t('totalFacilitiesDescription')}
             </p>
           </CardContent>
         </Card>
       </div>
        <Card>
         <CardHeader>
-          <CardTitle>Overview</CardTitle>
+          <CardTitle>{t('overviewTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            This is your main dashboard. From here, you can manage all aspects of the Maroc Sport Hub platform.
-            Use the navigation on the left to manage facilities.
+            {t('overviewDescription')}
           </p>
         </CardContent>
       </Card>

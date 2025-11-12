@@ -58,5 +58,60 @@
     "successTitle": "تم إنشاء الحساب",
     "successDescription": "لقد تم تسجيلك بنجاح.",
     "failTitle": "فشل التسجيل"
+  },
+  "Dashboard": {
+    "Navigation": {
+      "adminPanel": "لوحة الإدارة",
+      "overview": "نظرة عامة",
+      "requests": "الطلبات",
+      "facilities": "المنشآت",
+      "equipments": "المعدات",
+      "users": "المستخدمون",
+      "dashboard": "لوحة التحكم",
+      "backToSite": "العودة إلى الموقع"
+    },
+    "NoPermission": {
+      "title": "الوصول مرفوض",
+      "description": "ليس لديك إذن لعرض هذه الصفحة.",
+      "homeButton": "اذهب إلى الصفحة الرئيسية"
+    },
+    "Overview": {
+      "welcome": "مرحباً {name}!",
+      "totalFacilities": "إجمالي المنشآت",
+      "totalFacilitiesDescription": "عدد المنشآت الرياضية المدارة.",
+      "overviewTitle": "نظرة عامة",
+      "overviewDescription": "هذه هي لوحة التحكم الرئيسية الخاصة بك. من هنا، يمكنك إدارة جميع جوانب منصة Maroc Sport Hub. استخدم التنقل على اليسار لإدارة المنشآت."
+    },
+    "Facilities": {
+      "title": "المنشآت",
+      "description": "إدارة المنشآت الرياضية الخاصة بك.",
+      "addButton": "إضافة منشأة",
+      "tableHeaderName": "الاسم",
+      "tableHeaderRegion": "المنطقة",
+      "tableHeaderEquipments": "المعدات",
+      "tableHeaderSports": "الرياضات",
+      "loading": "جار التحميل...",
+      "noFacilities": "لم يتم العثور على منشآت."
+    },
+    "Equipments": {
+      "title": "المعدات",
+      "description": "إدارة المعدات الرياضية الخاصة بك.",
+      "addButton": "إضافة معدات",
+      "tableHeaderName": "الاسم",
+      "tableHeaderRentalCost": "تكلفة الإيجار",
+      "tableHeaderDepositCost": "تكلفة الوديعة",
+      "currency": "درهم/ساعة",
+      "loading": "جار التحميل...",
+      "noEquipments": "لم يتم العثور على معدات."
+    },
+    "Users": {
+      "title": "المستخدمون",
+      "description": "إدارة جميع مستخدمي المنصة.",
+      "tableHeaderUser": "المستخدم",
+      "tableHeaderRole": "الدور",
+      "tableHeaderJoined": "تاريخ الانضمام",
+      "loading": "جار تحميل المستخدمين...",
+      "noUsers": "لم يتم العثور على مستخدمين."
+    }
   }
 }

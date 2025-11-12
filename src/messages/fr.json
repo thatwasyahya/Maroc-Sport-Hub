@@ -58,5 +58,60 @@
     "successTitle": "Compte créé",
     "successDescription": "Vous avez été inscrit avec succès.",
     "failTitle": "Échec de l'inscription"
+  },
+  "Dashboard": {
+    "Navigation": {
+      "adminPanel": "Panneau d'administration",
+      "overview": "Aperçu",
+      "requests": "Demandes",
+      "facilities": "Installations",
+      "equipments": "Équipements",
+      "users": "Utilisateurs",
+      "dashboard": "Tableau de bord",
+      "backToSite": "Retour au site"
+    },
+    "NoPermission": {
+      "title": "Accès refusé",
+      "description": "Vous n'avez pas la permission de voir cette page.",
+      "homeButton": "Aller à la page d'accueil"
+    },
+    "Overview": {
+      "welcome": "Bienvenue, {name} !",
+      "totalFacilities": "Total des installations",
+      "totalFacilitiesDescription": "Nombre d'installations sportives gérées.",
+      "overviewTitle": "Aperçu",
+      "overviewDescription": "Ceci est votre tableau de bord principal. D'ici, vous pouvez gérer tous les aspects de la plateforme Maroc Sport Hub. Utilisez la navigation à gauche pour gérer les installations."
+    },
+    "Facilities": {
+      "title": "Installations",
+      "description": "Gérez vos installations sportives.",
+      "addButton": "Ajouter une installation",
+      "tableHeaderName": "Nom",
+      "tableHeaderRegion": "Région",
+      "tableHeaderEquipments": "Équipements",
+      "tableHeaderSports": "Sports",
+      "loading": "Chargement...",
+      "noFacilities": "Aucune installation trouvée."
+    },
+    "Equipments": {
+      "title": "Équipements",
+      "description": "Gérez vos équipements sportifs.",
+      "addButton": "Ajouter un équipement",
+      "tableHeaderName": "Nom",
+      "tableHeaderRentalCost": "Coût de location",
+      "tableHeaderDepositCost": "Coût de la caution",
+      "currency": "MAD/hr",
+      "loading": "Chargement...",
+      "noEquipments": "Aucun équipement trouvé."
+    },
+    "Users": {
+      "title": "Utilisateurs",
+      "description": "Gérez tous les utilisateurs de la plateforme.",
+      "tableHeaderUser": "Utilisateur",
+      "tableHeaderRole": "Rôle",
+      "tableHeaderJoined": "Inscrit le",
+      "loading": "Chargement des utilisateurs...",
+      "noUsers": "Aucun utilisateur trouvé."
+    }
   }
 }
