@@ -1,0 +1,62 @@
+
+{
+  "Home": {
+    "heroTitle": "Explore, Book, Play",
+    "heroSubtitle": "The ultimate platform to find and book sports facilities across Morocco. Whether you're a solo athlete or a team, your next game starts here.",
+    "exploreMap": "Explore Map",
+    "filtersTitle": "Filters",
+    "filterSport": "Sport",
+    "filterRegion": "Region",
+    "filterEquipment": "Equipment",
+    "filterOther": "Other Filters",
+    "filterIndoor": "Indoor",
+    "filterOutdoor": "Outdoor",
+    "filterAccessible": "Accessible",
+    "clearFilters": "Clear Filters",
+    "locateError": "Location error. Please allow access to your position.",
+    "geolocationNotSupported": "Geolocation is not supported by your browser.",
+    "appName": "Maroc Sport Hub",
+    "footerDescription": "Your one-stop source for mapping, organizing, and booking sports facilities across Morocco.",
+    "footerNavigation": "Navigation",
+    "footerHome": "Home",
+    "footerProfile": "Profile",
+    "footerDashboard": "Dashboard",
+    "footerFollowUs": "Follow Us",
+    "footerRights": "All rights reserved.",
+    "heroAlt": "Football stadium lit up at night"
+  },
+  "Header": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "profile": "My Profile",
+    "dashboard": "Dashboard"
+  },
+  "Login": {
+    "title": "Login",
+    "description": "Enter your email below to login to your account.",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "forgotPassword": "Forgot your password?",
+    "submitButton": "Login",
+    "noAccount": "Don't have an account?",
+    "signupLink": "Sign up",
+    "successTitle": "Login Successful",
+    "successDescription": "Welcome back!",
+    "failTitle": "Login Failed"
+  },
+  "Signup": {
+    "title": "Sign Up",
+    "description": "Enter your information to create an account.",
+    "nameLabel": "Full Name",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "submitButton": "Create an account",
+    "submittingButton": "Creating Account...",
+    "hasAccount": "Already have an account?",
+    "loginLink": "Login",
+    "successTitle": "Account Created",
+    "successDescription": "You have been successfully signed up.",
+    "failTitle": "Sign Up Failed"
+  }
+}

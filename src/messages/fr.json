@@ -1,0 +1,62 @@
+
+{
+  "Home": {
+    "heroTitle": "Explorez, Réservez, Jouez",
+    "heroSubtitle": "La plateforme ultime pour trouver et réserver des installations sportives à travers le Maroc. Que vous soyez un athlète solo ou une équipe, votre prochain match commence ici.",
+    "exploreMap": "Explorer la Carte",
+    "filtersTitle": "Filtres",
+    "filterSport": "Sport",
+    "filterRegion": "Région",
+    "filterEquipment": "Équipement",
+    "filterOther": "Autres Filtres",
+    "filterIndoor": "Intérieur",
+    "filterOutdoor": "Extérieur",
+    "filterAccessible": "Accès PMR",
+    "clearFilters": "Effacer les filtres",
+    "locateError": "Erreur de localisation. Veuillez autoriser l'accès à votre position.",
+    "geolocationNotSupported": "La géolocalisation n'est pas prise en charge par votre navigateur.",
+    "appName": "Maroc Sport Hub",
+    "footerDescription": "Votre source unique pour cartographier, organiser et réserver des installations sportives à travers le Maroc.",
+    "footerNavigation": "Navigation",
+    "footerHome": "Accueil",
+    "footerProfile": "Profil",
+    "footerDashboard": "Tableau de bord",
+    "footerFollowUs": "Suivez-nous",
+    "footerRights": "Tous droits réservés.",
+    "heroAlt": "Stade de football éclairé la nuit"
+  },
+  "Header": {
+    "login": "Se connecter",
+    "signup": "S'inscrire",
+    "logout": "Se déconnecter",
+    "profile": "Mon Profil",
+    "dashboard": "Tableau de bord"
+  },
+  "Login": {
+    "title": "Connexion",
+    "description": "Entrez votre email ci-dessous pour vous connecter à votre compte.",
+    "emailLabel": "Email",
+    "passwordLabel": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "submitButton": "Se connecter",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "signupLink": "S'inscrire",
+    "successTitle": "Connexion réussie",
+    "successDescription": "Bienvenue !",
+    "failTitle": "Échec de la connexion"
+  },
+  "Signup": {
+    "title": "Inscription",
+    "description": "Entrez vos informations pour créer un compte.",
+    "nameLabel": "Nom complet",
+    "emailLabel": "Email",
+    "passwordLabel": "Mot de passe",
+    "submitButton": "Créer un compte",
+    "submittingButton": "Création du compte...",
+    "hasAccount": "Vous avez déjà un compte ?",
+    "loginLink": "Se connecter",
+    "successTitle": "Compte créé",
+    "successDescription": "Vous avez été inscrit avec succès.",
+    "failTitle": "Échec de l'inscription"
+  }
+}

@@ -1,0 +1,62 @@
+
+{
+  "Home": {
+    "heroTitle": "استكشف، احجز، العب",
+    "heroSubtitle": "المنصة المثالية للعثور على المنشآت الرياضية وحجزها في جميع أنحاء المغرب. سواء كنت رياضيًا منفردًا أو فريقًا، فإن مباراتك القادمة تبدأ هنا.",
+    "exploreMap": "استكشاف الخريطة",
+    "filtersTitle": "عوامل التصفية",
+    "filterSport": "الرياضة",
+    "filterRegion": "المنطقة",
+    "filterEquipment": "المعدات",
+    "filterOther": "عوامل تصفية أخرى",
+    "filterIndoor": "داخلي",
+    "filterOutdoor": "خارجي",
+    "filterAccessible": "ولوجيات",
+    "clearFilters": "مسح عوامل التصفية",
+    "locateError": "خطأ في تحديد الموقع. يرجى السماح بالوصول إلى موقعك.",
+    "geolocationNotSupported": "تحديد الموقع الجغراfi غير مدعوم من قبل متصفحك.",
+    "appName": "ماروك سبورت هاب",
+    "footerDescription": "مصدرك الوحيد لرسم الخرائط وتنظيم وحجز المنشآت الرياضية في جميع أنحاء المغرب.",
+    "footerNavigation": "التنقل",
+    "footerHome": "الصفحة الرئيسية",
+    "footerProfile": "الملف الشخصي",
+    "footerDashboard": "لوحة التحكم",
+    "footerFollowUs": "تابعنا",
+    "footerRights": "جميع الحقوق محفوظة.",
+    "heroAlt": "ملعب كرة قدم مضاء ليلاً"
+  },
+  "Header": {
+    "login": "تسجيل الدخول",
+    "signup": "التسجيل",
+    "logout": "تسجيل الخروج",
+    "profile": "ملفي الشخصي",
+    "dashboard": "لوحة التحكم"
+  },
+  "Login": {
+    "title": "تسجيل الدخول",
+    "description": "أدخل بريدك الإلكتروني أدناه لتسجيل الدخول إلى حسابك.",
+    "emailLabel": "البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "submitButton": "تسجيل الدخول",
+    "noAccount": "ليس لديك حساب؟",
+    "signupLink": "التسجيل",
+    "successTitle": "تم تسجيل الدخول بنجاح",
+    "successDescription": "مرحبا بعودتك!",
+    "failTitle": "فشل تسجيل الدخول"
+  },
+  "Signup": {
+    "title": "التسجيل",
+    "description": "أدخل معلوماتك لإنشاء حساب.",
+    "nameLabel": "الاسم الكامل",
+    "emailLabel": "البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "submitButton": "إنشاء حساب",
+    "submittingButton": "جاري إنشاء الحساب...",
+    "hasAccount": "هل لديك حساب بالفعل؟",
+    "loginLink": "تسجيل الدخول",
+    "successTitle": "تم إنشاء الحساب",
+    "successDescription": "لقد تم تسجيلك بنجاح.",
+    "failTitle": "فشل التسجيل"
+  }
+}
