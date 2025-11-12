@@ -20,42 +20,40 @@ import type { Facility, EstablishmentState, BuildingState, EquipmentState } from
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
-const headerMappings: { [key: string]: (keyof Facility | 'lat' | 'lng') } = {
-  'reference region': 'reference_region',
-  'référence région': 'reference_region',
-  'region': 'region',
-  'région': 'region',
-  'province': 'province',
-  'commune': 'commune',
-  'milieu': 'milieu',
-  'installations sportives': 'installations_sportives',
-  'catégorie abrégée': 'category',
-  "nom de l'établissement": 'name',
-  'nom': 'name',
-  'localisation': 'address',
-  'adresse': 'address',
-  'longitude': 'lng',
-  'latitude': 'lat',
-  'propriété': 'ownership',
-  'entité gestionnaire': 'managing_entity',
-  'date dernière rénovation': 'last_renovation_date',
-  'superficie': 'surface_area',
-  "capacité d'accueil": 'capacity',
-  'effectif': 'staff_count',
-  "état de l'établissement": 'establishment_state',
-  'espace aménagé': 'developed_space',
-  'titre foncier': 'titre_foncier_numero',
-  'etat du bâtiment': 'building_state',
-  'etat des équipements': 'equipment_state',
-  'nombre du personnel du secteur sport affecté': 'sports_staff_count',
-  'besoin rh': 'hr_needs',
-  'prise en compte': 'rehabilitation_plan',
-  "besoin d'aménagement": 'besoin_amenagement',
-  "besoin d'équipements": 'besoin_equipements',
-  'observation': 'observations',
-  'bénificiaires': 'beneficiaries',
-  'beneficiaires': 'beneficiaries',
-  'sports': 'sports',
+// Mapping from the app's data model to possible header variations in the Excel file.
+// The keys are the fields in our `Facility` type.
+// The values are arrays of possible header texts (case-insensitive, trimmed).
+const headerMappings: { [key in keyof Partial<Facility> | 'lat' | 'lng']?: string[] } = {
+    reference_region: ['reference region', 'référence région'],
+    region: ['region', 'région'],
+    province: ['province'],
+    commune: ['commune'],
+    milieu: ['milieu', 'milieu urbain - rural'],
+    installations_sportives: ['installations sportives'],
+    category: ['catégorie abrégée'],
+    name: ["nom de l'établissement", 'nom'],
+    address: ['localisation', 'adresse'],
+    lng: ['longitude', 'lon'],
+    lat: ['latitude', 'lat'],
+    ownership: ['propriété'],
+    managing_entity: ['entité gestionnaire'],
+    last_renovation_date: ['date dernière rénovation'],
+    surface_area: ['superficie'],
+    capacity: ["capacité d'accueil"],
+    staff_count: ['effectif'],
+    establishment_state: ["état de l'établissement"],
+    developed_space: ['espace aménagé'],
+    titre_foncier_numero: ['titre foncier'],
+    building_state: ['etat du bâtiment', 'état du bâtiment'],
+    equipment_state: ['etat des équipements', 'état des équipements'],
+    sports_staff_count: ['nombre du personnel du secteur sport affecté'],
+    hr_needs: ['besoin rh'],
+    rehabilitation_plan: ['prise en compte'],
+    besoin_amenagement: ["besoin d'aménagement"],
+    besoin_equipements: ["besoin d'équipements"],
+    observations: ['observation'],
+    beneficiaries: ['bénificiaires', 'beneficiaires'],
+    sports: ['sports'],
 };
 
 const stateMappings = {
@@ -83,6 +81,7 @@ const toInteger = (value: any): number | undefined => {
     const num = parseInt(String(value).trim(), 10);
     return isNaN(num) ? undefined : num;
 };
+
 
 interface ImportFacilitiesDialogProps {
   open: boolean;
@@ -126,84 +125,95 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary', cellDates: true, cellNF: false, cellText:false });
+        const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, { header: 1, defval: "", raw: false });
         
-        if (jsonData.length < 2) {
+        // Convert sheet to CSV string first
+        const csvData = XLSX.utils.sheet_to_csv(worksheet, { header: 1 });
+        const lines = csvData.split('\n');
+
+        if (lines.length < 2) {
           throw new Error('La feuille de calcul est vide ou ne contient que des en-têtes.');
         }
 
-        const rawHeaders: string[] = jsonData[0];
-        const rows = jsonData.slice(1);
-        
-        const columnIndexMap: { [key: string]: number } = {};
+        const rawHeaders = lines[0].split(',');
 
-        const normalizedHeaderKeys = Object.keys(headerMappings).map(key => key.toLowerCase().trim());
+        // 1. Create a map from our model field to the column index in the sheet
+        const columnIndexMap: { [key: string]: number } = {};
         
-        rawHeaders.forEach((header, index) => {
-            if (typeof header !== 'string') return;
-            const normalizedHeader = header.toLowerCase().trim();
+        Object.entries(headerMappings).forEach(([modelField, possibleHeaders]) => {
+            const normalizedPossibleHeaders = possibleHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]/gi, ''));
             
-            for (const mappingKey in headerMappings) {
-                if (normalizedHeader.includes(mappingKey)) {
-                    const mappedField = headerMappings[mappingKey];
-                    if (!columnIndexMap[mappedField]) { 
-                        columnIndexMap[mappedField] = index;
+            rawHeaders.forEach((rawHeader, index) => {
+                const normalizedHeader = rawHeader.toLowerCase().trim().replace(/[^a-z0-9]/gi, '');
+                if (normalizedPossibleHeaders.some(h => normalizedHeader.includes(h))) {
+                    if (columnIndexMap[modelField] === undefined) { // Take the first match
+                        columnIndexMap[modelField] = index;
                     }
                 }
-            }
+            });
         });
-        
-        const facilities: Partial<Facility>[] = rows.map((rowArray: any[]) => {
-          let row: Partial<Facility> & { lat?: number, lng?: number } = {};
-          
-          Object.entries(columnIndexMap).forEach(([field, index]) => {
-              const mappedField = field as (keyof Facility | 'lat' | 'lng');
-              let value = rowArray[index];
-              if (value === null || value === undefined || String(value).trim() === '') return;
 
-              if (mappedField === 'lat' || mappedField === 'lng') {
-                const num = toFloat(value);
-                if (num !== undefined) (row as any)[mappedField] = num;
-              } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count', 'beneficiaries'].includes(mappedField)) {
-                  const num = toInteger(value);
-                  if (num !== undefined) (row as any)[mappedField] = num;
-              } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space'].includes(mappedField)) {
-                  (row as any)[mappedField] = toBoolean(value);
-              } else if (mappedField === 'sports' && typeof value === 'string') {
-                  row.sports = value.split(/[,;]/).map(s => s.trim()).filter(Boolean);
-              } else if (mappedField === 'last_renovation_date' && (value instanceof Date || !isNaN(Date.parse(value)))) {
-                  row.last_renovation_date = value instanceof Date ? value : new Date(value);
-              } else if (Object.keys(stateMappings).includes(mappedField)) {
-                  const key = mappedField as keyof typeof stateMappings;
-                  const code = String(value).trim();
-                  if (stateMappings[key] && (stateMappings[key] as any)[code]) {
-                      (row as any)[key] = (stateMappings[key] as any)[code];
-                  } else {
-                      (row as any)[key] = String(value);
-                  }
-              }
-              else {
-                  (row as any)[mappedField] = String(value).trim();
-              }
+        // 2. Process each data row using the columnIndexMap
+        const facilities: Partial<Facility>[] = lines.slice(1).map(line => {
+          const rowArray = line.split(',');
+          let facility: Partial<Facility> & { lat?: number, lng?: number } = {};
+
+          Object.entries(columnIndexMap).forEach(([modelField, index]) => {
+            const value = rowArray[index];
+            if (value === null || value === undefined || String(value).trim() === '') return;
+            
+            let processedValue: any = String(value).trim();
+            
+            const field = modelField as keyof Facility | 'lat' | 'lng';
+
+            if (field === 'lat' || field === 'lng') {
+              processedValue = toFloat(value);
+            } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count', 'beneficiaries'].includes(field)) {
+              processedValue = toInteger(value);
+            } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space'].includes(field)) {
+              processedValue = toBoolean(value);
+            } else if (field === 'sports' && typeof value === 'string') {
+              processedValue = value.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+            } else if (field === 'last_renovation_date') {
+               const dateNumber = parseFloat(value);
+               if (!isNaN(dateNumber) && dateNumber > 1) {
+                  // It's likely an Excel date serial number
+                  processedValue = XLSX.SSF.parse_date_code(dateNumber);
+               } else if (!isNaN(Date.parse(value))) {
+                  processedValue = new Date(value);
+               } else {
+                  processedValue = undefined;
+               }
+            } else if (Object.keys(stateMappings).includes(field)) {
+                const key = field as keyof typeof stateMappings;
+                const code = String(value).trim();
+                if (stateMappings[key] && (stateMappings[key] as any)[code]) {
+                    processedValue = (stateMappings[key] as any)[code];
+                }
+            }
+            
+            (facility as any)[modelField] = processedValue;
           });
-
-          if (typeof row.lat === 'number' && typeof row.lng === 'number') {
-             row.location = { lat: row.lat, lng: row.lng };
+          
+          if (typeof facility.lat === 'number' && typeof facility.lng === 'number') {
+             facility.location = { lat: facility.lat, lng: facility.lng };
           }
-          delete row.lat;
-          delete row.lng;
-          
-          if (!row.name || !row.location) return null;
-          
-          row.adminId = user.uid;
-          if (!row.sports) row.sports = [];
+          delete facility.lat;
+          delete facility.lng;
 
-          return row;
-        }).filter((f): f is Facility => f !== null && f.name !== undefined && f.location !== undefined);
+          if (!facility.name || !facility.location) {
+             return null;
+          }
+          
+          facility.adminId = user.uid;
+          if (!facility.sports) facility.sports = [];
 
+          return facility;
+
+        }).filter((f): f is Facility => f !== null);
+        
         if (facilities.length === 0) {
             throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez que les colonnes 'nom de l'établissement' (ou 'nom'), 'latitude' et 'longitude' sont présentes et remplies avec des données valides.");
         }
@@ -239,10 +249,9 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             const payload = {
                 ...facilityData,
                 sports: facilityData.sports || [],
-                type: facilityData.type || 'outdoor',
+                type: 'outdoor', // Default value
                 accessible: facilityData.accessible || false,
-                city: facilityData.commune || '', 
-                
+                city: facilityData.commune || '', // Use commune as city
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
