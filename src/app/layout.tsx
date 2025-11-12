@@ -7,6 +7,9 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,19 +28,31 @@ export const metadata: Metadata = {
   description: 'Map, organize, and book sports facilities in Morocco.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params: { locale }
 }: Readonly<{
   children: React.ReactNode;
+  params: { locale: string };
 }>) {
+
+  let messages;
+  try {
+    messages = await getMessages({locale});
+  } catch (error) {
+    notFound();
+  }
+
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable} dark`} style={{ scrollBehavior: 'smooth' }}>
+    <html lang={locale} className={`${inter.variable} ${poppins.variable} dark`} style={{ scrollBehavior: 'smooth' }}>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>
-          <FirebaseErrorListener />
-          {children}
-          <Toaster />
-        </FirebaseClientProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <FirebaseClientProvider>
+            <FirebaseErrorListener />
+            {children}
+            <Toaster />
+          </FirebaseClientProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
