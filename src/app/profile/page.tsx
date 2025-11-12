@@ -86,7 +86,10 @@ export default function ProfilePage() {
     const getInitials = (name?: string) => {
         if (!name) return '';
         const names = name.split(' ');
-        return names.length > 1 ? `${names[0][0]}${names[names.length - 1][0]}` : name.substring(0, 2);
+        if (names.length > 1 && names[1]) {
+          return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+        }
+        return name ? name.substring(0, 2).toUpperCase() : "";
     };
     
     if (isLoading) {
@@ -121,7 +124,7 @@ export default function ProfilePage() {
                                 <Card>
                                     <CardContent className="pt-6 flex flex-col items-center text-center">
                                         <Avatar className="h-24 w-24 mb-4">
-                                            <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
+                                            <AvatarImage src={userProfile.avatarUrl || undefined} alt={userProfile.name} />
                                             <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
                                         </Avatar>
                                         <h2 className="text-2xl font-bold">{userProfile.name}</h2>
