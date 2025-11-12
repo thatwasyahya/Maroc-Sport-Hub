@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { writeBatch, collection, serverTimestamp, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,10 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, FileUp, FileCheck2, AlertCircle, X, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, FileUp, FileCheck2, AlertCircle } from 'lucide-react';
 import Papa from 'papaparse';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Badge } from '../ui/badge';
 import type { Facility } from '@/lib/types';
 
 
@@ -28,7 +27,7 @@ interface ImportFacilitiesDialogProps {
 }
 
 const requiredDbFields = [
-    { key: 'nom_de_letablissement', label: 'Nom de l\'établissement', notes: 'Obligatoire' },
+    { key: 'name', label: 'Nom de l\'établissement', notes: 'Obligatoire' },
     { key: 'latitude', label: 'Latitude', notes: 'Obligatoire' },
     { key: 'longitude', label: 'Longitude', notes: 'Obligatoire' },
 ];
@@ -38,60 +37,88 @@ const optionalDbFields = [
     { key: 'region', label: 'Région' },
     { key: 'province', label: 'Province' },
     { key: 'commune', label: 'Commune' },
-    { key: 'milieu_urbain___rural', label: 'Milieu (Urbain/Rural)' },
+    { key: 'milieu', label: 'Milieu (Urbain/Rural)' },
     { key: 'installations_sportives', label: 'Type d\'installation' },
     { key: 'categorie_abregee', label: 'Catégorie abrégée' },
-    { key: 'localisation', label: 'Adresse/Localisation' },
-    { key: 'propriete', label: 'Propriété' },
-    { key: 'entite_gestionnaire', label: 'Entité gestionnaire' },
-    { key: 'date_derniere_renovation', label: 'Date dernière rénovation', notes: 'Format date' },
-    { key: 'superficie', label: 'Superficie (m²)', notes: 'Numérique' },
-    { key: 'capacite_daccueil', label: 'Capacité d\'accueil', notes: 'Numérique' },
-    { key: 'effectif', label: 'Effectif total', notes: 'Numérique' },
-    { key: 'etat_de_letablissement__1_[operationnel]_2_[en_arret]_3_[pret]_(a_etre_inaugure)_4_[en_cours_doperationnalisation]_(pret_avec_besoins/conditions)_5_[en_cours_de_construction]', label: 'État de l\'établissement' },
-    { key: 'espace_amenage', label: 'Espace aménagé', notes: 'Booléen (oui/non)' },
-    { key: 'الرسم_العقاري_رقم)_(...)_titre_foncier_n_…..', label: 'N° Titre Foncier' },
-    { key: 'etat_du_batiment__1_[bon]_2_[moyen]_3_[mauvais]_4_[mediocre]', label: 'État du bâtiment' },
-    { key: 'etat_des_equipements__0__non_equipe_1_[bon]_2_[moyen]_3_[mauvais]_4_[mediocre]', label: 'État des équipements' },
-    { key: 'nombre_du_personnel_du_secteur_sport_affecte', label: 'Personnel du secteur sport', notes: 'Numérique' },
-    { key: 'besoin__rh', label: 'Besoin en RH', notes: 'Booléen (oui/non)' },
-    { key: 'prise_en_compte_dans_le__cadre_du_prog_de_rehabilitation_annee_...............', label: 'Plan de réhabilitation' },
-    { key: 'besoin_damenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)' },
-    { key: 'besoin_dequipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)' },
-    { key: 'observation_sur__les_mesures_a_mettre_en_place_pour_reouverture', label: 'Observations' },
-    { key: 'benificiares', label: 'Bénéficiaires', notes: 'Numérique' },
+    { key: 'address', label: 'Adresse/Localisation' },
+    { key: 'ownership', label: 'Propriété' },
+    { key: 'managing_entity', label: 'Entité gestionnaire' },
+    { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format date' },
+    { key: 'surface_area', label: 'Superficie (m²)', notes: 'Numérique' },
+    { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique' },
+    { key: 'staff_count', label: 'Effectif total', notes: 'Numérique' },
+    { key: 'establishment_state', label: 'État de l\'établissement' },
+    { key: 'developed_space', label: 'Espace aménagé', notes: 'Booléen (oui/non)' },
+    { key: 'titre_foncier_numero', label: 'N° Titre Foncier' },
+    { key: 'building_state', label: 'État du bâtiment' },
+    { key: 'equipment_state', label: 'État des équipements' },
+    { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique' },
+    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Booléen (oui/non)' },
+    { key: 'rehabilitation_plan', label: 'Plan de réhabilitation' },
+    { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)' },
+    { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)' },
+    { key: 'observations', label: 'Observations' },
+    { key: 'beneficiaries', label: 'Bénéficiaires', notes: 'Numérique' },
 ];
 
 const allDbFields = [...requiredDbFields, ...optionalDbFields];
 
-const cleanColumnName = (col: string): string => {
-    return col
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "_")
-        .replace(/-/g, "_")
-        .replace(/'/g, "")
-        .replace(/"/g, "")
-        .replace(/:/g, "")
-        .replace(/\n/g, "_")
-        .replace(/é/g, "e")
-        .replace(/è/g, "e")
-        .replace(/ê/g, "e")
-        .replace(/à/g, "a")
-        .replace(/â/g, "a")
-        .replace(/ô/g, "o")
-        .replace(/î/g, "i")
-        .replace(/ï/g, "i")
-        .replace(/ç/g, "c");
+const headerMappings: { [key: string]: string } = {
+  'name': 'nom_de_letablissement',
+  'latitude': 'latitude',
+  'longitude': 'longitude',
+  'reference_region': 'reference_region',
+  'region': 'region',
+  'province': 'province',
+  'commune': 'commune',
+  'milieu': 'milieu_urbain___rural',
+  'installations_sportives': 'installations_sportives',
+  'categorie_abregee': 'categorie_abregee',
+  'address': 'localisation',
+  'ownership': 'propriete',
+  'managing_entity': 'entite_gestionnaire',
+  'last_renovation_date': 'date_derniere_renovation',
+  'surface_area': 'superficie',
+  'capacity': 'capacite_daccueil',
+  'staff_count': 'effectif',
+  'establishment_state': 'etat_de_letablissement__1_[operationnel]_2_[en_arret]_3_[pret]_(a_etre_inaugure)_4_[en_cours_doperationnalisation]_(pret_avec_besoins/conditions)_5_[en_cours_de_construction]',
+  'developed_space': 'espace_amenage',
+  'titre_foncier_numero': 'الرسم_العقاري_رقم)_(...)_titre_foncier_n_…..',
+  'building_state': 'etat_du_batiment__1_[bon]_2_[moyen]_3_[mauvais]_4_[mediocre]',
+  'equipment_state': 'etat_des_equipements__0__non_equipe_1_[bon]_2_[moyen]_3_[mauvais]_4_[mediocre]',
+  'sports_staff_count': 'nombre_du_personnel_du_secteur_sport_affecte',
+  'hr_needs': 'besoin__rh',
+  'rehabilitation_plan': 'prise_en_compte_dans_le__cadre_du_prog_de_rehabilitation_annee_...............',
+  'besoin_amenagement': 'besoin_damenagement',
+  'besoin_equipements': 'besoin_dequipements',
+  'observations': 'observation_sur__les_mesures_a_mettre_en_place_pour_reouverture',
+  'beneficiaries': 'benificiares',
 };
+
+
+const cleanColumnName = (col: string): string => {
+    return col.trim().toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/-/g, '_')
+        .replace(/'/g, '')
+        .replace(/"/g, '')
+        .replace(/:/g, '')
+        .replace(/\n/g, '_')
+        .replace(/[éèê]/g, 'e')
+        .replace(/[àâ]/g, 'a')
+        .replace(/ô/g, 'o')
+        .replace(/[îï]/g, 'i')
+        .replace(/ç/g, 'c')
+        .replace(/[^a-z0-9_]/g, '');
+};
+
 
 export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFacilitiesDialogProps) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [fileHeaders, setFileHeaders] = useState<string[]>([]);
   const [fileData, setFileData] = useState<any[]>([]);
   
@@ -102,16 +129,13 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   const [error, setError] = useState<string | null>(null);
 
   const resetState = useCallback(() => {
-    setFileName(null);
+    setFile(null);
     setFileHeaders([]);
     setFileData([]);
     setColumnMap({});
     setParsedData([]);
     setIsProcessing(false);
     setError(null);
-    if(fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   }, []);
 
   const handleClose = (isOpen: boolean) => {
@@ -121,38 +145,63 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     onOpenChange(isOpen);
   };
   
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    resetState();
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.name.endsWith('.csv')) {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) {
+        resetState();
+        return;
+    };
+     if (!selectedFile.name.endsWith('.csv')) {
       setError('Veuillez sélectionner un fichier au format .csv');
+      resetState();
       return;
     }
-    
-    setFileName(file.name);
-    
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if(results.errors.length) {
-            setError(`Erreur lors de la lecture du fichier CSV: ${results.errors[0].message}`);
-            return;
-        }
-        setFileHeaders(results.meta.fields || []);
-        setFileData(results.data);
-      },
-      error: (err: any) => {
-        setError(`Erreur lors de la lecture du fichier CSV: ${err.message}`);
-      }
-    });
+    setFile(selectedFile);
   };
-  
-  const handleColumnMapChange = (dbField: string, fileHeader: string) => {
-    setColumnMap(prev => ({...prev, [dbField]: fileHeader}));
-  };
+
+  useEffect(() => {
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          const text = e.target?.result as string;
+           Papa.parse(text, {
+              header: true,
+              skipEmptyLines: true,
+              complete: (results) => {
+                  if (results.errors.length) {
+                      setError(`Erreur lors de la lecture du CSV : ${results.errors[0].message}`);
+                      return;
+                  }
+                  if (!results.meta.fields || results.meta.fields.length === 0) {
+                      setError("Le fichier CSV est vide ou les en-têtes sont manquants.");
+                      return;
+                  }
+                  setFileHeaders(results.meta.fields);
+                  setFileData(results.data);
+
+                  // Auto-map columns
+                  const newColumnMap: Record<string, string> = {};
+                  const cleanedFileHeaders = results.meta.fields.map(h => ({ original: h, cleaned: cleanColumnName(h) }));
+
+                  for (const dbFieldKey in headerMappings) {
+                      const expectedCleanedHeader = headerMappings[dbFieldKey];
+                      const foundHeader = cleanedFileHeaders.find(h => h.cleaned.includes(expectedCleanedHeader));
+                      if (foundHeader) {
+                          newColumnMap[dbFieldKey] = foundHeader.original;
+                      }
+                  }
+                  setColumnMap(newColumnMap);
+              },
+              error: (err: any) => {
+                  setError(`Erreur PapaParse : ${err.message}`);
+              }
+          });
+      };
+      reader.readAsText(file);
+  }, [file]);
+
 
   const processAndImport = () => {
     if (!user) {
@@ -165,93 +214,55 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         setError("Le mappage des champs obligatoires (Nom, Latitude, Longitude) est requis.");
         return;
     }
-
+    
     setIsProcessing(true);
 
     const facilities: Partial<Facility>[] = fileData.map((row) => {
-        const facility: Partial<any> = { adminId: user.uid };
-        let name: string | null = null;
-        let lat: number | null = null;
-        let lng: number | null = null;
-
-        for (const dbFieldKey in columnMap) {
-            const fileHeader = columnMap[dbFieldKey];
-            if (fileHeader && row[fileHeader] !== undefined && row[fileHeader] !== null) {
-                const value = row[fileHeader];
-                
-                if (dbFieldKey === 'nom_de_letablissement') {
-                    name = String(value);
-                    facility['name'] = name;
-                } else if (dbFieldKey === 'latitude') {
-                    const num = parseFloat(String(value).replace(',', '.'));
-                    if (!isNaN(num)) lat = num;
-                } else if (dbFieldKey === 'longitude') {
-                    const num = parseFloat(String(value).replace(',', '.'));
-                    if (!isNaN(num)) lng = num;
-                } else {
-                    const dbFieldInfo = allDbFields.find(f => f.key === dbFieldKey);
-                    if (dbFieldInfo?.notes?.includes('Numérique')) {
-                      facility[dbFieldKey] = parseFloat(String(value).replace(',', '.')) || undefined;
-                    } else if (dbFieldInfo?.notes?.includes('Booléen')) {
-                      facility[dbFieldKey] = ['oui', 'yes', 'true', '1'].includes(String(value).toLowerCase());
-                    } else {
-                       facility[dbFieldKey] = String(value);
-                    }
-                }
-            }
+      const facility: Partial<any> = { adminId: user.uid };
+      
+      for (const dbFieldKey in columnMap) {
+        const fileHeader = columnMap[dbFieldKey];
+        if (fileHeader && row[fileHeader] !== undefined && row[fileHeader] !== null && String(row[fileHeader]).trim() !== '') {
+          const value = String(row[fileHeader]).trim();
+          facility[dbFieldKey] = value;
         }
+      }
 
-        if (name && lat !== null && lng !== null) {
-            facility.location = { lat, lng };
-            // Map the cleaned keys to the expected Facility interface keys
-            const finalFacility: Partial<Facility> = {
-                adminId: facility.adminId,
-                name: facility.name,
-                location: facility.location,
-                reference_region: facility.reference_region,
-                region: facility.region,
-                province: facility.province,
-                commune: facility.commune,
-                milieu: facility.milieu_urbain___rural,
-                installations_sportives: facility.installations_sportives,
-                categorie_abregee: facility.categorie_abregee,
-                address: facility.localisation,
-                ownership: facility.propriete,
-                managing_entity: facility.entite_gestionnaire,
-                last_renovation_date: facility.date_derniere_renovation,
-                surface_area: facility.superficie,
-                capacity: facility.capacite_daccueil,
-                staff_count: facility.effectif,
-                establishment_state: facility.etat_de_letablissement__1_operationnel_2_en_arret_3_pret_a_etre_inaugure_4_en_cours_doperationnalisation_pret_avec_besoins_conditions_5_en_cours_de_construction,
-                developed_space: facility.espace_amenage,
-                titre_foncier_numero: facility['الرسم_العقاري_رقم)_(...)_titre_foncier_n_…..'],
-                building_state: facility.etat_du_batiment__1_bon_2_moyen_3_mauvais_4_mediocre,
-                equipment_state: facility.etat_des_equipements__0__non_equipe_1_bon_2_moyen_3_mauvais_4_mediocre,
-                sports_staff_count: facility.nombre_du_personnel_du_secteur_sport_affecte,
-                hr_needs: facility.besoin__rh,
-                rehabilitation_plan: facility.prise_en_compte_dans_le__cadre_du_prog_de_rehabilitation_annee,
-                besoin_amenagement: facility.besoin_damenagement,
-                besoin_equipements: facility.besoin_dequipements,
-                observations: facility.observation_sur__les_mesures_a_mettre_en_place_pour_reouverture,
-                beneficiaries: facility.benificiares,
-            };
-            return finalFacility;
-        }
-        return null;
+      const name = facility.name;
+      const lat = parseFloat(String(facility.latitude).replace(',', '.'));
+      const lng = parseFloat(String(facility.longitude).replace(',', '.'));
+
+      if (name && !isNaN(lat) && !isNaN(lng)) {
+        return {
+          ...facility,
+          name,
+          location: { lat, lng },
+          // Type conversions
+          surface_area: facility.surface_area ? parseFloat(String(facility.surface_area).replace(',', '.')) : undefined,
+          capacity: facility.capacity ? parseInt(String(facility.capacity), 10) : undefined,
+          staff_count: facility.staff_count ? parseInt(String(facility.staff_count), 10) : undefined,
+          sports_staff_count: facility.sports_staff_count ? parseInt(String(facility.sports_staff_count), 10) : undefined,
+          beneficiaries: facility.beneficiaries ? parseInt(String(facility.beneficiaries), 10) : undefined,
+          hr_needs: ['oui', 'yes', 'true', '1'].includes(String(facility.hr_needs).toLowerCase()),
+          besoin_amenagement: ['oui', 'yes', 'true', '1'].includes(String(facility.besoin_amenagement).toLowerCase()),
+          besoin_equipements: ['oui', 'yes', 'true', '1'].includes(String(facility.besoin_equipements).toLowerCase()),
+          developed_space: ['oui', 'yes', 'true', '1'].includes(String(facility.developed_space).toLowerCase()),
+        };
+      }
+      return null;
     }).filter((f): f is Partial<Facility> => f !== null);
 
     if (facilities.length === 0) {
-         setError("Aucune ligne valide n'a pu être lue. Vérifiez votre mappage et le contenu du fichier.");
-         setIsProcessing(false);
-         return;
+      setError("Aucune ligne valide n'a pu être lue. Vérifiez votre mappage et le contenu du fichier.");
+      setIsProcessing(false);
+      return;
     }
     
-    setParsedData(facilities); // For potential preview, though we go straight to import
+    setParsedData(facilities);
     
-    // Perform the import
     const batch = writeBatch(firestore);
     facilities.forEach(facilityData => {
-        const docRef = doc(collection(firestore, 'facilities')); // Auto-generate ID
+        const docRef = doc(collection(firestore, 'facilities'));
         batch.set(docRef, {
             ...facilityData,
             createdAt: serverTimestamp(),
@@ -269,11 +280,6 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
       })
       .catch((error: any) => {
           setError(`Erreur lors de l'importation : ${error.message}`);
-          toast({
-              variant: "destructive",
-              title: "Échec de l'importation",
-              description: `Une erreur s'est produite. ${error.message}`,
-          });
       })
       .finally(() => {
           setIsProcessing(false);
@@ -281,27 +287,18 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   };
 
   const renderContent = () => {
-    if (!fileName) {
+    if (fileData.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-muted-foreground/30 p-12 text-center">
             <FileUp className="h-10 w-10 text-muted-foreground" />
             <h3 className="text-lg font-semibold">Télécharger un fichier CSV</h3>
             <p className="text-sm text-muted-foreground">Cliquez sur le bouton pour sélectionner un fichier .csv depuis votre ordinateur.</p>
-            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Button type="button" variant="outline" onClick={() => document.getElementById('csv-input')?.click()}>
               Sélectionner un fichier
             </Button>
-            <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept=".csv" className="hidden" />
+            <input type="file" id="csv-input" onChange={handleFileChange} accept=".csv" className="hidden" />
         </div>
       )
-    }
-
-    if (parsedData.length > 0) {
-        return (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-green-500/50 bg-green-500/10 p-12 text-center">
-                <Loader2 className="h-10 w-10 animate-spin text-green-600" />
-                <p className="text-muted-foreground">Importation de {parsedData.length} lignes...</p>
-            </div>
-        )
     }
 
     return (
@@ -309,20 +306,20 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3 mb-4">
             <FileCheck2 className="h-6 w-6 text-green-600" />
             <div>
-                <p className="font-medium">{fileName}</p>
+                <p className="font-medium">{file?.name}</p>
                 <p className="text-sm text-muted-foreground">Fichier prêt. Veuillez mapper les colonnes ci-dessous.</p>
             </div>
         </div>
         <ScrollArea className="h-96">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-1">
-              {[...requiredDbFields, ...optionalDbFields].map(field => (
+              {allDbFields.map(field => (
                   <div key={field.key} className="space-y-1">
                       <label className="font-medium text-sm">
                           {field.label}
                           {requiredDbFields.some(f => f.key === field.key) && <span className="text-destructive ml-1">*</span>}
                       </label>
                       {field.notes && <p className="text-xs text-muted-foreground">{field.notes}</p>}
-                      <Select onValueChange={(value) => handleColumnMapChange(field.key, value)} value={columnMap[field.key]}>
+                      <Select onValueChange={(value) => setColumnMap(prev => ({...prev, [field.key]: value}))} value={columnMap[field.key] || ''}>
                         <SelectTrigger>
                           <SelectValue placeholder="Choisir une colonne..." />
                         </SelectTrigger>
@@ -366,9 +363,9 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => handleClose(false)}>Annuler</Button>
-          <Button onClick={processAndImport} disabled={!fileName || isProcessing || !requiredMappingsMet}>
+          <Button onClick={processAndImport} disabled={fileData.length === 0 || isProcessing || !requiredMappingsMet}>
             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isProcessing ? 'Importation...' : 'Importer les Données'}
+            {isProcessing ? 'Importation...' : `Importer ${parsedData.length > 0 ? parsedData.length : ''} Lignes`}
           </Button>
         </DialogFooter>
       </DialogContent>
