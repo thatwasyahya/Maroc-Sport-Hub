@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Users, HardHat, ClipboardList, Package, Building, ShieldQuestion, UserCheck, BarChart, FileText } from 'lucide-react';
+import { Accessibility, Calendar, Building2, MapPin, Moon, Sun, Users, HardHat, ClipboardList, Package, Building, ShieldQuestion, UserCheck, BarChart, FileText, LandPlot, HandCoins, User, Hash, AlertTriangle, Syringe, Wrench, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -35,13 +35,17 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
     };
     
   const detailItem = (Icon: React.ElementType, label: string, value: React.ReactNode) => {
-    if (!value && typeof value !== 'number') return null;
+    if (!value && typeof value !== 'number' && typeof value !== 'boolean') return null;
+    let displayValue = String(value);
+    if (typeof value === 'boolean') {
+        displayValue = value ? 'Oui' : 'Non';
+    }
     return (
       <div className="flex items-start gap-3">
         <Icon className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
         <div>
           <p className="font-medium text-sm">{label}</p>
-          <p className="text-muted-foreground text-sm">{String(value)}</p>
+          <p className="text-muted-foreground text-sm">{displayValue}</p>
         </div>
       </div>
     );
@@ -73,26 +77,52 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                 <div className="grid gap-2">
                     <h3 className="font-semibold text-lg mb-2">Informations Générales</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {detailItem(FileText, "Type d'installation", request.installations_sportives)}
+                        {detailItem(Badge, "Catégorie", request.categorie_abregee)}
                         {detailItem(MapPin, "Adresse", request.address)}
-                        {detailItem(Building2, "Ville, Province", `${request.city}, ${request.province || 'N/A'}`)}
-                        {detailItem(ShieldQuestion, "Propriété", request.ownership)}
+                        {detailItem(Building2, "Province, Commune", `${request.province || 'N/A'}, ${request.commune || 'N/A'}`)}
+                        {detailItem(MapPin, "Région", request.region)}
+                        {detailItem(Sun, "Milieu", request.milieu)}
+                    </div>
+                </div>
+
+                <Separator />
+                
+                <div className="grid gap-2">
+                    <h3 className="font-semibold text-lg mb-2">Propriété et Gestion</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {detailItem(HandCoins, "Propriété", request.ownership)}
                         {detailItem(UserCheck, "Entité Gestionnaire", request.managing_entity)}
-                        {detailItem(request.type === 'indoor' ? Moon : Sun, "Type", request.type)}
-                        {detailItem(Accessibility, "Accessibilité", request.accessible ? 'Oui' : 'Non')}
+                        {detailItem(Hash, "N° Titre Foncier", request.titre_foncier_numero)}
                     </div>
                 </div>
 
                 <Separator />
 
                 <div className="grid gap-2">
-                    <h3 className="font-semibold text-lg mb-2">Détails de l'Établissement</h3>
+                    <h3 className="font-semibold text-lg mb-2">Détails Techniques et État</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {detailItem(BarChart, "État Établissement", request.establishment_state)}
-                        {detailItem(Building, "État Bâtiment", request.building_state)}
-                        {detailItem(Package, "État Équipements", request.equipment_state)}
+                        {detailItem(LandPlot, "Superficie (m²)", request.surface_area)}
                         {detailItem(Users, "Capacité d'accueil", request.capacity)}
-                        {detailItem(HardHat, "Effectif", request.staff_count)}
                         {detailItem(Calendar, "Dernière rénovation", request.last_renovation_date ? format(new Date(request.last_renovation_date), 'PPP') : 'N/A')}
+                        {detailItem(BarChart, "État Établissement", request.establishment_state?.replace(/_/g, ' '))}
+                        {detailItem(Building, "État Bâtiment", request.building_state)}
+                        {detailItem(Package, "État Équipements", request.equipment_state?.replace(/_/g, ' '))}
+                        {detailItem(CheckCircle, "Espace Aménagé", request.developed_space)}
+                    </div>
+                </div>
+                
+                 <Separator />
+
+                <div className="grid gap-2">
+                    <h3 className="font-semibold text-lg mb-2">Ressources Humaines et Besoins</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {detailItem(Users, "Effectif Total", request.staff_count)}
+                        {detailItem(User, "Personnel Sport", request.sports_staff_count)}
+                        {detailItem(Users, "Bénéficiaires", request.beneficiaries)}
+                        {detailItem(AlertTriangle, "Besoin RH", request.hr_needs)}
+                        {detailItem(Wrench, "Besoin Aménagement", request.besoin_amenagement)}
+                        {detailItem(Syringe, "Besoin Équipements", request.besoin_equipements)}
                     </div>
                 </div>
 

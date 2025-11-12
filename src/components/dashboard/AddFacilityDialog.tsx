@@ -29,7 +29,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import type { Facility, EstablishmentState, BuildingState, EquipmentState } from '@/lib/types';
 import { Checkbox } from '../ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
 import { sports } from '@/lib/data';
 import { getRegions, getCities } from '@/lib/maroc-api';
@@ -41,48 +40,66 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar } from '../ui/calendar';
+import { Switch } from '../ui/switch';
 
 const facilitySchema = z.object({
-  name: z.string().min(1, 'Name is required.'),
-  description: z.string().optional(),
-  address: z.string().min(1, 'Address is required.'),
-  region: z.string().min(1, "Region is required."),
+  name: z.string().min(1, 'Nom est requis.'), // nom_etablissement
+  address: z.string().min(1, 'Adresse est requise.'), // localisation
+  
+  lat: z.coerce.number().optional(), // latitude
+  lng: z.coerce.number().optional(), // longitude
+
+  // Location fields
+  region: z.string().min(1, "Région est requise."),
   province: z.string().optional(),
   commune: z.string().optional(),
-  city: z.string().min(1, "City is required."),
-  lat: z.coerce.number().optional(),
-  lng: z.coerce.number().optional(),
+  milieu: z.enum(['Urbain', 'Rural']).optional(),
+
+  // Classification
+  installations_sportives: z.string().optional(),
+  categorie_abregee: z.string().optional(),
+  
+  // Ownership and Management
+  ownership: z.string().optional(), // propriete
+  managing_entity: z.string().optional(), // entite_gestionnaire
+  titre_foncier_numero: z.string().optional(),
+
+  // Dates
+  last_renovation_date: z.date().optional(), // date_derniere_renovation
+
+  // Specs
+  surface_area: z.coerce.number().optional(), // superficie
+  capacity: z.coerce.number().optional(), // capacite_accueil
+  staff_count: z.coerce.number().optional(), // effectif
+  sports_staff_count: z.coerce.number().optional(), // nombre_personnel_sport
+  beneficiaries: z.coerce.number().optional(),
+
+  // State
+  establishment_state: z.enum(['Operationnel', 'En_arret', 'Pret', 'En_cours_operationnalisation', 'En_cours_construction', 'Non défini']).optional(),
+  building_state: z.enum(['Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini']).optional(),
+  equipment_state: z.enum(['Non_equipe', 'Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini']).optional(),
+
+  // Needs
+  hr_needs: z.boolean().default(false), // besoin_rh
+  besoin_amenagement: z.boolean().default(false),
+  besoin_equipements: z.boolean().default(false),
+
+  // Other
+  rehabilitation_plan: z.string().optional(), // prise_en_compte_prog_rehabilitation_annee
+  observations: z.string().optional(), // observation_reouverture
+  
+  // Legacy/simplified fields
+  description: z.string().optional(),
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: "You have to select at least one sport.",
+    message: "Vous devez sélectionner au moins un sport.",
   }),
   equipments: z.array(z.object({
-    name: z.string().min(1, 'Equipment name cannot be empty.'),
-    quantity: z.string().min(1, 'Quantity is required.'),
+    name: z.string().min(1, 'Nom ne peut être vide.'),
+    quantity: z.string().min(1, 'Quantité est requise.'),
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
-  
-  // New fields
-  reference_region: z.string().optional(),
-  milieu: z.enum(['Urbain', 'Rural']).optional(),
-  category: z.string().optional(),
-  ownership: z.string().optional(),
-  managing_entity: z.string().optional(),
-  last_renovation_date: z.date().optional(),
-  surface_area: z.coerce.number().optional(),
-  capacity: z.coerce.number().optional(),
-  staff_count: z.coerce.number().optional(),
-  establishment_state: z.enum(['Opérationnel', 'En arrêt', 'Prêt', 'En cours de transformation', 'En cours de construction', 'Non défini']).optional(),
-  developed_space: z.string().optional(),
-  building_state: z.enum(['Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini']).optional(),
-  equipment_state: z.enum(['Non équipé', 'Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini']).optional(),
-  sports_staff_count: z.coerce.number().optional(),
-  hr_needs: z.string().optional(),
-  rehabilitation_plan: z.string().optional(),
-  development_basin: z.string().optional(),
-  equipment_basin: z.string().optional(),
-  beneficiaries: z.string().optional(),
-  observations: z.string().optional(),
+  developed_space: z.boolean().default(false), // espace_amenage
 });
 
 type FacilityFormValues = z.infer<typeof facilitySchema>;
@@ -101,7 +118,6 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
   const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   const regions = getRegions();
-  const [cities, setCities] = useState<string[]>([]);
   
   const sportOptions = sports.map(sport => ({ value: sport, label: sport }));
 
@@ -109,14 +125,16 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     resolver: zodResolver(facilitySchema),
     defaultValues: {
       name: '',
-      description: '',
       address: '',
       region: '',
-      city: '',
       sports: [],
       equipments: [],
       type: 'outdoor',
       accessible: false,
+      hr_needs: false,
+      besoin_amenagement: false,
+      besoin_equipements: false,
+      developed_space: false,
     },
   });
 
@@ -128,32 +146,24 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
   const selectedRegion = form.watch('region');
 
   useEffect(() => {
-    if (selectedRegion) {
-        setCities(getCities(selectedRegion));
-        form.setValue('city', '');
-    } else {
-        setCities([]);
-    }
     setGeocodingStatus('idle');
   }, [selectedRegion, form]);
   
   const addressWatched = form.watch('address');
-  const cityWatched = form.watch('city');
   useEffect(() => {
     setGeocodingStatus('idle');
-  }, [addressWatched, cityWatched]);
+  }, [addressWatched]);
 
 
   const handleGeocode = async () => {
     const address = form.getValues("address");
-    const city = form.getValues("city");
     const region = form.getValues("region");
     
-    if (!address || !city || !region) {
+    if (!address || !region) {
       toast({
         variant: "destructive",
         title: "Adresse incomplète",
-        description: "Veuillez remplir l'adresse, la ville et la région avant de continuer.",
+        description: "Veuillez remplir l'adresse et la région avant de continuer.",
       });
       return;
     }
@@ -161,7 +171,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
     setIsGeocoding(true);
     setGeocodingStatus('idle');
     try {
-      const fullAddress = `${address}, ${city}, ${region}, Morocco`;
+      const fullAddress = `${address}, ${region}, Morocco`;
       const location = await geocodeAddress(fullAddress);
       if (location) {
         form.setValue("lat", location.lat);
@@ -194,7 +204,7 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
 
   const onSubmit = async (data: FacilityFormValues) => {
     if (!user) {
-      toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
+      toast({ variant: 'destructive', title: 'Erreur d\'authentification', description: 'Vous devez être connecté.' });
       return;
     }
      if (!data.lat || !data.lng) {
@@ -223,35 +233,35 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
       await addDoc(facilitiesCollectionRef, newFacilityData);
 
       toast({
-        title: 'Facility Added',
-        description: `${data.name} has been successfully created.`,
+        title: 'Installation ajoutée',
+        description: `L'installation "${data.name}" a été créée avec succès.`,
       });
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error adding facility:', error);
+      console.error('Erreur lors de l\'ajout:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'An unexpected error occurred while adding the facility.',
+        title: 'Erreur',
+        description: 'Une erreur inattendue est survenue lors de l\'ajout de l\'installation.',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  const establishmentStates: EstablishmentState[] = ['Opérationnel', 'En arrêt', 'Prêt', 'En cours de transformation', 'En cours de construction', 'Non défini'];
-  const buildingStates: BuildingState[] = ['Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini'];
-  const equipmentStates: EquipmentState[] = ['Non équipé', 'Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini'];
+  const establishmentStates: EstablishmentState[] = ['Operationnel', 'En_arret', 'Pret', 'En_cours_operationnalisation', 'En_cours_construction', 'Non défini'];
+  const buildingStates: BuildingState[] = ['Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini'];
+  const equipmentStates: EquipmentState[] = ['Non_equipe', 'Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini'];
 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Add New Facility</DialogTitle>
+          <DialogTitle>Ajouter une nouvelle installation</DialogTitle>
           <DialogDescription>
-            Fill in the details below to add a new sports facility.
+            Remplissez les détails ci-dessous pour ajouter une nouvelle installation sportive.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -259,29 +269,39 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
             <ScrollArea className="h-[70vh] p-4">
               <div className="space-y-6">
                 
+                <h3 className="text-lg font-medium border-b pb-2">Informations Générales</h3>
+                <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Nom de l'établissement*</FormLabel>
+                        <FormControl><Input placeholder="ex: Stade Municipal" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="name" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Facility Name*</FormLabel>
-                            <FormControl><Input placeholder="e.g., City Stadium" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="category" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <FormControl><Input placeholder="e.g., Stade, Salle couverte" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
+                  <FormField control={form.control} name="installations_sportives" render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Type d'installation</FormLabel>
+                          <FormControl><Input placeholder="ex: Stade, Salle couverte" {...field} /></FormControl>
+                          <FormMessage />
+                      </FormItem>
+                  )}/>
+                  <FormField control={form.control} name="categorie_abregee" render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Catégorie abrégée</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                      </FormItem>
+                  )}/>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <h3 className="text-lg font-medium border-b pb-2">Localisation</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="region" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Region*</FormLabel>
+                            <FormLabel>Région*</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select a region" /></SelectTrigger></FormControl>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner une région" /></SelectTrigger></FormControl>
                                 <SelectContent>{regions.map((region) => (<SelectItem key={region.name} value={region.name}>{region.name}</SelectItem>))}</SelectContent>
                             </Select>
                             <FormMessage />
@@ -294,12 +314,22 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                              <FormMessage />
                         </FormItem>
                     )}/>
-                     <FormField control={form.control} name="city" render={({ field }) => (
+                     <FormField control={form.control} name="commune" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>City*</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={!selectedRegion}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select a city" /></SelectTrigger></FormControl>
-                                <SelectContent>{cities.map((city) => (<SelectItem key={city} value={city}>{city}</SelectItem>))}</SelectContent>
+                            <FormLabel>Commune</FormLabel>
+                            <FormControl><Input placeholder="Commune" {...field} /></FormControl>
+                             <FormMessage />
+                        </FormItem>
+                    )}/>
+                    <FormField control={form.control} name="milieu" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Milieu</FormLabel>
+                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner un milieu" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Urbain">Urbain</SelectItem>
+                                    <SelectItem value="Rural">Rural</SelectItem>
+                                </SelectContent>
                             </Select>
                             <FormMessage />
                         </FormItem>
@@ -308,9 +338,9 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                 
                  <FormField control={form.control} name="address" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Address*</FormLabel>
+                        <FormLabel>Adresse/Localisation*</FormLabel>
                         <div className="flex gap-2 items-start">
-                            <FormControl><Input placeholder="e.g., 123 Main St" {...field} /></FormControl>
+                            <FormControl><Input placeholder="ex: 123 Rue Principale, Quartier..." {...field} /></FormControl>
                             <div className='flex flex-col gap-1'>
                                 <Button type="button" onClick={handleGeocode} disabled={isGeocoding}>
                                     <Search className="mr-2 h-4 w-4" />
@@ -324,129 +354,180 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                     </FormItem>
                 )}/>
 
-                <FormField control={form.control} name="description" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl><Textarea placeholder="Describe the facility, its features, and rules." className="resize-none" {...field}/></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}/>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <h3 className="text-lg font-medium border-b pb-2">Propriété et Gestion</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="ownership" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Ownership</FormLabel>
+                            <FormLabel>Propriété</FormLabel>
                             <FormControl><Input {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
                     <FormField control={form.control} name="managing_entity" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Managing Entity</FormLabel>
+                            <FormLabel>Entité gestionnaire</FormLabel>
                             <FormControl><Input {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
-                    <FormField control={form.control} name="last_renovation_date" render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>Last Renovation Date</FormLabel>
-                             <Popover>
-                                <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date("1900-01-01")} initialFocus />
-                                </PopoverContent>
-                            </Popover>
+                    <FormField control={form.control} name="titre_foncier_numero" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>N° Titre Foncier</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
                 </div>
+                
+                <h3 className="text-lg font-medium border-b pb-2">Spécifications Techniques</h3>
+                <FormField control={form.control} name="last_renovation_date" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Date de dernière rénovation</FormLabel>
+                         <Popover>
+                            <PopoverTrigger asChild>
+                            <FormControl>
+                                <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                    {field.value ? format(field.value, "PPP") : <span>Choisir une date</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                            </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date("1900-01-01")} initialFocus />
+                            </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                )}/>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="surface_area" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Surface Area (m²)</FormLabel>
+                            <FormLabel>Superficie (m²)</FormLabel>
                             <FormControl><Input type="number" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
                      <FormField control={form.control} name="capacity" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Capacity</FormLabel>
+                            <FormLabel>Capacité d'accueil</FormLabel>
                             <FormControl><Input type="number" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}/>
-                     <FormField control={form.control} name="staff_count" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Staff Count</FormLabel>
-                            <FormControl><Input type="number" {...field} /></FormControl>
-                            <FormMessage />
+                </div>
+
+                <div className="space-y-4 rounded-md border p-4">
+                    <h3 className="text-sm font-medium">État Actuel</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                       <FormField control={form.control} name="establishment_state" render={({ field }) => (
+                           <FormItem><FormLabel>État de l'établissement</FormLabel>
+                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                   <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger></FormControl>
+                                   <SelectContent>{establishmentStates.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                               </Select>
+                           <FormMessage /></FormItem>
+                       )}/>
+                       <FormField control={form.control} name="building_state" render={({ field }) => (
+                           <FormItem><FormLabel>État du bâtiment</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                   <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger></FormControl>
+                                   <SelectContent>{buildingStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                               </Select>
+                           <FormMessage /></FormItem>
+                       )}/>
+                       <FormField control={form.control} name="equipment_state" render={({ field }) => (
+                           <FormItem><FormLabel>État des équipements</FormLabel>
+                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                   <FormControl><SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger></FormControl>
+                                   <SelectContent>{equipmentStates.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                               </Select>
+                           <FormMessage /></FormItem>
+                       )}/>
+                    </div>
+                </div>
+
+                <div className="space-y-4 rounded-md border p-4">
+                    <h3 className="text-sm font-medium">Ressources Humaines</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="staff_count" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Effectif total</FormLabel>
+                                <FormControl><Input type="number" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}/>
+                        <FormField control={form.control} name="sports_staff_count" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Personnel du secteur sport</FormLabel>
+                                <FormControl><Input type="number" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}/>
+                    </div>
+                    <FormField control={form.control} name="hr_needs" render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                            <div className="space-y-0.5">
+                                <FormLabel>Besoin en RH</FormLabel>
+                            </div>
+                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                         </FormItem>
                     )}/>
                 </div>
                 
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField control={form.control} name="establishment_state" render={({ field }) => (
-                        <FormItem><FormLabel>Establishment State</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
-                                <SelectContent>{establishmentStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                            </Select>
-                        <FormMessage /></FormItem>
+                <div className="space-y-4 rounded-md border p-4">
+                    <h3 className="text-sm font-medium">Besoins et Planification</h3>
+                     <FormField control={form.control} name="rehabilitation_plan" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Prise en compte (prog. réhabilitation)</FormLabel>
+                            <FormControl><Input placeholder="Année ou détails" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
                     )}/>
-                    <FormField control={form.control} name="building_state" render={({ field }) => (
-                        <FormItem><FormLabel>Building State</FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
-                                <SelectContent>{buildingStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                            </Select>
-                        <FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="equipment_state" render={({ field }) => (
-                        <FormItem><FormLabel>Equipment State</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
-                                <SelectContent>{equipmentStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                            </Select>
-                        <FormMessage /></FormItem>
-                    )}/>
+                    <div className="flex gap-4">
+                        <FormField control={form.control} name="besoin_amenagement" render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm flex-1">
+                                <div className="space-y-0.5"><FormLabel>Besoin d'aménagement</FormLabel></div>
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                            </FormItem>
+                        )}/>
+                        <FormField control={form.control} name="besoin_equipements" render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm flex-1">
+                                <div className="space-y-0.5"><FormLabel>Besoin d'équipements</FormLabel></div>
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                            </FormItem>
+                        )}/>
+                    </div>
                 </div>
 
                 <div className="space-y-4 rounded-md border p-4 mt-4">
-                  <h3 className="text-sm font-medium">Equipments</h3>
+                  <h3 className="text-sm font-medium">Équipements Fournis</h3>
                   {fields.map((field, index) => (
                     <div key={field.id} className="flex items-end gap-2">
                       <FormField control={form.control} name={`equipments.${index}.quantity`} render={({ field }) => (
-                          <FormItem className="w-24"><FormLabel className="text-xs">Quantity</FormLabel><FormControl><Input placeholder="e.g., 5 or X" {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem className="w-24"><FormLabel className="text-xs">Quantité</FormLabel><FormControl><Input placeholder="ex: 5 ou X" {...field} /></FormControl><FormMessage /></FormItem>
                       )}/>
                       <FormField control={form.control} name={`equipments.${index}.name`} render={({ field }) => (
-                          <FormItem className="flex-1"><FormLabel className="text-xs">Equipment Name</FormLabel><FormControl><Input placeholder="e.g., Basketballs" {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem className="flex-1"><FormLabel className="text-xs">Nom de l'équipement</FormLabel><FormControl><Input placeholder="ex: Ballons de basket" {...field} /></FormControl><FormMessage /></FormItem>
                       )}/>
                       <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   ))}
                   <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append({ name: '', quantity: '1' })}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Equipment
+                    <PlusCircle className="mr-2 h-4 w-4" /> Ajouter Équipement
                   </Button>
                 </div>
 
                  <FormField control={form.control} name="sports" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Sports*</FormLabel>
-                       <FormDescription>Select the sports available at this facility.</FormDescription>
+                       <FormDescription>Sélectionnez les sports disponibles.</FormDescription>
                       <FormControl>
                         <MultiSelect
                           options={sportOptions}
                           selected={field.value}
                           onChange={(value) => {field.onChange(value)}}
-                          placeholder="Select sports..."
+                          placeholder="Sélectionner des sports..."
                           className="w-full"
                         />
                       </FormControl>
@@ -454,48 +535,26 @@ export default function AddFacilityDialog({ open, onOpenChange }: AddFacilityDia
                     </FormItem>
                   )}/>
               
-                <div className="flex gap-8 pt-4">
-                    <FormField control={form.control} name="type" render={({ field }) => (
-                        <FormItem className="space-y-3">
-                            <FormLabel>Type</FormLabel>
-                            <FormControl>
-                                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
-                                    <FormItem className="flex items-center space-x-2 space-y-0">
-                                        <FormControl><RadioGroupItem value="outdoor" /></FormControl>
-                                        <FormLabel className="font-normal">Outdoor</FormLabel>
-                                    </FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0">
-                                        <FormControl><RadioGroupItem value="indoor" /></FormControl>
-                                        <FormLabel className="font-normal">Indoor</FormLabel>
-                                    </FormItem>
-                                </RadioGroup>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                    <FormField control={form.control} name="accessible" render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 rounded-md border p-3">
-                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl>
-                            <div className="space-y-1 leading-none">
-                                <FormLabel>PMR Accessible</FormLabel>
-                                <FormDescription>Is this facility accessible for people with reduced mobility?</FormDescription>
-                            </div>
-                        </FormItem>
-                    )}/>
-                </div>
                  <FormField control={form.control} name="observations" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Observations</FormLabel>
-                        <FormControl><Textarea placeholder="Any other observations..." className="resize-none" {...field}/></FormControl>
+                        <FormLabel>Observations / Mesures pour réouverture</FormLabel>
+                        <FormControl><Textarea {...field}/></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}/>
+                <FormField control={form.control} name="description" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Description (simplifiée)</FormLabel>
+                        <FormControl><Textarea placeholder="Décrivez l'installation, ses caractéristiques et ses règles." className="resize-none" {...field}/></FormControl>
                         <FormMessage />
                     </FormItem>
                 )}/>
               </div>
             </ScrollArea>
             <DialogFooter className="pt-4">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Adding...' : 'Add Facility'}
+                {isSubmitting ? 'Ajout en cours...' : 'Ajouter Installation'}
               </Button>
             </DialogFooter>
           </form>

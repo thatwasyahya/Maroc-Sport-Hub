@@ -79,7 +79,7 @@ export default function Home() {
 
     if (selectedRegions.length > 0) {
       newFilteredFacilities = newFilteredFacilities.filter(f => 
-        selectedRegions.includes(f.region)
+        f.region && selectedRegions.includes(f.region)
       );
     }
     
@@ -288,7 +288,7 @@ export default function Home() {
                         <>
                             <SheetHeader className="p-6 border-b border-border">
                                 <SheetTitle className="font-headline text-3xl">{selectedFacility.name}</SheetTitle>
-                                <SheetDescription>{selectedFacility.city}, {selectedFacility.region}</SheetDescription>
+                                <SheetDescription>{selectedFacility.commune}, {selectedFacility.province}, {selectedFacility.region}</SheetDescription>
                             </SheetHeader>
                             <FacilityDetails facility={selectedFacility} />
                         </>
