@@ -25,7 +25,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser, useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Checkbox } from '../ui/checkbox';
@@ -38,39 +37,6 @@ import { PlusCircle, Trash2, Search, Loader2 } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
 import type { FacilityRequest } from '@/lib/types';
 import { geocodeAddress } from '@/services/nominatim';
-
-// This is a simple image compression utility that can be expanded.
-const compressImage = (file: File, quality = 0.7): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error('Canvas to Blob conversion failed'));
-            }
-          },
-          'image/jpeg',
-          quality
-        );
-      };
-      img.onerror = (error) => reject(error);
-    };
-    reader.onerror = (error) => reject(error);
-  });
-};
-
 
 const facilityRequestSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -87,8 +53,6 @@ const facilityRequestSchema = z.object({
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
-  photo: z.any().refine((files) => files?.length > 0, 'Une photo est requise.'),
-  attachment: z.any().optional(),
 });
 
 type FacilityRequestFormValues = z.infer<typeof facilityRequestSchema>;
@@ -125,10 +89,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       accessible: false,
     },
   });
-  
-  const photoRef = form.register("photo");
-  const attachmentRef = form.register("attachment");
-
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -203,30 +163,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       setIsGeocoding(false);
     }
   };
-  
-  const handleFileUpload = async (file: File, type: 'photo' | 'attachment'): Promise<string | undefined> => {
-      if (!user) return undefined;
-
-      const storage = getStorage();
-      const filePath = `facility-requests/${user.uid}/${Date.now()}_${type}_${file.name}`;
-      const storageRef = ref(storage, filePath);
-      
-      // Compress image before uploading if it's a photo
-      if (type === 'photo' && file.type.startsWith('image/')) {
-        try {
-          const compressedBlob = await compressImage(file);
-          await uploadBytes(storageRef, compressedBlob, { contentType: 'image/jpeg' });
-        } catch (e) {
-          console.warn("Could not compress image, uploading original file. Error:", e);
-          await uploadBytes(storageRef, file);
-        }
-      } else {
-         await uploadBytes(storageRef, file);
-      }
-      
-      const downloadUrl = await getDownloadURL(storageRef);
-      return downloadUrl;
-  };
 
   const onSubmit = async (data: FacilityRequestFormValues) => {
     if (!user) {
@@ -239,20 +175,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
     setIsSubmitting(true);
     try {
-      const photoFile = data.photo?.[0];
-      const attachmentFile = data.attachment?.[0];
-
-      const uploadPromises: Promise<string | undefined>[] = [];
-
-      if (photoFile) {
-        uploadPromises.push(handleFileUpload(photoFile, 'photo'));
-      }
-      if (attachmentFile) {
-        uploadPromises.push(handleFileUpload(attachmentFile, 'attachment'));
-      }
-      
-      const [photoUrl, attachmentUrl] = await Promise.all(uploadPromises);
-
       const location = { lat, lng };
 
       const newRequestData: Omit<FacilityRequest, 'id'> = {
@@ -264,8 +186,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         location,
-        photoUrl: photoUrl,
-        attachmentUrl: attachmentFile ? attachmentUrl : undefined,
       };
 
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
@@ -404,44 +324,6 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="photo"
-                  render={() => {
-                    return (
-                      <FormItem>
-                        <FormLabel>Photo de l'Installation</FormLabel>
-                        <FormDescription>
-                          Ajoutez une photo principale pour l'installation (obligatoire).
-                        </FormDescription>
-                        <FormControl>
-                          <Input type="file" accept="image/*" {...photoRef} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="attachment"
-                  render={() => {
-                    return (
-                      <FormItem>
-                        <FormLabel>Pièce Jointe (Optionnel)</FormLabel>
-                        <FormDescription>
-                          Ajoutez un document ou une image supplémentaire.
-                        </FormDescription>
-                        <FormControl>
-                          <Input type="file" {...attachmentRef} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
                 />
 
                 <div className="space-y-4 rounded-md border p-4 mt-4">

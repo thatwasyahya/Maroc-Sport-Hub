@@ -61,6 +61,4 @@ export interface FacilityRequest {
     lat: number;
     lng: number;
   };
-  photoUrl?: string; // URL to the main photo in Firebase Storage
-  attachmentUrl?: string; // URL to the attachment in Firebase Storage
 }

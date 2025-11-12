@@ -47,11 +47,6 @@
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
             }
-        },
-        "photoUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "URL of the main facility photo in Firebase Storage."
         }
       },
       "required": ["id", "name", "location"]
@@ -86,16 +81,6 @@
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
             }
-        },
-        "photoUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "URL of the main facility photo in Firebase Storage."
-        },
-        "attachmentUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "URL of the uploaded attachment in Firebase Storage."
         }
       },
       "required": ["userId", "userName", "userEmail", "status", "name", "region", "city", "sports", "type", "createdAt", "location"]
