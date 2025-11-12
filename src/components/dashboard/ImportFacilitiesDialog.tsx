@@ -36,7 +36,7 @@ const DB_FIELDS: { key: keyof Facility | string, label: string, required?: boole
     { key: 'installations_sportives', label: 'Type d\'installation' },
     { key: 'categorie_abregee', label: 'Catégorie abrégée' },
     { key: 'ownership', label: 'Propriété' },
-    { key 'managing_entity', label: 'Entité gestionnaire' },
+    { key: 'managing_entity', label: 'Entité gestionnaire' },
     { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format date' },
     { key: 'surface_area', label: 'Superficie (m²)', notes: 'Numérique' },
     { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique' },
@@ -50,6 +50,7 @@ const DB_FIELDS: { key: keyof Facility | string, label: string, required?: boole
     { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Oui/Non' },
     { key: 'rehabilitation_plan', label: 'Plan de réhabilitation' },
     { key: 'observations', label: 'Observations' },
+    { key: 'sports', label: 'Sports', notes: 'Séparés par des virgules' },
 ];
 
 export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
@@ -80,44 +81,48 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
         setFile(selectedFile);
         setError(null);
 
-        try {
-            const data = await selectedFile.arrayBuffer();
-            const workbook = XLSX.read(data);
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            
-            if (jsonData.length < 1) {
-                setError('Le fichier est vide ou illisible.');
-                return;
-            }
-
-            const headers = jsonData[0] as string[];
-            setFileHeaders(headers.filter(h => h)); // Filter out empty headers
-            
-            // Auto-mapping attempt
-            const initialMapping: Record<string, string> = {};
-            DB_FIELDS.forEach(field => {
-                const normalizedFieldLabel = field.label.toLowerCase().replace(/[^a-z0-9]/gi, '');
-                const foundHeader = headers.find(h => {
-                    const normalizedHeader = h.toLowerCase().replace(/[^a-z0-9]/gi, '');
-                    return normalizedHeader.includes(normalizedFieldLabel);
-                });
-                if (foundHeader) {
-                    initialMapping[field.key] = foundHeader;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = event.target?.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                if (jsonData.length < 1) {
+                    setError('Le fichier est vide ou illisible.');
+                    return;
                 }
-            });
-            setColumnMapping(initialMapping);
+                const headers = (jsonData[0] as string[]).map(h => h.trim());
+                setFileHeaders(headers.filter(h => h)); 
+                
+                // Auto-mapping attempt
+                const initialMapping: Record<string, string> = {};
+                const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/gi, '');
 
-            setStep('mapping');
-        } catch (err) {
-            console.error(err);
-            setError('Erreur lors de la lecture du fichier. Assurez-vous que c\'est un fichier Excel valide.');
-        }
+                DB_FIELDS.forEach(field => {
+                    const normalizedFieldLabel = normalize(field.label);
+                    const foundHeader = headers.find(h => {
+                        const normalizedHeader = normalize(h);
+                        return normalizedHeader.includes(normalizedFieldLabel);
+                    });
+                    if (foundHeader) {
+                        initialMapping[field.key] = foundHeader;
+                    }
+                });
+                setColumnMapping(initialMapping);
+                setStep('mapping');
+            } catch (err) {
+                console.error(err);
+                setError('Erreur lors de la lecture du fichier. Assurez-vous que c\'est un fichier Excel valide.');
+            }
+        };
+        reader.readAsBinaryString(selectedFile);
     };
 
     const handleMappingChange = (dbField: string, fileHeader: string) => {
-        setColumnMapping(prev => ({ ...prev, [dbField]: fileHeader }));
+        setColumnMapping(prev => ({ ...prev, [dbField]: fileHeader === '--ignore--' ? undefined : fileHeader }));
     };
 
     const processData = () => {
@@ -129,8 +134,10 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
         }
 
         try {
-            const data = file!.arrayBuffer().then(buffer => {
-                const workbook = XLSX.read(buffer);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const data = event.target?.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
@@ -140,7 +147,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                     
                     for (const [dbFieldKey, fileHeader] of Object.entries(columnMapping)) {
                         if (fileHeader && row[fileHeader] !== undefined) {
-                            const value = row[fileHeader];
+                            let value = row[fileHeader];
                             
                             if (dbFieldKey.startsWith('location.')) {
                                 const coordKey = dbFieldKey.split('.')[1] as 'lat' | 'lng';
@@ -149,13 +156,19 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                                     if (!facility.location) facility.location = { lat: 0, lng: 0 };
                                     facility.location[coordKey] = numValue;
                                 }
-                            } else if (typeof (facility as any)[dbFieldKey as keyof Facility] === 'boolean') {
-                                const boolValue = ['true', 'oui', 'yes', '1', 'vrai'].includes(String(value).toLowerCase());
+                            } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space', 'accessible'].includes(dbFieldKey)) {
+                                 const boolValue = ['true', 'oui', 'yes', '1', 'vrai'].includes(String(value).toLowerCase());
                                 (facility as any)[dbFieldKey] = boolValue;
-                            } else if (typeof (facility as any)[dbFieldKey as keyof Facility] === 'number') {
-                                (facility as any)[dbFieldKey] = parseFloat(String(value).replace(',', '.'));
-                            }
-                            else {
+                            } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count', 'beneficiaries'].includes(dbFieldKey)) {
+                                const numValue = parseFloat(String(value).replace(',', '.'));
+                                if(!isNaN(numValue)) (facility as any)[dbFieldKey] = numValue;
+                            } else if (dbFieldKey === 'last_renovation_date' && typeof value === 'number') {
+                                // Handle Excel date serial number
+                                const date = XLSX.SSF.parse_date_code(value);
+                                (facility as any)[dbFieldKey] = new Date(date.y, date.m - 1, date.d);
+                            } else if (dbFieldKey === 'sports' && typeof value === 'string') {
+                                facility.sports = value.split(',').map(s => s.trim());
+                            } else {
                                (facility as any)[dbFieldKey] = value;
                             }
                         }
@@ -164,12 +177,13 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                 }).filter(f => f.name && f.location?.lat && f.location?.lng);
                 
                 if (facilities.length === 0) {
-                    throw new Error("Aucune ligne valide n'a pu être traitée. Vérifiez votre mappage et le contenu du fichier.");
+                    throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez votre mappage et le contenu du fichier.");
                 }
                 
                 setParsedData(facilities);
                 setStep('preview');
-            });
+            };
+            reader.readAsBinaryString(file!);
         } catch (err: any) {
             console.error(err);
             setError(err.message || 'Une erreur est survenue lors du traitement des données.');
@@ -184,6 +198,10 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
 
         for (const facility of parsedData) {
             try {
+                // Ensure default values for arrays
+                if (!facility.sports) facility.sports = [];
+                if (!facility.equipments) facility.equipments = [];
+
                 const facilityPayload: Partial<Facility> = {
                     ...facility,
                     adminId: user.uid,
@@ -285,7 +303,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                 {step === 'preview' && (
                      <div className="flex-1 flex flex-col gap-4 overflow-y-hidden">
                         <h3 className="font-semibold">Étape 3: Prévisualisation</h3>
-                        <p className="text-sm text-muted-foreground">Vérifiez les données avant l'importation. Seules les 10 premières lignes sont affichées.</p>
+                        <p className="text-sm text-muted-foreground">Vérifiez les données avant l'importation. Seules les 10 premières lignes valides sont affichées.</p>
                         <ScrollArea className="flex-1 border rounded-lg">
                              <Table>
                                 <TableHeader>
@@ -300,7 +318,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                                     {parsedData.slice(0, 10).map((facility, index) => (
                                         <TableRow key={index}>
                                             <TableCell>{facility.name}</TableCell>
-                                            <TableCell>{facility.region}</TableCell>
+                                            <TableCell>{facility.region || 'N/A'}</TableCell>
                                             <TableCell>{facility.location?.lat.toFixed(4)}</TableCell>
                                             <TableCell>{facility.location?.lng.toFixed(4)}</TableCell>
                                         </TableRow>
@@ -335,8 +353,6 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                         </>}
                     </div>
                 )}
-
-
             </DialogContent>
         </Dialog>
     );
