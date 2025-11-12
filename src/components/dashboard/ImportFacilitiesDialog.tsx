@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { useUser, useFirestore } from '@/firebase';
-import { writeBatch, collection, serverTimestamp } from 'firebase/firestore';
+import { writeBatch, collection, serverTimestamp, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,7 +19,7 @@ import Papa from 'papaparse';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Badge } from '../ui/badge';
-import type { Facility, EstablishmentState, BuildingState, EquipmentState } from '@/lib/types';
+import type { Facility } from '@/lib/types';
 
 
 interface ImportFacilitiesDialogProps {
@@ -28,8 +28,9 @@ interface ImportFacilitiesDialogProps {
 }
 
 const requiredDbFields = [
-    { key: 'name', label: 'Nom de l\'établissement', notes: 'Obligatoire' },
-    { key: 'location', label: 'Coordonnées (Latitude/Longitude)', notes: 'Obligatoire' },
+    { key: 'nom_de_letablissement', label: 'Nom de l\'établissement', notes: 'Obligatoire' },
+    { key: 'latitude', label: 'Latitude', notes: 'Obligatoire' },
+    { key: 'longitude', label: 'Longitude', notes: 'Obligatoire' },
 ];
 
 const optionalDbFields = [
@@ -37,33 +38,52 @@ const optionalDbFields = [
     { key: 'region', label: 'Région' },
     { key: 'province', label: 'Province' },
     { key: 'commune', label: 'Commune' },
-    { key: 'milieu', label: 'Milieu (Urbain/Rural)' },
+    { key: 'milieu_urbain___rural', label: 'Milieu (Urbain/Rural)' },
     { key: 'installations_sportives', label: 'Type d\'installation' },
     { key: 'categorie_abregee', label: 'Catégorie abrégée' },
-    { key: 'address', label: 'Adresse/Localisation' },
-    { key: 'ownership', label: 'Propriété' },
-    { key: 'managing_entity', label: 'Entité gestionnaire' },
-    { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format date' },
-    { key: 'surface_area', label: 'Superficie (m²)', notes: 'Numérique' },
-    { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique' },
-    { key: 'staff_count', label: 'Effectif total', notes: 'Numérique' },
-    { key: 'establishment_state', label: 'État de l\'établissement' },
-    { key: 'developed_space', label: 'Espace aménagé', notes: 'Booléen (oui/non)' },
-    { key: 'titre_foncier_numero', label: 'N° Titre Foncier' },
-    { key: 'building_state', label: 'État du bâtiment' },
-    { key: 'equipment_state', label: 'État des équipements' },
-    { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique' },
-    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Booléen (oui/non)' },
-    { key: 'rehabilitation_plan', label: 'Plan de réhabilitation' },
-    { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)' },
-    { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)' },
-    { key: 'observations', label: 'Observations' },
-    { key: 'beneficiaries', label: 'Bénéficiaires', notes: 'Numérique' },
+    { key: 'localisation', label: 'Adresse/Localisation' },
+    { key: 'propriete', label: 'Propriété' },
+    { key: 'entite_gestionnaire', label: 'Entité gestionnaire' },
+    { key: 'date_derniere_renovation', label: 'Date dernière rénovation', notes: 'Format date' },
+    { key: 'superficie', label: 'Superficie (m²)', notes: 'Numérique' },
+    { key: 'capacite_daccueil', label: 'Capacité d\'accueil', notes: 'Numérique' },
+    { key: 'effectif', label: 'Effectif total', notes: 'Numérique' },
+    { key: 'etat_de_letablissement__1_[operationnel]_2_[en_arret]_3_[pret]_(a_etre_inaugure)_4_[en_cours_doperationnalisation]_(pret_avec_besoins/conditions)_5_[en_cours_de_construction]', label: 'État de l\'établissement' },
+    { key: 'espace_amenage', label: 'Espace aménagé', notes: 'Booléen (oui/non)' },
+    { key: 'الرسم_العقاري_رقم)_(...)_titre_foncier_n_…..', label: 'N° Titre Foncier' },
+    { key: 'etat_du_batiment__1_[bon]_2_[moyen]_3_[mauvais]_4_[mediocre]', label: 'État du bâtiment' },
+    { key: 'etat_des_equipements__0__non_equipe_1_[bon]_2_[moyen]_3_[mauvais]_4_[mediocre]', label: 'État des équipements' },
+    { key: 'nombre_du_personnel_du_secteur_sport_affecte', label: 'Personnel du secteur sport', notes: 'Numérique' },
+    { key: 'besoin__rh', label: 'Besoin en RH', notes: 'Booléen (oui/non)' },
+    { key: 'prise_en_compte_dans_le__cadre_du_prog_de_rehabilitation_annee_...............', label: 'Plan de réhabilitation' },
+    { key: 'besoin_damenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)' },
+    { key: 'besoin_dequipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)' },
+    { key: 'observation_sur__les_mesures_a_mettre_en_place_pour_reouverture', label: 'Observations' },
+    { key: 'benificiares', label: 'Bénéficiaires', notes: 'Numérique' },
 ];
 
 const allDbFields = [...requiredDbFields, ...optionalDbFields];
 
-type Step = 'select_file' | 'map_columns' | 'preview' | 'importing';
+const cleanColumnName = (col: string): string => {
+    return col
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_")
+        .replace(/-/g, "_")
+        .replace(/'/g, "")
+        .replace(/"/g, "")
+        .replace(/:/g, "")
+        .replace(/\n/g, "_")
+        .replace(/é/g, "e")
+        .replace(/è/g, "e")
+        .replace(/ê/g, "e")
+        .replace(/à/g, "a")
+        .replace(/â/g, "a")
+        .replace(/ô/g, "o")
+        .replace(/î/g, "i")
+        .replace(/ï/g, "i")
+        .replace(/ç/g, "c");
+};
 
 export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFacilitiesDialogProps) {
   const { user } = useUser();
@@ -71,7 +91,6 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [step, setStep] = useState<Step>('select_file');
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileHeaders, setFileHeaders] = useState<string[]>([]);
   const [fileData, setFileData] = useState<any[]>([]);
@@ -82,8 +101,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const resetState = () => {
-    setStep('select_file');
+  const resetState = useCallback(() => {
     setFileName(null);
     setFileHeaders([]);
     setFileData([]);
@@ -94,7 +112,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     if(fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
+  }, []);
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
@@ -118,15 +136,13 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      preview: 5, // Only need headers and a few rows to start
       complete: (results) => {
         if(results.errors.length) {
             setError(`Erreur lors de la lecture du fichier CSV: ${results.errors[0].message}`);
             return;
         }
         setFileHeaders(results.meta.fields || []);
-        setFileData(results.data); // Store all data now
-        setStep('map_columns');
+        setFileData(results.data);
       },
       error: (err: any) => {
         setError(`Erreur lors de la lecture du fichier CSV: ${err.message}`);
@@ -138,234 +154,194 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     setColumnMap(prev => ({...prev, [dbField]: fileHeader}));
   };
 
-  const processMappedData = () => {
+  const processAndImport = () => {
     if (!user) {
       setError('Vous devez être connecté pour importer des données.');
       return;
     }
-    
-    // Check if required fields are mapped
-    if (!columnMap.name || (!columnMap.latitude && !columnMap.longitude && !columnMap.location)) {
+
+    const requiredMappingsMet = requiredDbFields.every(field => columnMap[field.key]);
+    if (!requiredMappingsMet) {
         setError("Le mappage des champs obligatoires (Nom, Latitude, Longitude) est requis.");
         return;
     }
 
+    setIsProcessing(true);
+
     const facilities: Partial<Facility>[] = fileData.map((row) => {
-        const facility: Partial<Facility> = { adminId: user.uid };
+        const facility: Partial<any> = { adminId: user.uid };
+        let name: string | null = null;
         let lat: number | null = null;
         let lng: number | null = null;
 
-        for (const dbField of allDbFields) {
-            const fileHeader = columnMap[dbField.key];
-            if (fileHeader && row[fileHeader] !== undefined) {
+        for (const dbFieldKey in columnMap) {
+            const fileHeader = columnMap[dbFieldKey];
+            if (fileHeader && row[fileHeader] !== undefined && row[fileHeader] !== null) {
                 const value = row[fileHeader];
                 
-                if (dbField.key === 'latitude' || dbField.key === 'longitude') {
+                if (dbFieldKey === 'nom_de_letablissement') {
+                    name = String(value);
+                    facility['name'] = name;
+                } else if (dbFieldKey === 'latitude') {
                     const num = parseFloat(String(value).replace(',', '.'));
-                    if (!isNaN(num)) {
-                        if (dbField.key === 'latitude') lat = num;
-                        if (dbField.key === 'longitude') lng = num;
-                    }
-                } else if (dbField.notes?.includes('Numérique')) {
-                    (facility as any)[dbField.key] = parseFloat(String(value).replace(',', '.')) || undefined;
-                } else if (dbField.notes?.includes('Booléen')) {
-                    (facility as any)[dbField.key] = ['oui', 'yes', 'true', '1'].includes(String(value).toLowerCase());
+                    if (!isNaN(num)) lat = num;
+                } else if (dbFieldKey === 'longitude') {
+                    const num = parseFloat(String(value).replace(',', '.'));
+                    if (!isNaN(num)) lng = num;
                 } else {
-                    (facility as any)[dbField.key] = value || undefined;
-                }
-            }
-        }
-        
-        // Special case for combined location
-        const locationHeader = columnMap.location;
-        if(locationHeader && typeof row[locationHeader] === 'string') {
-            const parts = row[locationHeader].split(/[,; ]+/);
-            if(parts.length === 2) {
-                const parsedLat = parseFloat(parts[0]);
-                const parsedLng = parseFloat(parts[1]);
-                if(!isNaN(parsedLat) && !isNaN(parsedLng)) {
-                    lat = parsedLat;
-                    lng = parsedLng;
+                    const dbFieldInfo = allDbFields.find(f => f.key === dbFieldKey);
+                    if (dbFieldInfo?.notes?.includes('Numérique')) {
+                      facility[dbFieldKey] = parseFloat(String(value).replace(',', '.')) || undefined;
+                    } else if (dbFieldInfo?.notes?.includes('Booléen')) {
+                      facility[dbFieldKey] = ['oui', 'yes', 'true', '1'].includes(String(value).toLowerCase());
+                    } else {
+                       facility[dbFieldKey] = String(value);
+                    }
                 }
             }
         }
 
-        if (lat !== null && lng !== null) {
+        if (name && lat !== null && lng !== null) {
             facility.location = { lat, lng };
-        }
-
-        if (facility.name && facility.location) {
-            return facility;
+            // Map the cleaned keys to the expected Facility interface keys
+            const finalFacility: Partial<Facility> = {
+                adminId: facility.adminId,
+                name: facility.name,
+                location: facility.location,
+                reference_region: facility.reference_region,
+                region: facility.region,
+                province: facility.province,
+                commune: facility.commune,
+                milieu: facility.milieu_urbain___rural,
+                installations_sportives: facility.installations_sportives,
+                categorie_abregee: facility.categorie_abregee,
+                address: facility.localisation,
+                ownership: facility.propriete,
+                managing_entity: facility.entite_gestionnaire,
+                last_renovation_date: facility.date_derniere_renovation,
+                surface_area: facility.superficie,
+                capacity: facility.capacite_daccueil,
+                staff_count: facility.effectif,
+                establishment_state: facility.etat_de_letablissement__1_operationnel_2_en_arret_3_pret_a_etre_inaugure_4_en_cours_doperationnalisation_pret_avec_besoins_conditions_5_en_cours_de_construction,
+                developed_space: facility.espace_amenage,
+                titre_foncier_numero: facility['الرسم_العقاري_رقم)_(...)_titre_foncier_n_…..'],
+                building_state: facility.etat_du_batiment__1_bon_2_moyen_3_mauvais_4_mediocre,
+                equipment_state: facility.etat_des_equipements__0__non_equipe_1_bon_2_moyen_3_mauvais_4_mediocre,
+                sports_staff_count: facility.nombre_du_personnel_du_secteur_sport_affecte,
+                hr_needs: facility.besoin__rh,
+                rehabilitation_plan: facility.prise_en_compte_dans_le__cadre_du_prog_de_rehabilitation_annee,
+                besoin_amenagement: facility.besoin_damenagement,
+                besoin_equipements: facility.besoin_dequipements,
+                observations: facility.observation_sur__les_mesures_a_mettre_en_place_pour_reouverture,
+                beneficiaries: facility.benificiares,
+            };
+            return finalFacility;
         }
         return null;
     }).filter((f): f is Partial<Facility> => f !== null);
 
     if (facilities.length === 0) {
          setError("Aucune ligne valide n'a pu être lue. Vérifiez votre mappage et le contenu du fichier.");
+         setIsProcessing(false);
          return;
     }
     
-    setParsedData(facilities);
-    setStep('preview');
-  };
-  
-  const handleImport = async () => {
-    if (parsedData.length === 0 || !firestore) return;
-    setStep('importing');
+    setParsedData(facilities); // For potential preview, though we go straight to import
     
-    try {
-        const batch = writeBatch(firestore);
-        
-        parsedData.forEach(facilityData => {
-            const docRef = doc(collection(firestore, 'facilities')); // Auto-generate ID
-            batch.set(docRef, {
-                ...facilityData,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+    // Perform the import
+    const batch = writeBatch(firestore);
+    facilities.forEach(facilityData => {
+        const docRef = doc(collection(firestore, 'facilities')); // Auto-generate ID
+        batch.set(docRef, {
+            ...facilityData,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
         });
+    });
 
-        await batch.commit();
-        toast({
-            title: "Importation réussie",
-            description: `${parsedData.length} installations ont été importées avec succès.`,
-        });
-        handleClose(true);
-    } catch (error: any) {
-        setError(`Erreur lors de l'importation : ${error.message}`);
-        toast({
-            variant: "destructive",
-            title: "Échec de l'importation",
-            description: `Une erreur s'est produite lors de l'importation des données. ${error.message}`,
-        });
-        setStep('preview'); // Go back to preview on error
-    }
+    batch.commit()
+      .then(() => {
+          toast({
+              title: "Importation réussie",
+              description: `${facilities.length} installations ont été importées avec succès.`,
+          });
+          handleClose(true);
+      })
+      .catch((error: any) => {
+          setError(`Erreur lors de l'importation : ${error.message}`);
+          toast({
+              variant: "destructive",
+              title: "Échec de l'importation",
+              description: `Une erreur s'est produite. ${error.message}`,
+          });
+      })
+      .finally(() => {
+          setIsProcessing(false);
+      });
   };
 
-  const renderStepContent = () => {
-    switch(step) {
-        case 'select_file':
-            return (
-                <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-muted-foreground/30 p-12 text-center">
-                    <FileUp className="h-10 w-10 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold">Télécharger un fichier CSV</h3>
-                    <p className="text-sm text-muted-foreground">Cliquez sur le bouton pour sélectionner un fichier .csv depuis votre ordinateur.</p>
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                      Sélectionner un fichier
-                    </Button>
-                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept=".csv" className="hidden" />
-                </div>
-            );
-        case 'map_columns':
-            return (
-                <>
-                <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3 mb-4">
-                    <FileCheck2 className="h-6 w-6 text-green-600" />
-                    <div>
-                        <p className="font-medium">{fileName}</p>
-                        <p className="text-sm text-muted-foreground">Fichier prêt. Veuillez mapper les colonnes.</p>
-                    </div>
-                </div>
-                <ScrollArea className="h-96">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-1">
-                      {allDbFields.map(field => (
-                          <div key={field.key} className="space-y-1">
-                              <label className="font-medium text-sm">
-                                  {field.label}
-                                  {requiredDbFields.some(f => f.key === field.key) && <span className="text-destructive ml-1">*</span>}
-                              </label>
-                              {field.notes && <p className="text-xs text-muted-foreground">{field.notes}</p>}
-                              <Select onValueChange={(value) => handleColumnMapChange(field.key, value)} value={columnMap[field.key]}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Choisir une colonne..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="--skip--">Ignorer cette colonne</SelectItem>
-                                    {fileHeaders.map(header => (
-                                        <SelectItem key={header} value={header}>{header}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                          </div>
-                      ))}
-                  </div>
-                </ScrollArea>
-                </>
-            );
-        case 'preview':
-             return (
-                <>
-                    <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">
-                        <FileCheck2 className="h-6 w-6 text-green-600" />
-                        <div>
-                            <p className="font-medium">{fileName}</p>
-                            <p className="text-sm text-muted-foreground">{parsedData.length} lignes prêtes à être importées.</p>
-                        </div>
-                    </div>
-                    <ScrollArea className="h-72 w-full">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Nom</TableHead>
-                                    <TableHead>Province</TableHead>
-                                    <TableHead>Commune</TableHead>
-                                    <TableHead>Latitude</TableHead>
-                                    <TableHead>Longitude</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {parsedData.slice(0, 100).map((facility, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell className="font-medium">{facility.name || 'N/A'}</TableCell>
-                                        <TableCell>{facility.province || 'N/A'}</TableCell>
-                                        <TableCell>{facility.commune || 'N/A'}</TableCell>
-                                        <TableCell>{facility.location?.lat.toFixed(4) || 'N/A'}</TableCell>
-                                        <TableCell>{facility.location?.lng.toFixed(4) || 'N/A'}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                         {parsedData.length > 100 && <p className="text-center text-sm text-muted-foreground mt-4">Et {parsedData.length - 100} autres lignes...</p>}
-                    </ScrollArea>
-                </>
-            );
-        case 'importing':
-             return (
-                <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-muted-foreground/30 p-12 text-center">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Importation en cours...</p>
-                </div>
-            );
+  const renderContent = () => {
+    if (!fileName) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-muted-foreground/30 p-12 text-center">
+            <FileUp className="h-10 w-10 text-muted-foreground" />
+            <h3 className="text-lg font-semibold">Télécharger un fichier CSV</h3>
+            <p className="text-sm text-muted-foreground">Cliquez sur le bouton pour sélectionner un fichier .csv depuis votre ordinateur.</p>
+            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+              Sélectionner un fichier
+            </Button>
+            <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept=".csv" className="hidden" />
+        </div>
+      )
     }
+
+    if (parsedData.length > 0) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-green-500/50 bg-green-500/10 p-12 text-center">
+                <Loader2 className="h-10 w-10 animate-spin text-green-600" />
+                <p className="text-muted-foreground">Importation de {parsedData.length} lignes...</p>
+            </div>
+        )
+    }
+
+    return (
+      <>
+        <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3 mb-4">
+            <FileCheck2 className="h-6 w-6 text-green-600" />
+            <div>
+                <p className="font-medium">{fileName}</p>
+                <p className="text-sm text-muted-foreground">Fichier prêt. Veuillez mapper les colonnes ci-dessous.</p>
+            </div>
+        </div>
+        <ScrollArea className="h-96">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-1">
+              {[...requiredDbFields, ...optionalDbFields].map(field => (
+                  <div key={field.key} className="space-y-1">
+                      <label className="font-medium text-sm">
+                          {field.label}
+                          {requiredDbFields.some(f => f.key === field.key) && <span className="text-destructive ml-1">*</span>}
+                      </label>
+                      {field.notes && <p className="text-xs text-muted-foreground">{field.notes}</p>}
+                      <Select onValueChange={(value) => handleColumnMapChange(field.key, value)} value={columnMap[field.key]}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir une colonne..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="--skip--">Ignorer cette colonne</SelectItem>
+                            {fileHeaders.map(header => (
+                                <SelectItem key={header} value={header}>{header}</SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                  </div>
+              ))}
+          </div>
+        </ScrollArea>
+      </>
+    );
   }
 
-  const renderFooter = () => {
-    switch (step) {
-        case 'select_file':
-            return (
-                 <>
-                    <Button variant="ghost" onClick={() => handleClose(false)}>Annuler</Button>
-                 </>
-            );
-        case 'map_columns':
-            return (
-                <>
-                    <Button variant="ghost" onClick={() => setStep('select_file')}>Retour</Button>
-                    <Button onClick={processMappedData}>Étape suivante : Prévisualiser</Button>
-                </>
-            );
-        case 'preview':
-            return (
-                <>
-                    <Button variant="ghost" onClick={() => setStep('map_columns')}>Retour au mappage</Button>
-                    <Button onClick={handleImport}>Importer {parsedData.length} ligne(s)</Button>
-                </>
-            );
-        default:
-            return <Button variant="ghost" onClick={() => handleClose(false)}>Fermer</Button>;
-    }
-  };
-
+  const requiredMappingsMet = requiredDbFields.every(field => columnMap[field.key] && columnMap[field.key] !== '--skip--');
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -373,7 +349,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         <DialogHeader>
           <DialogTitle>Importer des Installations depuis un CSV</DialogTitle>
           <DialogDescription>
-            Suivez les étapes pour importer vos données d'installations.
+            Étape 1: Sélectionnez un fichier. Étape 2: Mappez les colonnes. Étape 3: Importez.
           </DialogDescription>
         </DialogHeader>
         
@@ -385,11 +361,15 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
-            {renderStepContent()}
+            {renderContent()}
         </div>
 
         <DialogFooter>
-          {renderFooter()}
+          <Button variant="ghost" onClick={() => handleClose(false)}>Annuler</Button>
+          <Button onClick={processAndImport} disabled={!fileName || isProcessing || !requiredMappingsMet}>
+            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isProcessing ? 'Importation...' : 'Importer les Données'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
