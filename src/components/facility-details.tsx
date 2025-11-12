@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import type { Facility } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Accessibility, Sun, Sprout, Building, Users, HardHat, Calendar, UserCheck, Package, BarChart, LandPlot, HandCoins, User, Hash, AlertTriangle, Wrench, Syringe, CheckCircle, FileText } from 'lucide-react';
