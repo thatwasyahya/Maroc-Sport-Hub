@@ -122,23 +122,25 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             if (mappedKey) {
               let value = rowArray[index];
               
-              if (value === undefined || value === null) return;
+              if (value === undefined || value === null || value === '') return;
+              
+              const valueStr = String(value).trim();
               
               // Handle specific type conversions
               if (mappedKey === 'lat' || mappedKey === 'lng') {
-                (row as any)[mappedKey] = parseFloat(value);
-              } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count'].includes(mappedKey)) {
-                (row as any)[mappedKey] = Number(value);
-              } else if (['beneficiaries'].includes(mappedKey)) {
-                 (row as any)[mappedKey] = parseInt(String(value), 10);
+                const num = parseFloat(valueStr.replace(',', '.'));
+                if (!isNaN(num)) (row as any)[mappedKey] = num;
+              } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count', 'beneficiaries'].includes(mappedKey)) {
+                const num = parseInt(valueStr, 10);
+                if (!isNaN(num)) (row as any)[mappedKey] = num;
               } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space'].includes(mappedKey)) {
-                 (row as any)[mappedKey] = ['true', 'vrai', 'oui', '1', 1].includes(String(value).toLowerCase());
+                 (row as any)[mappedKey] = ['true', 'vrai', 'oui', '1'].includes(valueStr.toLowerCase());
               } else if (mappedKey === 'sports' && typeof value === 'string') {
                  row.sports = value.split(',').map(s => s.trim()).filter(Boolean);
               } else if (value instanceof Date) {
                   (row as any)[mappedKey] = value;
               } else {
-                  (row as any)[mappedKey] = String(value);
+                  (row as any)[mappedKey] = valueStr;
               }
             }
           });
