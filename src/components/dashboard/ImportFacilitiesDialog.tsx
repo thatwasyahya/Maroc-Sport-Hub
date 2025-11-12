@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,48 +19,7 @@ import type { Facility, EstablishmentState, BuildingState, EquipmentState } from
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
-// Mapping from the app's data model to possible header variations in the Excel file.
-// The keys are the fields in our `Facility` type.
-// The values are arrays of possible header texts (case-insensitive, trimmed).
-const headerMappings: { [key in keyof Partial<Facility> | 'lat' | 'lng']?: string[] } = {
-    reference_region: ['reference region', 'référence région'],
-    region: ['region', 'région'],
-    province: ['province'],
-    commune: ['commune'],
-    milieu: ['milieu', 'milieu urbain - rural'],
-    installations_sportives: ['installations sportives'],
-    category: ['catégorie abrégée'],
-    name: ["nom de l'établissement", 'nom'],
-    address: ['localisation', 'adresse'],
-    lng: ['longitude', 'lon'],
-    lat: ['latitude', 'lat'],
-    ownership: ['propriété'],
-    managing_entity: ['entité gestionnaire'],
-    last_renovation_date: ['date dernière rénovation'],
-    surface_area: ['superficie'],
-    capacity: ["capacité d'accueil"],
-    staff_count: ['effectif'],
-    establishment_state: ["état de l'établissement"],
-    developed_space: ['espace aménagé'],
-    titre_foncier_numero: ['titre foncier'],
-    building_state: ['etat du bâtiment', 'état du bâtiment'],
-    equipment_state: ['etat des équipements', 'état des équipements'],
-    sports_staff_count: ['nombre du personnel du secteur sport affecté'],
-    hr_needs: ['besoin rh'],
-    rehabilitation_plan: ['prise en compte'],
-    besoin_amenagement: ["besoin d'aménagement"],
-    besoin_equipements: ["besoin d'équipements"],
-    observations: ['observation'],
-    beneficiaries: ['bénificiaires', 'beneficiaires'],
-    sports: ['sports'],
-};
-
-const stateMappings = {
-    establishment_state: { '1': 'Opérationnel', '2': 'En arrêt', '3': 'Prêt', '4': 'En cours de transformation', '5': 'En cours de construction' },
-    building_state: { '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre' },
-    equipment_state: { '0': 'Non équipé', '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre' }
-};
-
+// Functions to safely convert data types from the parsed JSON
 const toBoolean = (value: any): boolean => {
     if (typeof value === 'boolean') return value;
     if (value === null || value === undefined) return false;
@@ -80,6 +38,61 @@ const toInteger = (value: any): number | undefined => {
     if (value === null || value === undefined || String(value).trim() === '') return undefined;
     const num = parseInt(String(value).trim(), 10);
     return isNaN(num) ? undefined : num;
+};
+
+const toDate = (value: any): Date | undefined => {
+    if (!value) return undefined;
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date;
+};
+
+// Simplified mapping of potential keys from a generic conversion API to our model
+const headerMappings: { [key: string]: keyof Facility | 'lat' | 'lng' } = {
+    'reference region': 'reference_region',
+    'référence région': 'reference_region',
+    'region': 'region',
+    'région': 'region',
+    'province': 'province',
+    'commune': 'commune',
+    'milieu urbain - rural': 'milieu',
+    'installations sportives': 'installations_sportives',
+    'catégorie abrégée': 'category',
+    "nom de l'établissement": 'name',
+    'nom': 'name',
+    'localisation': 'address',
+    'adresse': 'address',
+    'longitude': 'lng',
+    'lon': 'lng',
+    'latitude': 'lat',
+    'propriété': 'ownership',
+    'entité gestionnaire': 'managing_entity',
+    'date dernière rénovation': 'last_renovation_date',
+    'superficie': 'surface_area',
+    "capacité d'accueil": 'capacity',
+    'effectif': 'staff_count',
+    "état de l'établissement": 'establishment_state',
+    'espace aménagé': 'developed_space',
+    'titre foncier': 'titre_foncier_numero',
+    'etat du bâtiment': 'building_state',
+    'état du bâtiment': 'building_state',
+    'etat des équipements': 'equipment_state',
+    'état des équipements': 'equipment_state',
+    'nombre du personnel du secteur sport affecté': 'sports_staff_count',
+    'besoin rh': 'hr_needs',
+    'prise en compte': 'rehabilitation_plan',
+    "besoin d'aménagement": 'besoin_amenagement',
+    "besoin d'équipements": 'besoin_equipements',
+    'observation': 'observations',
+    'bénificiaires': 'beneficiaries',
+    'beneficiaires': 'beneficiaries',
+    'sports': 'sports',
+};
+
+
+const stateMappings = {
+    establishment_state: { '1': 'Opérationnel', '2': 'En arrêt', '3': 'Prêt', '4': 'En cours de transformation', '5': 'En cours de construction' },
+    building_state: { '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre' },
+    equipment_state: { '0': 'Non équipé', '1': 'Bon', '2': 'Moyen', '3': 'Mauvais', '4': 'Médiocre' }
 };
 
 
@@ -107,7 +120,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     }
   };
 
-  const parseFile = () => {
+  const parseFile = async () => {
     if (!file) {
       setError('Veuillez sélectionner un fichier.');
       return;
@@ -121,119 +134,99 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     setError(null);
     setParsedData([]);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        
-        // Convert sheet to CSV string first
-        const csvData = XLSX.utils.sheet_to_csv(worksheet, { header: 1 });
-        const lines = csvData.split('\n');
+    const formData = new FormData();
+    formData.append('file', file);
 
-        if (lines.length < 2) {
-          throw new Error('La feuille de calcul est vide ou ne contient que des en-têtes.');
-        }
+    try {
+      // Use a reliable external API to convert XLS/XLSX to JSON
+      const response = await fetch('https://api2.docconversion.online/v1/convert/xls-to-json', {
+        method: 'POST',
+        body: formData,
+      });
 
-        const rawHeaders = lines[0].split(',');
-
-        // 1. Create a map from our model field to the column index in the sheet
-        const columnIndexMap: { [key: string]: number } = {};
-        
-        Object.entries(headerMappings).forEach(([modelField, possibleHeaders]) => {
-            const normalizedPossibleHeaders = possibleHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]/gi, ''));
-            
-            rawHeaders.forEach((rawHeader, index) => {
-                const normalizedHeader = rawHeader.toLowerCase().trim().replace(/[^a-z0-9]/gi, '');
-                if (normalizedPossibleHeaders.some(h => normalizedHeader.includes(h))) {
-                    if (columnIndexMap[modelField] === undefined) { // Take the first match
-                        columnIndexMap[modelField] = index;
-                    }
-                }
-            });
-        });
-
-        // 2. Process each data row using the columnIndexMap
-        const facilities: Partial<Facility>[] = lines.slice(1).map(line => {
-          const rowArray = line.split(',');
-          let facility: Partial<Facility> & { lat?: number, lng?: number } = {};
-
-          Object.entries(columnIndexMap).forEach(([modelField, index]) => {
-            const value = rowArray[index];
-            if (value === null || value === undefined || String(value).trim() === '') return;
-            
-            let processedValue: any = String(value).trim();
-            
-            const field = modelField as keyof Facility | 'lat' | 'lng';
-
-            if (field === 'lat' || field === 'lng') {
-              processedValue = toFloat(value);
-            } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count', 'beneficiaries'].includes(field)) {
-              processedValue = toInteger(value);
-            } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space'].includes(field)) {
-              processedValue = toBoolean(value);
-            } else if (field === 'sports' && typeof value === 'string') {
-              processedValue = value.split(/[,;]/).map(s => s.trim()).filter(Boolean);
-            } else if (field === 'last_renovation_date') {
-               const dateNumber = parseFloat(value);
-               if (!isNaN(dateNumber) && dateNumber > 1) {
-                  // It's likely an Excel date serial number
-                  processedValue = XLSX.SSF.parse_date_code(dateNumber);
-               } else if (!isNaN(Date.parse(value))) {
-                  processedValue = new Date(value);
-               } else {
-                  processedValue = undefined;
-               }
-            } else if (Object.keys(stateMappings).includes(field)) {
-                const key = field as keyof typeof stateMappings;
-                const code = String(value).trim();
-                if (stateMappings[key] && (stateMappings[key] as any)[code]) {
-                    processedValue = (stateMappings[key] as any)[code];
-                }
-            }
-            
-            (facility as any)[modelField] = processedValue;
-          });
-          
-          if (typeof facility.lat === 'number' && typeof facility.lng === 'number') {
-             facility.location = { lat: facility.lat, lng: facility.lng };
-          }
-          delete facility.lat;
-          delete facility.lng;
-
-          if (!facility.name || !facility.location) {
-             return null;
-          }
-          
-          facility.adminId = user.uid;
-          if (!facility.sports) facility.sports = [];
-
-          return facility;
-
-        }).filter((f): f is Facility => f !== null);
-        
-        if (facilities.length === 0) {
-            throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez que les colonnes 'nom de l'établissement' (ou 'nom'), 'latitude' et 'longitude' sont présentes et remplies avec des données valides.");
-        }
-
-        setParsedData(facilities);
-
-      } catch (err: any) {
-        console.error("Parsing error:", err);
-        setError(`Erreur lors de l'analyse du fichier : ${err.message}`);
-      } finally {
-        setIsParsing(false);
+      if (!response.ok) {
+        throw new Error(`Erreur du service de conversion: ${response.statusText}`);
       }
-    };
 
-    reader.onerror = () => {
-        setError("Impossible de lire le fichier.");
-        setIsParsing(false);
-    };
+      const jsonResult = await response.json();
 
-    reader.readAsBinaryString(file);
+      if (!jsonResult || !Array.isArray(jsonResult) || jsonResult.length === 0) {
+        throw new Error('Le fichier est vide ou dans un format non reconnu par le service de conversion.');
+      }
+
+      // Now, map the clean JSON to our data model
+      const facilities = jsonResult.map((rawRow: any) => {
+        let facility: Partial<Facility> & { lat?: number, lng?: number } = {};
+        
+        for (const rawHeader in rawRow) {
+            const normalizedHeader = rawHeader.toLowerCase().trim();
+            
+            // Find a matching key in our mappings
+            const modelField = Object.keys(headerMappings).find(key => normalizedHeader.includes(key));
+            
+            if (modelField) {
+                 const targetField = headerMappings[modelField];
+                 (facility as any)[targetField] = rawRow[rawHeader];
+            }
+        }
+
+        // --- Data Type Conversions ---
+        facility.lat = toFloat(facility.lat);
+        facility.lng = toFloat(facility.lng);
+
+        if (facility.lat && facility.lng) {
+            facility.location = { lat: facility.lat, lng: facility.lng };
+        }
+
+        facility.surface_area = toInteger(facility.surface_area);
+        facility.capacity = toInteger(facility.capacity);
+        facility.staff_count = toInteger(facility.staff_count);
+        facility.sports_staff_count = toInteger(facility.sports_staff_count);
+        facility.beneficiaries = toInteger(facility.beneficiaries);
+        
+        facility.hr_needs = toBoolean(facility.hr_needs);
+        facility.besoin_amenagement = toBoolean(facility.besoin_amenagement);
+        facility.besoin_equipements = toBoolean(facility.besoin_equipements);
+        facility.developed_space = toBoolean(facility.developed_space);
+
+        facility.last_renovation_date = toDate(facility.last_renovation_date);
+        
+        if (typeof facility.sports === 'string') {
+            facility.sports = facility.sports.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+        } else {
+            facility.sports = [];
+        }
+
+        // Map state fields
+        Object.keys(stateMappings).forEach(key => {
+            const field = key as keyof typeof stateMappings;
+            const code = String(facility[field]).trim();
+            if (stateMappings[field] && (stateMappings[field] as any)[code]) {
+                (facility as any)[field] = (stateMappings[field] as any)[code];
+            }
+        });
+        
+        if (!facility.name || !facility.location) {
+             return null;
+        }
+          
+        facility.adminId = user.uid;
+
+        return facility;
+
+      }).filter((f): f is Facility => f !== null);
+
+      if (facilities.length === 0) {
+        throw new Error("Aucune ligne valide n'a pu être lue après conversion. Vérifiez que le fichier contient bien les colonnes 'nom', 'latitude', et 'longitude' avec des données valides.");
+      }
+
+      setParsedData(facilities);
+    } catch (err: any) {
+      console.error("Parsing error:", err);
+      setError(`Erreur lors de l'analyse du fichier : ${err.message}`);
+    } finally {
+      setIsParsing(false);
+    }
   };
 
   const handleImport = async () => {
@@ -246,9 +239,10 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
         parsedData.forEach(facilityData => {
             const docRef = doc(facilitiesCollectionRef); 
+            const { lat, lng, ...rest } = facilityData as any;
             const payload = {
-                ...facilityData,
-                sports: facilityData.sports || [],
+                ...rest,
+                location: facilityData.location,
                 type: 'outdoor', // Default value
                 accessible: facilityData.accessible || false,
                 city: facilityData.commune || '', // Use commune as city
@@ -297,9 +291,9 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Importer des Installations depuis Excel</DialogTitle>
+          <DialogTitle>Importer des Installations depuis un Fichier</DialogTitle>
           <DialogDescription>
-            Sélectionnez un fichier .xlsx ou .csv. Le système essaiera de faire correspondre automatiquement les colonnes.
+            Sélectionnez un fichier .xlsx ou .csv. Le système le convertira et essaiera de mapper les colonnes.
           </DialogDescription>
         </DialogHeader>
 
@@ -360,3 +354,5 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     </Dialog>
   );
 }
+
+    
