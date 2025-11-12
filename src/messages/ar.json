@@ -107,11 +107,46 @@
     "Users": {
       "title": "المستخدمون",
       "description": "إدارة جميع مستخدمي المنصة.",
+      "addUser": "إضافة مستخدم",
       "tableHeaderUser": "المستخدم",
       "tableHeaderRole": "الدور",
       "tableHeaderJoined": "تاريخ الانضمام",
+      "tableHeaderActions": "الإجراءات",
       "loading": "جار تحميل المستخدمين...",
-      "noUsers": "لم يتم العثور على مستخدمين."
+      "noUsers": "لم يتم العثور على مستخدمين.",
+      "roles": {
+        "super_admin": "مدير عام",
+        "admin": "مدير",
+        "user": "مستخدم"
+      },
+      "deleteConfirmTitle": "هل أنت متأكد؟",
+      "deleteConfirmDescription": "هذا الإجراء لا يمكن التراجع عنه. سيؤدي هذا إلى حذف حساب المستخدم بشكل دائم.",
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "deleteSuccessTitle": "تم حذف المستخدم",
+      "deleteSuccessDescription": "تم حذف المستخدم بنجاح.",
+      "deleteErrorTitle": "خطأ في الحذف",
+      "form": {
+        "addUserTitle": "إضافة مستخدم جديد",
+        "addUserDescription": "إنشاء مستخدم جديد وتعيين دور له.",
+        "editUserTitle": "تعديل المستخدم",
+        "editUserDescription": "تحديث اسم المستخدم ودوره.",
+        "nameLabel": "الاسم الكامل",
+        "emailLabel": "البريد الإلكتروني",
+        "passwordLabel": "كلمة المرور",
+        "passwordHelp": "مطلوب للمستخدمين الجدد فقط. اتركه فارغًا لعدم التغيير.",
+        "roleLabel": "الدور",
+        "addButton": "إضافة مستخدم",
+        "updateButton": "تحديث المستخدم",
+        "addingButton": "جاري الإضافة...",
+        "updatingButton": "جاري التحديث...",
+        "addSuccessTitle": "تمت إضافة المستخدم",
+        "addSuccessDescription": "تم إنشاء المستخدم الجديد بنجاح.",
+        "updateSuccessTitle": "تم تحديث المستخدم",
+        "updateSuccessDescription": "تم تحديث معلومات المستخدم.",
+        "addErrorTitle": "خطأ في الإضافة",
+        "updateErrorTitle": "خطأ في التحديث"
+      }
     }
   }
 }

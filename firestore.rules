@@ -36,8 +36,10 @@ service cloud.firestore {
      **************************************************/
     match /users/{userId} {
       allow get: if isSignedIn();
-      allow list: if isSuperAdmin();
-      allow create: if isOwner(userId);
+      // Admins and Super Admins can list users.
+      allow list: if isAdmin();
+      // A user can be created if the requester is a super_admin or during their own sign-up.
+      allow create: if isSuperAdmin() || isOwner(userId);
       // A user can update their own profile. A super_admin can update any profile.
       allow update: if isOwner(userId) || isSuperAdmin();
       // A user can delete their own profile. A super_admin can delete any profile.

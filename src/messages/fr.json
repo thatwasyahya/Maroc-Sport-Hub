@@ -107,11 +107,46 @@
     "Users": {
       "title": "Utilisateurs",
       "description": "Gérez tous les utilisateurs de la plateforme.",
+      "addUser": "Ajouter un utilisateur",
       "tableHeaderUser": "Utilisateur",
       "tableHeaderRole": "Rôle",
       "tableHeaderJoined": "Inscrit le",
+      "tableHeaderActions": "Actions",
       "loading": "Chargement des utilisateurs...",
-      "noUsers": "Aucun utilisateur trouvé."
+      "noUsers": "Aucun utilisateur trouvé.",
+      "roles": {
+        "super_admin": "Super Admin",
+        "admin": "Admin",
+        "user": "Utilisateur"
+      },
+      "deleteConfirmTitle": "Êtes-vous sûr ?",
+      "deleteConfirmDescription": "Cette action est irréversible et supprimera définitivement l'utilisateur.",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "deleteSuccessTitle": "Utilisateur supprimé",
+      "deleteSuccessDescription": "L'utilisateur a été supprimé avec succès.",
+      "deleteErrorTitle": "Erreur de suppression",
+      "form": {
+        "addUserTitle": "Ajouter un nouvel utilisateur",
+        "addUserDescription": "Créez un nouvel utilisateur et assignez-lui un rôle.",
+        "editUserTitle": "Modifier l'utilisateur",
+        "editUserDescription": "Mettez à jour le nom et le rôle de l'utilisateur.",
+        "nameLabel": "Nom complet",
+        "emailLabel": "Email",
+        "passwordLabel": "Mot de passe",
+        "passwordHelp": "Requis uniquement pour les nouveaux utilisateurs. Laisser vide pour ne pas changer.",
+        "roleLabel": "Rôle",
+        "addButton": "Ajouter l'utilisateur",
+        "updateButton": "Mettre à jour l'utilisateur",
+        "addingButton": "Ajout en cours...",
+        "updatingButton": "Mise à jour...",
+        "addSuccessTitle": "Utilisateur ajouté",
+        "addSuccessDescription": "Le nouvel utilisateur a été créé avec succès.",
+        "updateSuccessTitle": "Utilisateur mis à jour",
+        "updateSuccessDescription": "Les informations de l'utilisateur ont été mises à jour.",
+        "addErrorTitle": "Erreur d'ajout",
+        "updateErrorTitle": "Erreur de mise à jour"
+      }
     }
   }
 }

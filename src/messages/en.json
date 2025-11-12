@@ -107,11 +107,46 @@
      "Users": {
       "title": "Users",
       "description": "Manage all users of the platform.",
+      "addUser": "Add User",
       "tableHeaderUser": "User",
       "tableHeaderRole": "Role",
       "tableHeaderJoined": "Joined On",
+      "tableHeaderActions": "Actions",
       "loading": "Loading users...",
-      "noUsers": "No users found."
+      "noUsers": "No users found.",
+      "roles": {
+        "super_admin": "Super Admin",
+        "admin": "Admin",
+        "user": "User"
+      },
+      "deleteConfirmTitle": "Are you absolutely sure?",
+      "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user account.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleteSuccessTitle": "User Deleted",
+      "deleteSuccessDescription": "The user has been successfully deleted.",
+      "deleteErrorTitle": "Delete Error",
+      "form": {
+        "addUserTitle": "Add New User",
+        "addUserDescription": "Create a new user and assign them a role.",
+        "editUserTitle": "Edit User",
+        "editUserDescription": "Update the user's name and role.",
+        "nameLabel": "Full Name",
+        "emailLabel": "Email",
+        "passwordLabel": "Password",
+        "passwordHelp": "Required for new users only. Leave blank to keep current password.",
+        "roleLabel": "Role",
+        "addButton": "Add User",
+        "updateButton": "Update User",
+        "addingButton": "Adding...",
+        "updatingButton": "Updating...",
+        "addSuccessTitle": "User Added",
+        "addSuccessDescription": "The new user has been created successfully.",
+        "updateSuccessTitle": "User Updated",
+        "updateSuccessDescription": "The user's information has been updated.",
+        "addErrorTitle": "Add Error",
+        "updateErrorTitle": "Update Error"
+      }
     }
   }
 }
