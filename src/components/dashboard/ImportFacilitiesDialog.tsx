@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,14 +14,15 @@ import { useFirestore, useUser } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, File, Loader2, CheckCircle, AlertTriangle, ArrowRight, X } from 'lucide-react';
-import type { Facility } from '@/lib/types';
+import type { Facility, EstablishmentState, BuildingState, EquipmentState } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { ScrollArea } from '../ui/scroll-area';
+import { parse } from 'papaparse'; // Using a robust CSV parser
 
 type ImportStep = 'upload' | 'mapping' | 'preview' | 'importing' | 'finished';
 
-const REQUIRED_FIELDS = ['name', 'location.lat', 'location.lng'];
+const REQUIRED_FIELDS: (keyof Facility | string)[] = ['name', 'location.lat', 'location.lng'];
 
 const DB_FIELDS: { key: keyof Facility | string, label: string, required?: boolean, notes?: string }[] = [
     { key: 'name', label: 'Nom de l\'établissement', required: true },
@@ -37,21 +37,22 @@ const DB_FIELDS: { key: keyof Facility | string, label: string, required?: boole
     { key: 'categorie_abregee', label: 'Catégorie abrégée' },
     { key: 'ownership', label: 'Propriété' },
     { key: 'managing_entity', label: 'Entité gestionnaire' },
-    { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format date' },
+    { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format AAAA-MM-JJ' },
     { key: 'surface_area', label: 'Superficie (m²)', notes: 'Numérique' },
     { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique' },
     { key: 'staff_count', label: 'Effectif total', notes: 'Numérique' },
-    { key: 'establishment_state', label: 'État de l\'établissement' },
-    { key: 'building_state', label: 'État du bâtiment' },
-    { key: 'equipment_state', label: 'État des équipements' },
+    { key: 'establishment_state', label: 'État de l\'établissement', notes: 'ex: Opérationnel, En arrêt...' },
+    { key: 'building_state', label: 'État du bâtiment', notes: 'ex: Bon, Moyen...' },
+    { key: 'equipment_state', label: 'État des équipements', notes: 'ex: Non équipé, Bon...' },
     { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique' },
-    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Oui/Non' },
-    { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Oui/Non' },
-    { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Oui/Non' },
+    { key: 'hr_needs', label: 'Besoin en RH', notes: 'oui/non' },
+    { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'oui/non' },
+    { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'oui/non' },
     { key: 'rehabilitation_plan', label: 'Plan de réhabilitation' },
     { key: 'observations', label: 'Observations' },
     { key: 'sports', label: 'Sports', notes: 'Séparés par des virgules' },
 ];
+
 
 export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
     const { user } = useUser();
@@ -61,6 +62,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
     const [step, setStep] = useState<ImportStep>('upload');
     const [file, setFile] = useState<File | null>(null);
     const [fileHeaders, setFileHeaders] = useState<string[]>([]);
+    const [fileData, setFileData] = useState<any[]>([]);
     const [columnMapping, setColumnMapping] = useState<Record<string, string | undefined>>({});
     const [parsedData, setParsedData] = useState<Partial<Facility>[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -69,56 +71,55 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
         setStep('upload');
         setFile(null);
         setFileHeaders([]);
+        setFileData([]);
         setColumnMapping({});
         setParsedData([]);
         setError(null);
     };
-
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) return;
 
         setFile(selectedFile);
         setError(null);
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const data = event.target?.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
-                const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                
-                if (jsonData.length < 1) {
-                    setError('Le fichier est vide ou illisible.');
+        parse(selectedFile, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+                if (results.errors.length > 0) {
+                    setError('Erreur lors de la lecture du fichier CSV. Assurez-vous qu\'il est valide.');
+                    console.error("CSV Parsing errors:", results.errors);
                     return;
                 }
-                const headers = (jsonData[0] as string[]).map(h => h.trim());
-                setFileHeaders(headers.filter(h => h)); 
-                
+                if (!results.data || results.data.length === 0) {
+                    setError('Le fichier CSV est vide ou ne contient pas de données.');
+                    return;
+                }
+                const headers = results.meta.fields || [];
+                setFileHeaders(headers);
+                setFileData(results.data);
+
                 // Auto-mapping attempt
                 const initialMapping: Record<string, string> = {};
-                const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/gi, '');
-
+                const normalize = (str: string) => (str || '').trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
+                
                 DB_FIELDS.forEach(field => {
-                    const normalizedFieldLabel = normalize(field.label);
-                    const foundHeader = headers.find(h => {
-                        const normalizedHeader = normalize(h);
-                        return normalizedHeader.includes(normalizedFieldLabel);
-                    });
+                    const normalizedFieldLabel = normalize(field.label.split('(')[0]);
+                    const foundHeader = headers.find(h => normalize(h).includes(normalizedFieldLabel));
                     if (foundHeader) {
                         initialMapping[field.key] = foundHeader;
                     }
                 });
+
                 setColumnMapping(initialMapping);
                 setStep('mapping');
-            } catch (err) {
-                console.error(err);
-                setError('Erreur lors de la lecture du fichier. Assurez-vous que c\'est un fichier Excel valide.');
+            },
+            error: (err: any) => {
+                setError('Une erreur est survenue lors de la lecture du fichier : ' + err.message);
             }
-        };
-        reader.readAsBinaryString(selectedFile);
+        });
     };
 
     const handleMappingChange = (dbField: string, fileHeader: string) => {
@@ -134,56 +135,36 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
         }
 
         try {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const data = event.target?.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
-                const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
-                const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
-
-                const facilities: Partial<Facility>[] = jsonData.map(row => {
-                    const facility: Partial<Facility> & { location?: { lat: number, lng: number }} = {};
-                    
-                    for (const [dbFieldKey, fileHeader] of Object.entries(columnMapping)) {
-                        if (fileHeader && row[fileHeader] !== undefined) {
-                            let value = row[fileHeader];
-                            
-                            if (dbFieldKey.startsWith('location.')) {
-                                const coordKey = dbFieldKey.split('.')[1] as 'lat' | 'lng';
-                                const numValue = parseFloat(String(value).replace(',', '.'));
-                                if (!isNaN(numValue)) {
-                                    if (!facility.location) facility.location = { lat: 0, lng: 0 };
-                                    facility.location[coordKey] = numValue;
-                                }
-                            } else if (['hr_needs', 'besoin_amenagement', 'besoin_equipements', 'developed_space', 'accessible'].includes(dbFieldKey)) {
-                                 const boolValue = ['true', 'oui', 'yes', '1', 'vrai'].includes(String(value).toLowerCase());
-                                (facility as any)[dbFieldKey] = boolValue;
-                            } else if (['surface_area', 'capacity', 'staff_count', 'sports_staff_count', 'beneficiaries'].includes(dbFieldKey)) {
-                                const numValue = parseFloat(String(value).replace(',', '.'));
-                                if(!isNaN(numValue)) (facility as any)[dbFieldKey] = numValue;
-                            } else if (dbFieldKey === 'last_renovation_date' && typeof value === 'number') {
-                                // Handle Excel date serial number
-                                const date = XLSX.SSF.parse_date_code(value);
-                                (facility as any)[dbFieldKey] = new Date(date.y, date.m - 1, date.d);
-                            } else if (dbFieldKey === 'sports' && typeof value === 'string') {
-                                facility.sports = value.split(',').map(s => s.trim());
-                            } else {
-                               (facility as any)[dbFieldKey] = value;
+            const facilities: Partial<Facility>[] = fileData.map(row => {
+                const facility: Partial<Facility> & { location?: { lat: number, lng: number }} = {};
+                
+                for (const [dbFieldKey, fileHeader] of Object.entries(columnMapping)) {
+                    if (fileHeader && row[fileHeader] !== undefined) {
+                        let value = row[fileHeader];
+                        
+                        // Handle location separately
+                        if (dbFieldKey === 'location.lat' || dbFieldKey === 'location.lng') {
+                            const coordKey = dbFieldKey.split('.')[1] as 'lat' | 'lng';
+                            const numValue = parseFloat(String(value).replace(',', '.'));
+                            if (!isNaN(numValue)) {
+                                if (!facility.location) facility.location = { lat: 0, lng: 0 };
+                                facility.location[coordKey] = numValue;
                             }
+                        } else {
+                            // Assign value to the correct field in facility object
+                            (facility as any)[dbFieldKey] = value;
                         }
                     }
-                    return facility;
-                }).filter(f => f.name && f.location?.lat && f.location?.lng);
-                
-                if (facilities.length === 0) {
-                    throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez votre mappage et le contenu du fichier.");
                 }
-                
-                setParsedData(facilities);
-                setStep('preview');
-            };
-            reader.readAsBinaryString(file!);
+                return facility;
+            }).filter(f => f.name && f.location?.lat && f.location?.lng);
+            
+            if (facilities.length === 0) {
+                 throw new Error("Aucune ligne valide n'a pu être lue. Vérifiez votre mappage et le contenu du fichier.");
+            }
+            
+            setParsedData(facilities);
+            setStep('preview');
         } catch (err: any) {
             console.error(err);
             setError(err.message || 'Une erreur est survenue lors du traitement des données.');
@@ -198,7 +179,6 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
 
         for (const facility of parsedData) {
             try {
-                // Ensure default values for arrays
                 if (!facility.sports) facility.sports = [];
                 if (!facility.equipments) facility.equipments = [];
 
@@ -233,9 +213,9 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Importer des Installations depuis Excel</DialogTitle>
+                    <DialogTitle>Importer des Installations depuis un fichier CSV</DialogTitle>
                     <DialogDescription>
-                        Suivez les étapes pour importer vos données.
+                        Étape 1: Exportez vos données Excel au format CSV (séparateur: virgule) et téléversez le fichier.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -249,15 +229,15 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                 {step === 'upload' && (
                     <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 rounded-lg text-center p-8">
                         <Upload className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                        <h3 className="font-semibold text-lg mb-2">Glissez-déposez votre fichier ici</h3>
+                        <h3 className="font-semibold text-lg mb-2">Glissez-déposez votre fichier .CSV ici</h3>
                         <p className="text-muted-foreground mb-4">ou</p>
                         <Button asChild>
                             <label htmlFor="file-upload">
                                 Parcourir les fichiers
-                                <input id="file-upload" type="file" className="sr-only" onChange={handleFileChange} accept=".xlsx, .xls, .csv" />
+                                <input id="file-upload" type="file" className="sr-only" onChange={handleFileChange} accept=".csv" />
                             </label>
                         </Button>
-                        <p className="text-xs text-muted-foreground mt-4">Formats supportés: .xlsx, .xls, .csv</p>
+                        <p className="text-xs text-muted-foreground mt-4">Format supporté: .csv</p>
                     </div>
                 )}
                 
@@ -273,7 +253,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                                             {field.label} {field.required && <span className="text-destructive">*</span>}
                                         </label>
                                         <Select
-                                            value={columnMapping[field.key]}
+                                            value={columnMapping[field.key] || ''}
                                             onValueChange={(value) => handleMappingChange(field.key, value)}
                                         >
                                             <SelectTrigger>
@@ -318,7 +298,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: { open: b
                                     {parsedData.slice(0, 10).map((facility, index) => (
                                         <TableRow key={index}>
                                             <TableCell>{facility.name}</TableCell>
-                                            <TableCell>{facility.region || 'N/A'}</TableCell>
+                                            <TableCell>{(facility as any).region || 'N/A'}</TableCell>
                                             <TableCell>{facility.location?.lat.toFixed(4)}</TableCell>
                                             <TableCell>{facility.location?.lng.toFixed(4)}</TableCell>
                                         </TableRow>
