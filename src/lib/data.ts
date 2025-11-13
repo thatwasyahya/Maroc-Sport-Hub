@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import type { Facility, User, UserRole, EquipmentItem } from "./types";
+import type { Facility, User, UserRole, EquipmentItem, EstablishmentState, BuildingState, EquipmentState } from "./types";
 import { regions, cities } from "./maroc-api";
 
 const createRandomUser = (role: UserRole, id: number): User => ({
@@ -47,25 +47,56 @@ const generateRandomEquipments = (): EquipmentItem[] => {
 const createRandomFacility = (): Facility => {
     const region = faker.helpers.arrayElement(regions);
     const city = faker.helpers.arrayElement(cities[region.name] || []);
-    
+    const hasLocation = faker.datatype.boolean(0.8); // 80% chance of having coordinates
+
     return {
         id: faker.string.uuid(),
         adminId: faker.string.uuid(),
-        external_id: `ext_${faker.string.alphanumeric(10)}`,
-        name: `${faker.company.name()} Sports Complex`,
+        
+        name: `Complexe Sportif ${faker.location.city()}`,
+        description: faker.lorem.paragraph(),
+        sports: faker.helpers.arrayElements(sports, { min: 1, max: 4 }),
+        equipments: generateRandomEquipments(),
+
+        // Location Info
         region: region.name,
-        city,
+        province: faker.helpers.arrayElement(['Province A', 'Province B', 'Province C']),
+        commune: faker.helpers.arrayElement(['Commune X', 'Commune Y', 'Commune Z']),
         address: faker.location.streetAddress(),
-        location: {
+        milieu: faker.helpers.arrayElement(['Urbain', 'Rural']),
+        location: hasLocation ? {
             lat: faker.location.latitude({ min: 30, max: 35 }),
             lng: faker.location.longitude({ min: -9, max: -2 }),
-        },
-        sports: faker.helpers.arrayElements(sports, { min: 1, max: 3 }),
+        } : undefined,
+
+        // Technical & State Info
+        installations_sportives: faker.helpers.arrayElement(['Stade', 'Salle Omnisport', 'Piscine', 'Terrain de Proximité']),
+        categorie_abregee: faker.helpers.arrayElement(['GS', 'SO', 'PO', 'TP']),
+        ownership: faker.helpers.arrayElement(['Public', 'Privé', 'Associatif']),
+        managing_entity: faker.helpers.arrayElement(['Commune', 'Ministère', 'Fédération Royale', 'Club Privé']),
+        last_renovation_date: faker.date.past({ years: 10 }),
+        surface_area: faker.number.int({ min: 500, max: 10000 }),
+        capacity: faker.number.int({ min: 100, max: 5000 }),
+        establishment_state: faker.helpers.arrayElement<EstablishmentState>(['Opérationnel', 'En arrêt', 'En cours de construction', 'Prêt']),
+        developed_space: faker.datatype.boolean(),
+        titre_foncier_numero: `TF/${faker.number.int({ min: 1000, max: 9999 })}`,
+        building_state: faker.helpers.arrayElement<BuildingState>(['Bon', 'Moyen', 'Mauvais']),
+        equipment_state: faker.helpers.arrayElement<EquipmentState>(['Bon', 'Moyen', 'Non équipé']),
+
+        // HR & Needs
+        staff_count: faker.number.int({ min: 2, max: 50 }),
+        sports_staff_count: faker.number.int({ min: 1, max: 20 }),
+        beneficiaries: faker.number.int({ min: 50, max: 2000 }),
+        hr_needs: faker.datatype.boolean(),
+        besoin_amenagement: faker.datatype.boolean(),
+        besoin_equipements: faker.datatype.boolean(),
+        rehabilitation_plan: `Programme ${faker.number.int({ min: 2024, max: 2028 })}`,
+
+        // Miscellaneous
+        observations: faker.lorem.sentence(),
         type: faker.helpers.arrayElement(["indoor", "outdoor"]),
         accessible: faker.datatype.boolean(),
-        description: faker.lorem.paragraph(),
-        photos: Array.from({ length: 3 }, (_, i) => `https://picsum.photos/seed/${faker.string.uuid()}/800/600`),
-        equipments: generateRandomEquipments(),
+        city: city, // keep for compatibility if needed
     };
 };
 
@@ -75,4 +106,4 @@ export const users: User[] = [
     ...Array.from({ length: 50 }, (_, i) => createRandomUser("user", i + 10)),
 ];
 
-export const facilities: Facility[] = Array.from({ length: 20 }, () => createRandomFacility());
+export const facilities: Facility[] = Array.from({ length: 150 }, () => createRandomFacility());
