@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trash2, Loader2, Upload } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2, Upload, Eye } from 'lucide-react';
 import AddFacilityDialog from '@/components/dashboard/AddFacilityDialog';
 import ImportFacilitiesDialog from '@/components/dashboard/ImportFacilitiesDialog';
 import { useTranslations } from 'next-intl';
@@ -23,6 +23,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import FacilityDetails from '@/components/facility-details';
 import { useToast } from '@/hooks/use-toast';
 
 export default function FacilitiesPage() {
@@ -33,6 +36,7 @@ export default function FacilitiesPage() {
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -50,6 +54,11 @@ export default function FacilitiesPage() {
   const handleEdit = (facility: Facility) => {
     setSelectedFacility(facility);
     setIsAddDialogOpen(true);
+  };
+
+  const handleView = (facility: Facility) => {
+    setSelectedFacility(facility);
+    setIsViewDialogOpen(true);
   };
   
   const handleDelete = async (facilityId: string) => {
@@ -123,7 +132,7 @@ export default function FacilitiesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {facility.sports.map((sport) => (
+                        {(facility.sports || []).map((sport) => (
                           <Badge key={sport} variant="outline">{sport}</Badge>
                         ))}
                       </div>
@@ -133,6 +142,9 @@ export default function FacilitiesPage() {
                            <Loader2 className="ml-auto h-5 w-5 animate-spin" />
                         ) : (
                           <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleView(facility)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => handleEdit(facility)}>
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -171,6 +183,7 @@ export default function FacilitiesPage() {
           </Table>
         </CardContent>
       </Card>
+      
       {isAddDialogOpen && (
         <AddFacilityDialog 
           open={isAddDialogOpen} 
@@ -178,12 +191,30 @@ export default function FacilitiesPage() {
           facility={selectedFacility}
         />
       )}
+      
       {isImportDialogOpen && (
           <ImportFacilitiesDialog
             open={isImportDialogOpen}
             onOpenChange={setIsImportDialogOpen}
           />
       )}
+
+      <Dialog open={isViewDialogOpen} onOpenChange={(open) => { if (!open) setSelectedFacility(null); setIsViewDialogOpen(open); }}>
+          <DialogContent className="max-w-3xl p-0">
+              {selectedFacility && (
+                  <>
+                      <DialogHeader className="p-6 pb-4">
+                          <DialogTitle className="font-headline text-3xl">{selectedFacility.name}</DialogTitle>
+                          <DialogDescription>{selectedFacility.address}</DialogDescription>
+                      </DialogHeader>
+                      <ScrollArea className="max-h-[70vh]">
+                        <FacilityDetails facility={selectedFacility} />
+                      </ScrollArea>
+                  </>
+              )}
+          </DialogContent>
+      </Dialog>
+
     </>
   );
 }
