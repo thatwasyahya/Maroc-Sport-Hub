@@ -62,7 +62,7 @@ export default function FacilityDetails({ facility }: { facility: Facility }) {
       <div className="px-6 pt-4 space-y-4">
         <div className="flex items-start text-muted-foreground text-sm">
           <MapPin className="w-4 h-4 mr-2 mt-1 shrink-0" />
-          <span>{facility.commune}, {facility.province}, {facility.region}</span>
+          <span>{facility.address}</span>
         </div>
         
         {facility.sports && facility.sports.length > 0 && (

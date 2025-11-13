@@ -17,9 +17,9 @@ export interface EquipmentItem {
   quantity: string; // Can be a number or 'X'
 }
 
-export type EstablishmentState = 'Operationnel' | 'En_arret' | 'Pret' | 'En_cours_operationnalisation' | 'En_cours_construction' | 'Non défini';
-export type BuildingState = 'Bon' | 'Moyen' | 'Mauvais' | 'Mediocre' | 'Non défini';
-export type EquipmentState = 'Non_equipe' | 'Bon' | 'Moyen' | 'Mauvais' | 'Mediocre' | 'Non défini';
+export type EstablishmentState = 'Opérationnel' | 'En arrêt' | 'Prêt' | 'En cours de transformation' | 'En cours de construction' | 'Non défini';
+export type BuildingState = 'Bon' | 'Moyen' | 'Mauvais' | 'Médiocre' | 'Non défini';
+export type EquipmentState = 'Non équipé' | 'Bon' | 'Moyen' | 'Mauvais' | 'Médiocre' | 'Non défini';
 
 
 export interface Facility {
@@ -35,7 +35,7 @@ export interface Facility {
   categorie_abregee?: string;
   name: string; // Was nom_etablissement
   address: string; // Was localisation
-  location: {
+  location?: {
     lat: number; // was latitude
     lng: number; // was longitude
   };
@@ -45,7 +45,7 @@ export interface Facility {
   surface_area?: number; // was superficie
   capacity?: number; // was capacite_accueil
   staff_count?: number; // was effectif
-  establishment_state?: EstablishmentState; // was etat_etablissement
+  establishment_state?: EstablishmentState;
   developed_space?: boolean; // was espace_amenage
   titre_foncier_numero?: string;
   building_state?: BuildingState; // was etat_batiment

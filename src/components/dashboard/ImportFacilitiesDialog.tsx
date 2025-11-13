@@ -28,8 +28,8 @@ interface ImportFacilitiesDialogProps {
 
 const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string, notes?: string, required?: boolean, keywords: string[] }[] = [
     { key: 'name', label: 'Nom de l\'établissement', required: true, keywords: ['nom_de_letablissement', 'nom'] },
-    { key: 'latitude', label: 'Latitude', required: true, keywords: ['latitude'] },
-    { key: 'longitude', label: 'Longitude', required: true, keywords: ['longitude'] },
+    { key: 'latitude', label: 'Latitude', keywords: ['latitude'] },
+    { key: 'longitude', label: 'Longitude', keywords: ['longitude'] },
     { key: 'region', label: 'Région', keywords: ['region'] },
     { key: 'province', label: 'Province', keywords: ['province'] },
     { key: 'commune', label: 'Commune', keywords: ['commune'] },
@@ -53,7 +53,7 @@ const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string,
     { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)', keywords: ['besoin_damenagement'] },
     { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)', keywords: ['besoin_dequipements'] },
     { key: 'observations', label: 'Observations', keywords: ['observation_sur__les_mesures'] },
-    { key: 'beneficiaries', label: 'Bénéficiaires', notes: 'Numérique', keywords: ['benificiares', 'beneficiaires'] },
+    { key: 'beneficiaries', label: 'Bénéficiaires', keywords: ['benificiares', 'beneficiaires'] },
 ];
 
 const cleanColumnName = (col: string): string => {
@@ -168,59 +168,62 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
       setError('Vous devez être connecté pour importer des données.');
       return;
     }
-
-    const requiredMappingsMet = dbFields.filter(f => f.required).every(field => columnMap[field.key] && columnMap[field.key] !== 'ignore_column');
-    if (!requiredMappingsMet) {
-        setError("Le mappage des champs obligatoires (Nom, Latitude, Longitude) est requis.");
-        return;
-    }
     
     setError(null);
 
     const facilities: Partial<Facility>[] = fileData.map((row) => {
-      let facilityData: Partial<any> = { adminId: user.uid, sports: [], equipments: [] };
-      
-      for (const dbField of dbFields) {
-          const fileHeader = columnMap[dbField.key];
-          if (fileHeader && columnMap[dbField.key] !== 'ignore_column' && row[fileHeader] !== undefined && row[fileHeader] !== null) {
-             const value = row[fileHeader];
-             if (typeof value === 'string' && value.trim() === '') continue;
-             facilityData[dbField.key] = value;
-          }
-      }
-      
-      // Use 'installations_sportives' as a fallback for 'name'
-      let name = facilityData.name ? String(facilityData.name).trim() : null;
-      if (!name && facilityData.installations_sportives) {
-        name = String(facilityData.installations_sportives).trim();
-      }
+        let facilityData: Partial<any> = { adminId: user.uid, sports: [], equipments: [] };
+        
+        for (const dbField of dbFields) {
+            const fileHeader = columnMap[dbField.key];
+            if (fileHeader && columnMap[dbField.key] !== 'ignore_column' && row[fileHeader] !== undefined && row[fileHeader] !== null) {
+               const value = row[fileHeader];
+               if (typeof value === 'string' && value.trim() === '') continue;
+               facilityData[dbField.key] = value;
+            }
+        }
+        
+        let name = facilityData.name ? String(facilityData.name).trim() : null;
+        if (!name && facilityData.installations_sportives) {
+          name = String(facilityData.installations_sportives).trim();
+        }
+  
+        const latString = String(facilityData.latitude || '').replace(',', '.').trim();
+        const lngString = String(facilityData.longitude || '').replace(',', '.').trim();
+        
+        const lat = parseFloat(latString);
+        const lng = parseFloat(lngString);
+        
+        // A row is valid if it has a name. Location is optional.
+        if (name) {
+          const finalData: Partial<Facility> = {
+            ...facilityData,
+            name,
+            surface_area: facilityData.surface_area ? parseFloat(String(facilityData.surface_area).replace(',', '.')) : undefined,
+            capacity: facilityData.capacity ? parseInt(String(facilityData.capacity), 10) : undefined,
+            staff_count: facilityData.staff_count ? parseInt(String(facilityData.staff_count), 10) : undefined,
+            sports_staff_count: facilityData.sports_staff_count ? parseInt(String(facilityData.sports_staff_count), 10) : undefined,
+            beneficiaries: facilityData.beneficiaries ? parseInt(String(facilityData.beneficiaries), 10) : undefined,
+            hr_needs: toBoolean(facilityData.hr_needs),
+            besoin_amenagement: toBoolean(facilityData.besoin_amenagement),
+            besoin_equipements: toBoolean(facilityData.besoin_equipements),
+            developed_space: toBoolean(facilityData.developed_space),
+            sports: [], // Default to empty array, can be populated later
+            equipments: [], // Default to empty array
+          };
 
-      const latString = String(facilityData.latitude || '').replace(',', '.').trim();
-      const lngString = String(facilityData.longitude || '').replace(',', '.').trim();
-      
-      const lat = parseFloat(latString);
-      const lng = parseFloat(lngString);
-      
-      if (name && !isNaN(lat) && !isNaN(lng)) {
-        return {
-          ...facilityData,
-          name,
-          location: { lat, lng },
-          surface_area: facilityData.surface_area ? parseFloat(String(facilityData.surface_area).replace(',', '.')) : undefined,
-          capacity: facilityData.capacity ? parseInt(String(facilityData.capacity), 10) : undefined,
-          staff_count: facilityData.staff_count ? parseInt(String(facilityData.staff_count), 10) : undefined,
-          sports_staff_count: facilityData.sports_staff_count ? parseInt(String(facilityData.sports_staff_count), 10) : undefined,
-          beneficiaries: facilityData.beneficiaries ? parseInt(String(facilityData.beneficiaries), 10) : undefined,
-          hr_needs: toBoolean(facilityData.hr_needs),
-          besoin_amenagement: toBoolean(facilityData.besoin_amenagement),
-          besoin_equipements: toBoolean(facilityData.besoin_equipements),
-          developed_space: toBoolean(facilityData.developed_space),
-          sports: [], // Default to empty array, can be populated later
-          equipments: [], // Default to empty array
-        };
-      }
-      return null;
-    }).filter((f): f is Partial<Facility> => f !== null);
+          if (!isNaN(lat) && !isNaN(lng)) {
+              finalData.location = { lat, lng };
+          }
+          
+          // Remove temporary lat/lng keys
+          delete (finalData as any).latitude;
+          delete (finalData as any).longitude;
+          
+          return finalData;
+        }
+        return null;
+      }).filter((f): f is Partial<Facility> => f !== null);
 
     if (facilities.length === 0) {
       setError("Aucune ligne valide n'a pu être lue. Vérifiez votre mappage et le contenu du fichier.");
@@ -342,8 +345,8 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
                             <TableCell>{facility.name}</TableCell>
                             <TableCell>{facility.region}</TableCell>
                             <TableCell>{facility.province}</TableCell>
-                            <TableCell>{facility.location?.lat}</TableCell>
-                            <TableCell>{facility.location?.lng}</TableCell>
+                            <TableCell>{facility.location?.lat || 'N/A'}</TableCell>
+                            <TableCell>{facility.location?.lng || 'N/A'}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

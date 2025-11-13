@@ -50,28 +50,31 @@ const MapView = ({ facilities, center, zoom, onMarkerClick }: { facilities: Faci
       }
 
       facilities.forEach(facility => {
-        const marker = L.marker([facility.location.lat, facility.location.lng]);
-        
-        const sportIcons = facility.sports.map(sport => {
-            const Icon = sportsIconsMap[sport];
-            return Icon ? `<div class="tooltip-icon">${renderToStaticMarkup(<Icon className="w-4 h-4" />)}</div>` : '';
-        }).join('');
-        
-        const popupContent = `
-          <div class="p-1 font-sans">
-            <h3 class="font-bold text-lg mb-1">${facility.name}</h3>
-            <p class="text-sm text-gray-500">${facility.city}, ${facility.region}</p>
-            <div class="flex gap-1 mt-2">${sportIcons}</div>
-          </div>
-        `;
-        
-        marker.bindPopup(popupContent);
-        
-        marker.on('click', () => {
-          onMarkerClick(facility);
-        });
+        // Only add marker if location data is valid
+        if (facility.location && typeof facility.location.lat === 'number' && typeof facility.location.lng === 'number') {
+          const marker = L.marker([facility.location.lat, facility.location.lng]);
+          
+          const sportIcons = facility.sports.map(sport => {
+              const Icon = sportsIconsMap[sport];
+              return Icon ? `<div class="tooltip-icon">${renderToStaticMarkup(<Icon className="w-4 h-4" />)}</div>` : '';
+          }).join('');
+          
+          const popupContent = `
+            <div class="p-1 font-sans">
+              <h3 class="font-bold text-lg mb-1">${facility.name}</h3>
+              <p class="text-sm text-gray-500">${facility.city}, ${facility.region}</p>
+              <div class="flex gap-1 mt-2">${sportIcons}</div>
+            </div>
+          `;
+          
+          marker.bindPopup(popupContent);
+          
+          marker.on('click', () => {
+            onMarkerClick(facility);
+          });
 
-        markerClusterGroupRef.current?.addLayer(marker);
+          markerClusterGroupRef.current?.addLayer(marker);
+        }
       });
       
       mapInstance.current.invalidateSize();

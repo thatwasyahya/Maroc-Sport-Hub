@@ -44,49 +44,40 @@ import { Switch } from '../ui/switch';
 
 
 const facilityRequestSchema = z.object({
-  name: z.string().min(1, 'Nom est requis.'), // nom_etablissement
-  address: z.string().min(1, 'Adresse est requise.'), // localisation
+  name: z.string().min(1, 'Nom est requis.'),
+  address: z.string().min(1, 'Adresse est requise.'),
 
-  // Location fields
   region: z.string().min(1, "Région est requise."),
   province: z.string().optional(),
   commune: z.string().optional(),
   milieu: z.enum(['Urbain', 'Rural']).optional(),
 
-  // Classification
   installations_sportives: z.string().optional(),
   categorie_abregee: z.string().optional(),
   
-  // Ownership and Management
-  ownership: z.string().optional(), // propriete
-  managing_entity: z.string().optional(), // entite_gestionnaire
+  ownership: z.string().optional(),
+  managing_entity: z.string().optional(),
   titre_foncier_numero: z.string().optional(),
 
-  // Dates
-  last_renovation_date: z.date().optional(), // date_derniere_renovation
+  last_renovation_date: z.date().optional(),
 
-  // Specs
-  surface_area: z.coerce.number().optional(), // superficie
-  capacity: z.coerce.number().optional(), // capacite_accueil
-  staff_count: z.coerce.number().optional(), // effectif
-  sports_staff_count: z.coerce.number().optional(), // nombre_personnel_sport
+  surface_area: z.coerce.number().optional(),
+  capacity: z.coerce.number().optional(),
+  staff_count: z.coerce.number().optional(),
+  sports_staff_count: z.coerce.number().optional(),
   beneficiaries: z.coerce.number().optional(),
 
-  // State
-  establishment_state: z.enum(['Operationnel', 'En_arret', 'Pret', 'En_cours_operationnalisation', 'En_cours_construction', 'Non défini']).optional(),
-  building_state: z.enum(['Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini']).optional(),
-  equipment_state: z.enum(['Non_equipe', 'Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini']).optional(),
+  establishment_state: z.enum(['Opérationnel', 'En arrêt', 'Prêt', 'En cours de transformation', 'En cours de construction', 'Non défini']).optional(),
+  building_state: z.enum(['Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini']).optional(),
+  equipment_state: z.enum(['Non équipé', 'Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini']).optional(),
 
-  // Needs
-  hr_needs: z.boolean().default(false), // besoin_rh
+  hr_needs: z.boolean().default(false),
   besoin_amenagement: z.boolean().default(false),
   besoin_equipements: z.boolean().default(false),
 
-  // Other
-  rehabilitation_plan: z.string().optional(), // prise_en_compte_prog_rehabilitation_annee
-  observations: z.string().optional(), // observation_reouverture
+  rehabilitation_plan: z.string().optional(),
+  observations: z.string().optional(),
   
-  // Legacy/simplified fields
   description: z.string().optional(),
   sports: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "Vous devez sélectionner au moins un sport.",
@@ -97,7 +88,7 @@ const facilityRequestSchema = z.object({
   })).optional(),
   type: z.enum(["indoor", "outdoor"]),
   accessible: z.boolean().default(false),
-  developed_space: z.boolean().default(false), // espace_amenage
+  developed_space: z.boolean().default(false),
 });
 
 type FacilityRequestFormValues = z.infer<typeof facilityRequestSchema>;
@@ -207,14 +198,9 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
       return;
     }
-    if (lat === null || lng === null) {
-      toast({ variant: 'destructive', title: 'Coordonnées manquantes', description: "Veuillez utiliser le bouton 'Trouver sur la carte' pour obtenir les coordonnées avant de soumettre." });
-      return;
-    }
+
     setIsSubmitting(true);
     try {
-      const location = { lat, lng };
-
       const newRequestData: Omit<FacilityRequest, 'id' | 'city'> = {
         ...data,
         userId: user.uid,
@@ -223,8 +209,11 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
         status: 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        location,
       };
+
+      if (lat !== null && lng !== null) {
+          newRequestData.location = { lat, lng };
+      }
 
       const requestsCollectionRef = collection(firestore, 'facilityRequests');
       await addDoc(requestsCollectionRef, newRequestData);
@@ -250,9 +239,9 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
   };
   
-  const establishmentStates: EstablishmentState[] = ['Operationnel', 'En_arret', 'Pret', 'En_cours_operationnalisation', 'En_cours_construction', 'Non défini'];
-  const buildingStates: BuildingState[] = ['Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini'];
-  const equipmentStates: EquipmentState[] = ['Non_equipe', 'Bon', 'Moyen', 'Mauvais', 'Mediocre', 'Non défini'];
+  const establishmentStates: EstablishmentState[] = ['Opérationnel', 'En arrêt', 'Prêt', 'En cours de transformation', 'En cours de construction', 'Non défini'];
+  const buildingStates: BuildingState[] = ['Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini'];
+  const equipmentStates: EquipmentState[] = ['Non équipé', 'Bon', 'Moyen', 'Mauvais', 'Médiocre', 'Non défini'];
 
 
   return (

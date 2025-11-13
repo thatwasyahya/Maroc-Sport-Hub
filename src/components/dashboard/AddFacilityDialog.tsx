@@ -135,7 +135,6 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
     if (facility && open) {
       const facilityData = { ...facility };
       
-      // Convert server timestamp or string date to Date object
       if (facilityData.last_renovation_date) {
         if (typeof facilityData.last_renovation_date === 'string') {
           facilityData.last_renovation_date = parseISO(facilityData.last_renovation_date);
@@ -146,10 +145,10 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
 
       form.reset({
         ...facilityData,
-        lat: facility.location.lat,
-        lng: facility.location.lng,
+        lat: facility.location?.lat,
+        lng: facility.location?.lng,
       });
-      if (facility.location.lat && facility.location.lng) {
+      if (facility.location?.lat && facility.location?.lng) {
         setGeocodingStatus('success');
       }
     } else if (!facility && open) {
@@ -228,25 +227,20 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
       toast({ variant: 'destructive', title: 'Erreur d\'authentification', description: 'Vous devez être connecté.' });
       return;
     }
-     if (!data.lat || !data.lng) {
-      toast({ variant: 'destructive', title: 'Coordonnées manquantes', description: "Veuillez utiliser le bouton 'Trouver sur la carte' pour obtenir les coordonnées avant de soumettre." });
-      return;
-    }
+    
     setIsSubmitting(true);
     try {
-      const location = {
-        lat: data.lat,
-        lng: data.lng,
-      };
-
       const { lat, lng, ...restOfData } = data;
       
       const facilityPayload: Partial<Facility> = {
         ...restOfData,
         adminId: facility?.adminId || user.uid, // Keep original admin on edit
-        location,
         updatedAt: serverTimestamp(),
       };
+
+      if (lat && lng) {
+        facilityPayload.location = { lat, lng };
+      }
       
       if (isEditing && facility) {
         const facilityRef = doc(firestore, 'facilities', facility.id);

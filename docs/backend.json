@@ -46,8 +46,7 @@
             "properties": {
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
-            },
-            "required": ["lat", "lng"]
+            }
         },
         "reference_region": { "type": "string" },
         "province": { "type": "string" },
@@ -72,7 +71,7 @@
         "beneficiaries": { "type": "string" },
         "observations": { "type": "string" }
       },
-      "required": ["id", "name", "location"]
+      "required": ["id", "name"]
     },
     "FacilityRequest": {
       "title": "FacilityRequest",
@@ -103,8 +102,7 @@
             "properties": {
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
-            },
-            "required": ["lat", "lng"]
+            }
         },
         "reference_region": { "type": "string" },
         "province": { "type": "string" },
@@ -129,7 +127,7 @@
         "beneficiaries": { "type": "string" },
         "observations": { "type": "string" }
       },
-      "required": ["userId", "userName", "userEmail", "status", "name", "region", "city", "sports", "type", "createdAt", "location"]
+      "required": ["userId", "userName", "userEmail", "status", "name", "region", "city", "sports", "type", "createdAt"]
     }
   },
   "auth": {
