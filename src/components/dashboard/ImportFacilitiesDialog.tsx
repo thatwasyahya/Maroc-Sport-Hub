@@ -27,13 +27,13 @@ interface ImportFacilitiesDialogProps {
 }
 
 const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string, notes?: string, required?: boolean, keywords: string[] }[] = [
-    { key: 'name', label: 'Nom de l\'établissement', required: true, keywords: ['nom_de_letablissement', 'nom'] },
+    { key: 'name', label: 'Nom de l\'établissement', required: true, keywords: ['nom_de_letablissement', 'nom_d_etablissement'] },
     { key: 'latitude', label: 'Latitude', keywords: ['latitude'] },
     { key: 'longitude', label: 'Longitude', keywords: ['longitude'] },
     { key: 'region', label: 'Région', keywords: ['region'] },
     { key: 'province', label: 'Province', keywords: ['province'] },
     { key: 'commune', label: 'Commune', keywords: ['commune'] },
-    { key: 'milieu', label: 'Milieu (Urbain/Rural)', keywords: ['milieu_urbain___rural', 'milieu'] },
+    { key: 'milieu', label: 'Milieu (Urbain/Rural)', keywords: ['milieu'] },
     { key: 'installations_sportives', label: 'Type d\'installation', keywords: ['installations_sportives'] },
     { key: 'categorie_abregee', label: 'Catégorie abrégée', keywords: ['categorie_abregee'] },
     { key: 'address', label: 'Adresse/Localisation', keywords: ['localisation', 'adresse'] },
@@ -45,15 +45,15 @@ const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string,
     { key: 'staff_count', label: 'Effectif total', notes: 'Numérique', keywords: ['effectif'] },
     { key: 'establishment_state', label: 'État de l\'établissement', keywords: ['etat_de_letablissement'] },
     { key: 'developed_space', label: 'Espace aménagé', notes: 'Booléen (oui/non)', keywords: ['espace_amenage'] },
-    { key: 'titre_foncier_numero', label: 'N° Titre Foncier', keywords: ['titre_foncier_n'] },
+    { key: 'titre_foncier_numero', label: 'N° Titre Foncier', keywords: ['titre_foncier'] },
     { key: 'building_state', label: 'État du bâtiment', keywords: ['etat_du_batiment'] },
     { key: 'equipment_state', label: 'État des équipements', keywords: ['etat_des_equipements'] },
-    { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique', keywords: ['nombre_du_personnel_du_secteur_sport_affecte'] },
-    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Booléen (oui/non)', keywords: ['besoin__rh'] },
+    { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique', keywords: ['nombre_du_personnel_du_secteur_sport'] },
+    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Booléen (oui/non)', keywords: ['besoin_rh'] },
     { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)', keywords: ['besoin_damenagement'] },
     { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)', keywords: ['besoin_dequipements'] },
-    { key: 'observations', label: 'Observations', keywords: ['observation_sur__les_mesures'] },
-    { key: 'beneficiaries', label: 'Bénéficiaires', keywords: ['benificiares', 'beneficiaires'] },
+    { key: 'observations', label: 'Observations', keywords: ['observation'] },
+    { key: 'beneficiaries', label: 'Bénéficiaires', keywords: ['beneficiaires', 'benificiares'] },
 ];
 
 const cleanColumnName = (col: string): string => {
@@ -158,7 +158,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   const toBoolean = (value: any): boolean => {
     if (typeof value === 'string') {
         const lowerValue = value.trim().toLowerCase();
-        return ['oui', 'yes', 'true', '1'].includes(lowerValue);
+        return ['oui', 'yes', 'true', '1', 'vrai'].includes(lowerValue);
     }
     return !!value;
   }
@@ -174,53 +174,59 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     const facilities: Partial<Facility>[] = fileData.map((row) => {
         let facilityData: Partial<any> = { adminId: user.uid, sports: [], equipments: [] };
         
-        for (const dbField of dbFields) {
+        for (const dbField of db.fields) {
             const fileHeader = columnMap[dbField.key];
             if (fileHeader && columnMap[dbField.key] !== 'ignore_column' && row[fileHeader] !== undefined && row[fileHeader] !== null) {
-               const value = row[fileHeader];
+               let value = row[fileHeader];
                if (typeof value === 'string' && value.trim() === '') continue;
+               
+               // Type conversion
+               switch(dbField.key) {
+                   case 'surface_area':
+                   case 'capacity':
+                   case 'staff_count':
+                   case 'sports_staff_count':
+                   case 'beneficiaries':
+                       value = parseFloat(String(value).replace(',', '.'));
+                       if (isNaN(value)) continue; // Skip if not a valid number
+                       break;
+                   case 'hr_needs':
+                   case 'besoin_amenagement':
+                   case 'besoin_equipements':
+                   case 'developed_space':
+                       value = toBoolean(value);
+                       break;
+                   case 'last_renovation_date':
+                       // Basic date parsing, assuming YYYY-MM-DD or similar
+                       const date = new Date(value);
+                       if (isNaN(date.getTime())) continue; // Skip invalid date
+                       value = date;
+                       break;
+               }
                facilityData[dbField.key] = value;
             }
         }
         
-        let name = facilityData.name ? String(facilityData.name).trim() : null;
-        if (!name && facilityData.installations_sportives) {
-          name = String(facilityData.installations_sportives).trim();
-        }
+        const name = facilityData.name || facilityData.installations_sportives;
   
-        const latString = String(facilityData.latitude || '').replace(',', '.').trim();
-        const lngString = String(facilityData.longitude || '').replace(',', '.').trim();
+        const latString = String(row[columnMap['latitude']] || '').replace(',', '.').trim();
+        const lngString = String(row[columnMap['longitude']] || '').replace(',', '.').trim();
         
         const lat = parseFloat(latString);
         const lng = parseFloat(lngString);
         
-        // A row is valid if it has a name. Location is optional.
         if (name) {
-          const finalData: Partial<Facility> = {
-            ...facilityData,
-            name,
-            surface_area: facilityData.surface_area ? parseFloat(String(facilityData.surface_area).replace(',', '.')) : undefined,
-            capacity: facilityData.capacity ? parseInt(String(facilityData.capacity), 10) : undefined,
-            staff_count: facilityData.staff_count ? parseInt(String(facilityData.staff_count), 10) : undefined,
-            sports_staff_count: facilityData.sports_staff_count ? parseInt(String(facilityData.sports_staff_count), 10) : undefined,
-            beneficiaries: facilityData.beneficiaries ? parseInt(String(facilityData.beneficiaries), 10) : undefined,
-            hr_needs: toBoolean(facilityData.hr_needs),
-            besoin_amenagement: toBoolean(facilityData.besoin_amenagement),
-            besoin_equipements: toBoolean(facilityData.besoin_equipements),
-            developed_space: toBoolean(facilityData.developed_space),
-            sports: [], // Default to empty array, can be populated later
-            equipments: [], // Default to empty array
-          };
-
-          if (!isNaN(lat) && !isNaN(lng)) {
-              finalData.location = { lat, lng };
-          }
-          
-          // Remove temporary lat/lng keys
-          delete (finalData as any).latitude;
-          delete (finalData as any).longitude;
-          
-          return finalData;
+            const finalData: Partial<Facility> = { ...facilityData, name };
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                finalData.location = { lat, lng };
+            }
+            
+            // Remove temporary lat/lng keys
+            delete (finalData as any).latitude;
+            delete (finalData as any).longitude;
+            
+            return finalData;
         }
         return null;
       }).filter((f): f is Partial<Facility> => f !== null);
@@ -241,10 +247,17 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     }
     setIsProcessing(true);
     const batch = writeBatch(firestore);
+    
     parsedData.forEach(facilityData => {
         const docRef = doc(collection(firestore, 'facilities'));
+
+        // Sanitize the object before sending to Firestore
+        const sanitizedData = Object.fromEntries(
+            Object.entries(facilityData).filter(([_, v]) => v !== undefined && v !== null && (typeof v !== 'number' || !isNaN(v)))
+        );
+
         batch.set(docRef, {
-            ...facilityData,
+            ...sanitizedData,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
@@ -257,8 +270,10 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
               description: `${parsedData.length} installations ont été importées avec succès.`,
           });
           onOpenChange(false);
+          resetState();
       })
       .catch((error: any) => {
+          console.error("Firestore batch commit error: ", error);
           setError(`Erreur lors de l'importation : ${error.message}`);
       })
       .finally(() => {
@@ -357,9 +372,13 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
   );
 
   const renderContent = () => {
-    if (step === 'mapping') return renderMappingStep();
-    if (step === 'preview') return renderPreviewStep();
-    return renderUploadStep();
+    switch(step) {
+        case 'mapping': return renderMappingStep();
+        case 'preview': return renderPreviewStep();
+        case 'upload':
+        default:
+            return renderUploadStep();
+    }
   };
   
   const requiredMappingsMet = dbFields.filter(f => f.required).every(field => columnMap[field.key] && columnMap[field.key] !== 'ignore_column');
@@ -390,21 +409,33 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
         </div>
 
         <DialogFooter>
-          {step !== 'upload' && <Button variant="outline" onClick={() => setStep(step === 'preview' ? 'mapping' : 'upload')}>Précédent</Button>}
-          <Button variant="ghost" onClick={() => { onOpenChange(false); resetState(); }}>Annuler</Button>
-          {step === 'mapping' && 
-            <Button onClick={processData} disabled={!requiredMappingsMet}>
-                Étape suivante : Prévisualiser
+          <Button variant="ghost" onClick={() => { onOpenChange(false); }}>Annuler</Button>
+          {step === 'upload' && file &&
+            <Button onClick={() => setStep('mapping')} disabled={!file}>
+                Étape Suivante : Mapper
             </Button>
           }
+          {step === 'mapping' && 
+            <>
+              <Button variant="outline" onClick={() => setStep('upload')}>Précédent</Button>
+              <Button onClick={processData} disabled={!requiredMappingsMet}>
+                  Étape Suivante : Prévisualiser
+              </Button>
+            </>
+          }
           {step === 'preview' &&
-             <Button onClick={handleImport} disabled={isProcessing}>
-                {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isProcessing ? 'Importation...' : `Importer ${parsedData.length} Lignes`}
-            </Button>
+            <>
+              <Button variant="outline" onClick={() => setStep('mapping')}>Précédent</Button>
+              <Button onClick={handleImport} disabled={isProcessing}>
+                  {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isProcessing ? 'Importation...' : `Importer ${parsedData.length} Lignes`}
+              </Button>
+            </>
           }
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
+    
