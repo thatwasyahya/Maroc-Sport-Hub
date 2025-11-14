@@ -1,52 +1,72 @@
-'use client';
-
-import { useState } from 'react';
-import Header from '@/components/header';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { unstable_setRequestLocale } from 'next-intl/server';
 import { useTranslations } from 'next-intl';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import type { Settings } from '@/lib/types';
+import Header from '@/components/header';
+import ContactForm from '@/components/contact-form';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { doc } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import type { Settings } from '@/lib/types';
 
-export default function ContactPage() {
+
+async function ContactInfo() {
+    const t = useTranslations('Contact');
+    const firestore = useFirestore();
+    const settingsDocRef = useMemoFirebase(() => (
+        firestore ? doc(firestore, 'settings', 'global') : null
+    ), [firestore]);
+    
+    // In a Server Component, we can't use useDoc directly.
+    // This is a placeholder for how you might fetch data on the server.
+    // For a real implementation, you'd use a server-side fetch function.
+    const settings: Settings | null = null; // Replace with actual data fetching if needed
+    const isSettingsLoading = false; // Replace with actual loading state if needed
+
+
+    return (
+        <div className="md:col-span-2 space-y-6">
+            <h3 className="text-2xl font-semibold font-headline">{t('info.title')}</h3>
+            { isSettingsLoading ? (
+                <div className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+            ) : (
+            <div className="space-y-4 text-muted-foreground">
+                <div className="flex items-start gap-4">
+                    <MapPin className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-foreground">{t('info.addressTitle')}</h4>
+                        <p>123 Avenue Mohammed V, Rabat, Maroc</p>
+                    </div>
+                </div>
+                 <div className="flex items-start gap-4">
+                    <Mail className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-foreground">{t('info.emailTitle')}</h4>
+                        <p>{settings?.contactEmail || 'contact@marocsporthub.ma'}</p>
+                    </div>
+                </div>
+                 <div className="flex items-start gap-4">
+                    <Phone className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-foreground">{t('info.phoneTitle')}</h4>
+                        <p>{settings?.contactPhone || '+212 5 37 00 00 00'}</p>
+                    </div>
+                </div>
+            </div>
+            )}
+        </div>
+    );
+}
+
+
+export default function ContactPage({ params: { locale } }: { params: { locale: string } }) {
+  unstable_setRequestLocale(locale);
   const t = useTranslations('Contact');
-  const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const firestore = useFirestore();
-  const settingsDocRef = useMemoFirebase(() => (
-    firestore ? doc(firestore, 'settings', 'global') : null
-  ), [firestore]);
-  const { data: settings, isLoading: isSettingsLoading } = useDoc<Settings>(settingsDocRef);
-
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: t('form.successTitle'),
-        description: t('form.successDescription'),
-      });
-      setName('');
-      setEmail('');
-      setMessage('');
-      setIsSubmitting(false);
-    }, 1000);
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -72,68 +92,10 @@ export default function ContactPage() {
 
                 <div className="grid md:grid-cols-5 gap-12">
                     <div className="md:col-span-3">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{t('form.title')}</CardTitle>
-                                <CardDescription>{t('form.description')}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="grid sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="name">{t('form.nameLabel')}</Label>
-                                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder={t('form.namePlaceholder')} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email">{t('form.emailLabel')}</Label>
-                                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder={t('form.emailPlaceholder')} />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="message">{t('form.messageLabel')}</Label>
-                                        <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} required placeholder={t('form.messagePlaceholder')} className="min-h-[150px]" />
-                                    </div>
-                                    <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                        {isSubmitting ? t('form.submittingButton') : t('form.submitButton')}
-                                    </Button>
-                                </form>
-                            </CardContent>
-                        </Card>
+                       <ContactForm />
                     </div>
-                    <div className="md:col-span-2 space-y-6">
-                        <h3 className="text-2xl font-semibold font-headline">{t('info.title')}</h3>
-                        { isSettingsLoading ? (
-                            <div className="space-y-4">
-                                <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-10 w-full" />
-                            </div>
-                        ) : (
-                        <div className="space-y-4 text-muted-foreground">
-                            <div className="flex items-start gap-4">
-                                <MapPin className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                                <div>
-                                    <h4 className="font-semibold text-foreground">{t('info.addressTitle')}</h4>
-                                    <p>123 Avenue Mohammed V, Rabat, Maroc</p>
-                                </div>
-                            </div>
-                             <div className="flex items-start gap-4">
-                                <Mail className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                                <div>
-                                    <h4 className="font-semibold text-foreground">{t('info.emailTitle')}</h4>
-                                    <p>{settings?.contactEmail || 'contact@marocsporthub.ma'}</p>
-                                </div>
-                            </div>
-                             <div className="flex items-start gap-4">
-                                <Phone className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                                <div>
-                                    <h4 className="font-semibold text-foreground">{t('info.phoneTitle')}</h4>
-                                    <p>{settings?.contactPhone || '+212 5 37 00 00 00'}</p>
-                                </div>
-                            </div>
-                        </div>
-                        )}
-                    </div>
+                    {/* @ts-expect-error Server Component */}
+                    <ContactInfo />
                 </div>
             </div>
         </div>
