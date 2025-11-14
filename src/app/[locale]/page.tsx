@@ -434,6 +434,7 @@ export default function Home() {
                 <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">{t('footerHome')}</Link></li>
                 <li><Link href="/profile" className="text-muted-foreground hover:text-primary transition-colors">{t('footerProfile')}</Link></li>
                  <li><Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">{t('footerDashboard')}</Link></li>
+                 <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">{t('footerContact')}</Link></li>
               </ul>
             </div>
             <div className="space-y-4">

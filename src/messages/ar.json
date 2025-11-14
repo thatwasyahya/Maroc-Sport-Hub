@@ -21,9 +21,35 @@
     "footerHome": "الصفحة الرئيسية",
     "footerProfile": "الملف الشخصي",
     "footerDashboard": "لوحة التحكم",
+    "footerContact": "اتصل بنا",
     "footerFollowUs": "تابعنا",
     "footerRights": "جميع الحقوق محفوظة.",
     "heroAlt": "ملعب كرة قدم مضاء ليلاً"
+  },
+  "Contact": {
+    "title": "اتصل بنا",
+    "description": "هل لديك سؤال أو ملاحظة؟ نحن هنا لمساعدتك. املأ النموذج أو استخدم المعلومات أدناه.",
+    "heroAlt": "خريطة مجردة",
+    "form": {
+      "title": "أرسل لنا رسالة",
+      "description": "سيقوم فريقنا بالرد عليك في أقرب وقت ممكن.",
+      "nameLabel": "الاسم الكامل",
+      "namePlaceholder": "اسمك الكامل",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "example@email.com",
+      "messageLabel": "رسالتك",
+      "messagePlaceholder": "اكتب رسالتك هنا...",
+      "submitButton": "إرسال الرسالة",
+      "submittingButton": "جاري الإرسال...",
+      "successTitle": "تم إرسال الرسالة",
+      "successDescription": "شكرًا لك على تواصلك معنا! سنعود إليك قريبًا."
+    },
+    "info": {
+      "title": "معلومات الاتصال",
+      "addressTitle": "العنوان",
+      "emailTitle": "البريد الإلكتروني",
+      "phoneTitle": "الهاتف"
+    }
   },
   "Header": {
     "login": "تسجيل الدخول",
@@ -64,8 +90,9 @@
       "adminPanel": "لوحة الإدارة",
       "overview": "نظرة عامة",
       "requests": "الطلبات",
-      "facilities": "المنشآت",
+      "facilities": "المنشآt",
       "users": "المستخدمون",
+      "admin": "إدارة",
       "dashboard": "لوحة التحكم",
       "backToSite": "العودة إلى الموقع"
     },
@@ -89,8 +116,6 @@
       "facilitiesByStateDescription": "نسبة المنشآت حسب حالة التشغيل.",
       "facilityCount": "عدد المنشآت",
       "region": "المنطقة",
-      "recentRequestsTitle": "طلبات الإضافة الأخيرة",
-      "recentRequestsDescription": "آخر 5 طلبات قدمها المستخدمون.",
       "topSportsTitle": "أفضل 5 رياضات شائعة",
       "topSportsDescription": "تصنيف الرياضات الأكثر توفرًا في المنشآt.",
       "facilityName": "اسم المنشأة",
@@ -114,7 +139,7 @@
       "tableHeaderSports": "الرياضات",
       "tableHeaderActions": "الإجراءات",
       "loading": "جار التحميل...",
-      "noFacilities": "لم يتم العثور على منشآت.",
+      "noFacilities": "لم يتم العثور على منشآt.",
       "selectedCount": "{count, plural, one {# منشأة محددة} few {# منشآت محددة} other {# منشأة محددة}}",
       "deleteSelected": "حذف المحدد",
       "confirmDeleteTitle": "هل أنت متأكد؟",
@@ -205,6 +230,23 @@
         "updateSuccessDescription": "تم تحديث معلومات المستخدم.",
         "addErrorTitle": "خطأ في الإضافة",
         "updateErrorTitle": "خطأ في التحديث"
+      }
+    },
+    "Admin": {
+      "title": "إدارة الموقع",
+      "description": "تكوين الجوانب العامة لمنصتك.",
+      "manage": "إدارة",
+      "footerLinks": {
+        "title": "روابط تذييل الصفحة",
+        "description": "إدارة الروابط المعروضة في تذييل الصفحة."
+      },
+      "generalSettings": {
+        "title": "الإعدادات العامة",
+        "description": "تعديل اسم الموقع وشعاره والمعلومات العامة."
+      },
+      "homepageSettings": {
+        "title": "إعدادات الصفحة الرئيسية",
+        "description": "تخصيص محتوى الصفحة الرئيسية."
       }
     }
   },

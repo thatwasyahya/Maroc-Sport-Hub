@@ -21,9 +21,35 @@
     "footerHome": "Accueil",
     "footerProfile": "Profil",
     "footerDashboard": "Tableau de bord",
+    "footerContact": "Contact",
     "footerFollowUs": "Suivez-nous",
     "footerRights": "Tous droits réservés.",
     "heroAlt": "Stade de football éclairé la nuit"
+  },
+  "Contact": {
+    "title": "Contactez-nous",
+    "description": "Une question, une remarque ? Nous sommes là pour vous aider. Remplissez le formulaire ou utilisez les informations ci-dessous.",
+    "heroAlt": "Carte abstraite",
+    "form": {
+      "title": "Envoyez-nous un message",
+      "description": "Notre équipe vous répondra dans les plus brefs délais.",
+      "nameLabel": "Nom complet",
+      "namePlaceholder": "Votre nom complet",
+      "emailLabel": "Email",
+      "emailPlaceholder": "example@email.com",
+      "messageLabel": "Votre message",
+      "messagePlaceholder": "Écrivez votre message ici...",
+      "submitButton": "Envoyer le message",
+      "submittingButton": "Envoi en cours...",
+      "successTitle": "Message envoyé",
+      "successDescription": "Merci de nous avoir contactés ! Nous reviendrons vers vous bientôt."
+    },
+    "info": {
+      "title": "Coordonnées",
+      "addressTitle": "Adresse",
+      "emailTitle": "Email",
+      "phoneTitle": "Téléphone"
+    }
   },
   "Header": {
     "login": "Se connecter",
@@ -66,6 +92,7 @@
       "requests": "Demandes",
       "facilities": "Installations",
       "users": "Utilisateurs",
+      "admin": "Administration",
       "dashboard": "Tableau de bord",
       "backToSite": "Retour au site"
     },
@@ -89,8 +116,6 @@
       "facilitiesByStateDescription": "Proportion des installations par état de fonctionnement.",
       "facilityCount": "Nombre d'installations",
       "region": "Région",
-      "recentRequestsTitle": "Demandes d'Ajout Récentes",
-      "recentRequestsDescription": "Les 5 dernières demandes soumises par les utilisateurs.",
       "topSportsTitle": "Top 5 des Sports les Plus Courants",
       "topSportsDescription": "Classement des sports les plus disponibles dans les installations.",
       "facilityName": "Nom de l'installation",
@@ -205,6 +230,23 @@
         "updateSuccessDescription": "Les informations de l'utilisateur ont été mises à jour.",
         "addErrorTitle": "Erreur d'ajout",
         "updateErrorTitle": "Erreur de mise à jour"
+      }
+    },
+    "Admin": {
+      "title": "Administration du Site",
+      "description": "Configurez les aspects généraux de votre plateforme.",
+      "manage": "Gérer",
+      "footerLinks": {
+        "title": "Liens du Pied de Page",
+        "description": "Gérez les liens affichés dans le pied de page du site."
+      },
+      "generalSettings": {
+        "title": "Paramètres Généraux",
+        "description": "Modifiez le nom du site, le logo et les informations générales."
+      },
+      "homepageSettings": {
+        "title": "Paramètres de l'Accueil",
+        "description": "Personnalisez le contenu de la page d'accueil."
       }
     }
   },

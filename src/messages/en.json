@@ -21,9 +21,35 @@
     "footerHome": "Home",
     "footerProfile": "Profile",
     "footerDashboard": "Dashboard",
+    "footerContact": "Contact",
     "footerFollowUs": "Follow Us",
     "footerRights": "All rights reserved.",
     "heroAlt": "Football stadium lit up at night"
+  },
+  "Contact": {
+    "title": "Contact Us",
+    "description": "Have a question or a comment? We're here to help. Fill out the form or use the information below.",
+    "heroAlt": "Abstract map",
+    "form": {
+      "title": "Send us a message",
+      "description": "Our team will get back to you as soon as possible.",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Your full name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "example@email.com",
+      "messageLabel": "Your Message",
+      "messagePlaceholder": "Type your message here...",
+      "submitButton": "Send Message",
+      "submittingButton": "Sending...",
+      "successTitle": "Message Sent",
+      "successDescription": "Thank you for reaching out! We'll get back to you soon."
+    },
+    "info": {
+      "title": "Contact Information",
+      "addressTitle": "Address",
+      "emailTitle": "Email",
+      "phoneTitle": "Phone"
+    }
   },
   "Header": {
     "login": "Login",
@@ -66,6 +92,7 @@
       "requests": "Requests",
       "facilities": "Facilities",
       "users": "Users",
+      "admin": "Admin",
       "dashboard": "Dashboard",
       "backToSite": "Back to Site"
     },
@@ -89,8 +116,6 @@
       "facilitiesByStateDescription": "Proportion of facilities by operational status.",
       "facilityCount": "Number of facilities",
       "region": "Region",
-      "recentRequestsTitle": "Recent Add Requests",
-      "recentRequestsDescription": "The last 5 requests submitted by users.",
       "topSportsTitle": "Top 5 Most Common Sports",
       "topSportsDescription": "Ranking of the most available sports in facilities.",
       "facilityName": "Facility Name",
@@ -205,6 +230,23 @@
         "updateSuccessDescription": "The user's information has been updated.",
         "addErrorTitle": "Add Error",
         "updateErrorTitle": "Update Error"
+      }
+    },
+    "Admin": {
+      "title": "Site Administration",
+      "description": "Configure general aspects of your platform.",
+      "manage": "Manage",
+      "footerLinks": {
+        "title": "Footer Links",
+        "description": "Manage the links displayed in the site footer."
+      },
+      "generalSettings": {
+        "title": "General Settings",
+        "description": "Edit the site name, logo, and general information."
+      },
+      "homepageSettings": {
+        "title": "Homepage Settings",
+        "description": "Customize the content of the homepage."
       }
     }
   },
