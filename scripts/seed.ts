@@ -1,3 +1,4 @@
+
 // tsx scripts/seed.ts
 import { initializeApp, App } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
@@ -7,8 +8,6 @@ import { firebaseConfig } from '../src/firebase/config';
 
 let app: App;
 // DO NOT connect to emulators. The script should target production.
-// process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
-// process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
 app = initializeApp({ projectId: firebaseConfig.projectId });
 
 const db = getFirestore(app);
@@ -39,15 +38,17 @@ async function seedDatabase() {
             console.log(`Seeded user profile: ${user.name}`);
         } catch (error: any) {
             if (error.code === 'auth/uid-already-exists' || error.code === 'auth/email-already-exists') {
-                console.log(`User ${user.email} already exists, skipping...`);
+                // This is expected if you run the script multiple times.
+                // console.log(`User ${user.email} already exists, skipping...`);
             } else {
                 console.error(`Error seeding user ${user.email}:`, error);
             }
         }
     }
+    console.log('User seeding process complete.');
 
     // Seed Facilities
-    console.log('Seeding facilities...');
+    console.log('Seeding new facilities...');
     const facilityBatch = db.batch();
     facilities.forEach(facility => {
         // Generate a new unique ID for each facility to ensure they are added, not overwritten.
@@ -63,7 +64,7 @@ async function seedDatabase() {
         facilityBatch.set(docRef, facilityData);
     });
     await facilityBatch.commit();
-    console.log(`${facilities.length} new facilities added.`);
+    console.log(`${facilities.length} new facilities have been added.`);
 
     console.log('Database seed complete!');
     process.exit(0);
