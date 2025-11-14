@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useUser, useDoc } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,7 +38,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   
-  const userDocRef = doc(firestore, "users", user?.uid || 'placeholder');
+  const userDocRef = useMemoFirebase(() => (user ? doc(firestore, "users", user.uid) : null), [user, firestore]);
   const { data: currentUserProfile } = useDoc<User>(userDocRef);
   
   const [users, setUsers] = useState<User[]>(defaultData.users);
