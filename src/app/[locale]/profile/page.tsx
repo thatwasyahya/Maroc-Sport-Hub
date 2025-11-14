@@ -74,12 +74,15 @@ export default function ProfilePage() {
     );
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
-    const requestsCollectionRef = useMemoFirebase(
-        () => (user ? query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid)) : null),
-        [firestore, user]
-    );
+    // const requestsCollectionRef = useMemoFirebase(
+    //     () => (user ? query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid)) : null),
+    //     [firestore, user]
+    // );
+    // const { data: requests, isLoading: areRequestsLoading } = useCollection<FacilityRequest>(requestsCollectionRef);
 
-    const { data: requests, isLoading: areRequestsLoading } = useCollection<FacilityRequest>(requestsCollectionRef);
+    const [requests, setRequests] = useState<FacilityRequest[]>([]);
+    const [areRequestsLoading, setAreRequestsLoading] = useState(false);
+
 
     if (isUserLoading || isProfileLoading) {
         return <ProfilePageSkeleton />;
