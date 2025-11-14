@@ -1,3 +1,4 @@
+
 import { faker } from "@faker-js/faker";
 import type { Facility, User, UserRole, EquipmentItem, EstablishmentState, BuildingState, EquipmentState } from "./types";
 import { regions, cities } from "./maroc-api";
@@ -16,7 +17,6 @@ const createRandomUser = (role: UserRole, id: number): User => {
         jobTitle: faker.person.jobTitle(),
         city: faker.location.city(),
         favoriteSports: faker.helpers.arrayElements(sports, { min: 1, max: 3 }),
-        avatarUrl: `https://avatar.iran.liara.run/public/${id}`,
         role,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -109,7 +109,7 @@ const createRandomFacility = (): Facility => {
 };
 
 export const users: User[] = [
-    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://avatar.iran.liara.run/public/super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date(), phoneNumber: '0600000000', gender: 'Male', birthDate: new Date('1980-01-01'), jobTitle: 'Platform Manager', city: 'Rabat', favoriteSports: ['Football', 'Tennis'] },
+    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', role: 'super_admin', createdAt: new Date(), updatedAt: new Date(), phoneNumber: '0600000000', gender: 'Male', birthDate: new Date('1980-01-01'), jobTitle: 'Platform Manager', city: 'Rabat', favoriteSports: ['Football', 'Tennis'] },
     ...Array.from({ length: 10 }, (_, i) => createRandomUser("admin", i)),
     ...Array.from({ length: 50 }, (_, i) => createRandomUser("user", i + 10)),
 ];

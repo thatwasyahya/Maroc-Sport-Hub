@@ -1,3 +1,4 @@
+
 export type UserRole = "super_admin" | "admin" | "user";
 
 export interface User {
@@ -9,7 +10,6 @@ export interface User {
   phoneNumber?: string | null;
   gender?: 'Male' | 'Female' | null;
   birthDate?: any; // Can be a server timestamp or Date object
-  avatarUrl?: string;
   role: UserRole;
   jobTitle?: string;
   city?: string;

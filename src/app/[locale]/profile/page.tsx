@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -129,7 +130,6 @@ export default function ProfilePage() {
                                 <Card className="sticky top-24">
                                      <CardHeader className='items-center text-center'>
                                         <Avatar className="h-28 w-28 border-4 border-background">
-                                            <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
                                             <AvatarFallback className="text-3xl">{getInitials(userProfile.name)}</AvatarFallback>
                                         </Avatar>
                                         <div className='pt-4 flex flex-col items-center gap-2'>

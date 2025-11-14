@@ -89,7 +89,7 @@ export default function UsersPage() {
       user: 'secondary'
   }
   
-  const isSuperAdmin = users.find(u => u.email === 'super@admin.com')?.role === 'super_admin';
+  const isSuperAdmin = currentUserProfile?.role === 'super_admin';
 
   return (
     <>
@@ -132,7 +132,6 @@ export default function UsersPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9">
-                            <AvatarImage src={userItem.avatarUrl} alt={userItem.name} />
                             <AvatarFallback>{getInitials(userItem.name)}</AvatarFallback>
                           </Avatar>
                           <div>
