@@ -128,18 +128,18 @@ export default function ProfilePage() {
                             <div className="md:col-span-4 lg:col-span-3">
                                 <Card className="sticky top-24">
                                      <CardHeader className='items-center text-center'>
-                                        <div className="relative w-28 h-28">
-                                            <Avatar className="h-full w-full border-4 border-background">
-                                                <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
-                                                <AvatarFallback className="text-3xl">{getInitials(userProfile.name)}</AvatarFallback>
-                                            </Avatar>
-                                             <Button size="icon" className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-background" onClick={() => setIsEditProfileOpen(true)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                        <div className='pt-4'>
-                                            <CardTitle className="font-headline text-2xl">{userProfile.name}</CardTitle>
-                                            <Badge variant={roleVariantMap[userProfile.role] || 'outline'} className="capitalize mt-2">{userProfile.role.replace('_', ' ')}</Badge>
+                                        <Avatar className="h-28 w-28 border-4 border-background">
+                                            <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
+                                            <AvatarFallback className="text-3xl">{getInitials(userProfile.name)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className='pt-4 flex flex-col items-center gap-2'>
+                                            <div className="flex items-center gap-2">
+                                                <CardTitle className="font-headline text-2xl">{userProfile.name}</CardTitle>
+                                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setIsEditProfileOpen(true)}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            <Badge variant={roleVariantMap[userProfile.role] || 'outline'} className="capitalize mt-1">{userProfile.role.replace('_', ' ')}</Badge>
                                         </div>
                                     </CardHeader>
                                     <CardContent className="text-sm text-muted-foreground space-y-3">

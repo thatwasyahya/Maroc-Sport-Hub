@@ -38,7 +38,6 @@ import { MultiSelect } from '../ui/multi-select';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Le nom est requis.'),
-  avatarUrl: z.string().url("L'URL de l'avatar doit être une URL valide.").optional().or(z.literal('')),
   phoneNumber: z.string().optional(),
   gender: z.enum(['Male', 'Female']).optional(),
   birthDate: z.date().optional(),
@@ -67,7 +66,6 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
-      avatarUrl: '',
       phoneNumber: '',
       gender: undefined,
       birthDate: undefined,
@@ -82,7 +80,6 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
         const birthDate = user.birthDate ? (user.birthDate.seconds ? new Date(user.birthDate.seconds * 1000) : new Date(user.birthDate)) : undefined;
         form.reset({
             name: user.name || '',
-            avatarUrl: user.avatarUrl || '',
             phoneNumber: user.phoneNumber || '',
             gender: user.gender as 'Male' | 'Female' | undefined,
             birthDate: birthDate,
@@ -104,7 +101,6 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
         name: data.name,
         firstName: firstName || '',
         lastName: lastName.join(' ') || '',
-        avatarUrl: data.avatarUrl,
         phoneNumber: data.phoneNumber,
         gender: data.gender || null,
         birthDate: data.birthDate || null,
@@ -142,19 +138,6 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
-             <FormField
-              control={form.control}
-              name="avatarUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('avatarUrlLabel')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={t('avatarUrlPlaceholder')} {...field} value={field.value || ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <div className="grid grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
