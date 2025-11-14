@@ -9,10 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trash2, Loader2, Phone, VenetianMask, Briefcase } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2, Phone, Briefcase } from 'lucide-react';
 import UserEditDialog from '@/components/dashboard/UserEditDialog';
 import {
   AlertDialog,
@@ -216,3 +216,5 @@ export default function UsersPage() {
     </>
   );
 }
+
+    

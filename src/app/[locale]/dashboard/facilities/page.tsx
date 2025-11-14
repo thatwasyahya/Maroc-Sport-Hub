@@ -90,11 +90,17 @@ export default function FacilitiesPage() {
     if (!firestore || !user) return;
     setProcessingId(facilityId);
     try {
+      // For now, just remove from local state
       setFacilities(prev => prev.filter(f => f.id !== facilityId));
       toast({
         title: "Installation supprimée (localement)",
         description: "L'installation a été retirée de la liste actuelle.",
       });
+      // await deleteDoc(doc(firestore, 'facilities', facilityId));
+      // toast({
+      //   title: t('deleteSuccessTitle'),
+      //   description: t('deleteSuccessDescription'),
+      // });
     } catch (error: any) {
       console.error("Error deleting facility: ", error);
       toast({
@@ -108,6 +114,7 @@ export default function FacilitiesPage() {
   };
   
   const handleBulkDelete = async () => {
+    // For now, just remove from local state
     setFacilities(prev => prev.filter(f => !selectedRowKeys.includes(f.id)));
     toast({
         title: `${selectedRowKeys.length} installations supprimées`,
@@ -246,7 +253,7 @@ export default function FacilitiesPage() {
                         checked={isAllSelected}
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                         aria-label="Select all"
-                        indeterminate={isSomeSelected ? true : undefined}
+                        indeterminate={isSomeSelected}
                     />
                   </TableHead>
                   <TableHead>{t('tableHeaderName')}</TableHead>
@@ -381,7 +388,5 @@ export default function FacilitiesPage() {
     </>
   );
 }
-
-    
 
     
