@@ -6,7 +6,7 @@ import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@
 import { doc, collection, query, where } from 'firebase/firestore';
 import type { User, FacilityRequest } from '@/lib/types';
 import Header from '@/components/header';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,15 +74,13 @@ export default function ProfilePage() {
     );
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
-    // const requestsCollectionRef = useMemoFirebase(
-    //     () => (user ? query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid)) : null),
-    //     [firestore, user]
-    // );
-    // const { data: requests, isLoading: areRequestsLoading } = useCollection<FacilityRequest>(requestsCollectionRef);
-
-    const [requests, setRequests] = useState<FacilityRequest[]>([]);
-    const [areRequestsLoading, setAreRequestsLoading] = useState(false);
-
+    // This query fetches only the requests made by the current user.
+    // The security rules MUST allow this specific query.
+    const requestsCollectionRef = useMemoFirebase(
+        () => (user ? query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid)) : null),
+        [firestore, user]
+    );
+    const { data: requests, isLoading: areRequestsLoading } = useCollection<FacilityRequest>(requestsCollectionRef);
 
     if (isUserLoading || isProfileLoading) {
         return <ProfilePageSkeleton />;
