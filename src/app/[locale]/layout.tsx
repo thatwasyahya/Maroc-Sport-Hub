@@ -30,6 +30,12 @@ export const metadata: Metadata = {
   description: 'Map, organize, and book sports facilities in Morocco.',
 };
 
+const locales = ['en', 'fr', 'ar'];
+
+export function generateStaticParams() {
+  return locales.map((locale) => ({locale}));
+}
+
 export default async function RootLayout({
   children,
   params: { locale },
