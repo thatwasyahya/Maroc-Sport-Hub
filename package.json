@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" tsx scripts/seed.ts"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",
