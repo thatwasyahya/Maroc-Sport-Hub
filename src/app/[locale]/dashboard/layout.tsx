@@ -10,7 +10,6 @@ import { useMemo, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
-import {unstable_setRequestLocale} from 'next-intl/server';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { InterceptedLink } from '@/components/intercepted-link';
 
@@ -93,8 +92,7 @@ function NavLinks({ links, currentPathname, onLinkClick }: { links: any[], curre
   );
 }
 
-export default function DashboardLayout({ children, params }: { children: React.ReactNode, params: {locale: string} }) {
-  unstable_setRequestLocale(params.locale);
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const pathname = usePathname();

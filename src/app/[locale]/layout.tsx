@@ -30,7 +30,6 @@ export const metadata: Metadata = {
   description: 'Map, organize, and book sports facilities in Morocco.',
 };
 
-// Even though this is the root layout, the middleware ensures that `locale` will always be present.
 export default async function RootLayout({
   children,
   params: { locale },
@@ -38,10 +37,8 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  // Enable static rendering
   unstable_setRequestLocale(locale);
 
-  // Receive messages provided in `i18n.ts`
   const messages = await getMessages();
 
   return (

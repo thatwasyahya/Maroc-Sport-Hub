@@ -13,7 +13,6 @@ import { PlusCircle, Edit, Trash2, Loader2, Upload, Eye, FileDown, MoreHorizonta
 import AddFacilityDialog from '@/components/dashboard/AddFacilityDialog';
 import ImportFacilitiesDialog from '@/components/dashboard/ImportFacilitiesDialog';
 import { useTranslations } from 'next-intl';
-import {unstable_setRequestLocale} from 'next-intl/server';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,8 +33,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
 
-export default function FacilitiesPage({params}: {params: {locale: string}}) {
-  unstable_setRequestLocale(params.locale);
+export default function FacilitiesPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();

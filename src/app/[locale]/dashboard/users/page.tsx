@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
-import {unstable_setRequestLocale} from 'next-intl/server';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -29,8 +28,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { defaultData } from '@/lib/data';
 
-export default function UsersPage({params}: {params: {locale: string}}) {
-  unstable_setRequestLocale(params.locale);
+export default function UsersPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();

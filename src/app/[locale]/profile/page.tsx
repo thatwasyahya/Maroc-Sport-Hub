@@ -16,7 +16,6 @@ import AddFacilityRequestDialog from '@/components/profile/AddFacilityRequestDia
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
-import {unstable_setRequestLocale} from 'next-intl/server';
 import EditProfileDialog from '@/components/profile/EditProfileDialog';
 
 function ProfilePageSkeleton() {
@@ -61,8 +60,7 @@ function ProfilePageSkeleton() {
     );
 }
 
-export default function ProfilePage({params}: {params: {locale: string}}) {
-    unstable_setRequestLocale(params.locale);
+export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const [isAddRequestOpen, setIsAddRequestOpen] = useState(false);
