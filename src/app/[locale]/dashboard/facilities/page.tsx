@@ -220,7 +220,7 @@ export default function FacilitiesPage() {
                         checked={isAllSelected}
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                         aria-label="Select all"
-                        indeterminate={isSomeSelected}
+                        indeterminate={isSomeSelected ? true : undefined}
                     />
                   </TableHead>
                   <TableHead>{t('tableHeaderName')}</TableHead>
@@ -355,5 +355,3 @@ export default function FacilitiesPage() {
     </>
   );
 }
-
-    
