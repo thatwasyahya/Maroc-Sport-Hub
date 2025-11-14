@@ -1,72 +1,34 @@
-import { unstable_setRequestLocale } from 'next-intl/server';
-import { useTranslations } from 'next-intl';
+import { unstable_setRequestLocale, getTranslations } from 'next-intl/server';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import Header from '@/components/header';
 import ContactForm from '@/components/contact-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { doc } from 'firebase/firestore';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { getDoc, doc } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase/config-server'; // Using server-side init
 import type { Settings } from '@/lib/types';
+import ContactInfo from '@/components/contact-info';
 
 
-async function ContactInfo() {
-    const t = useTranslations('Contact');
-    const firestore = useFirestore();
-    const settingsDocRef = useMemoFirebase(() => (
-        firestore ? doc(firestore, 'settings', 'global') : null
-    ), [firestore]);
-    
-    // In a Server Component, we can't use useDoc directly.
-    // This is a placeholder for how you might fetch data on the server.
-    // For a real implementation, you'd use a server-side fetch function.
-    const settings: Settings | null = null; // Replace with actual data fetching if needed
-    const isSettingsLoading = false; // Replace with actual loading state if needed
-
-
-    return (
-        <div className="md:col-span-2 space-y-6">
-            <h3 className="text-2xl font-semibold font-headline">{t('info.title')}</h3>
-            { isSettingsLoading ? (
-                <div className="space-y-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                </div>
-            ) : (
-            <div className="space-y-4 text-muted-foreground">
-                <div className="flex items-start gap-4">
-                    <MapPin className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <div>
-                        <h4 className="font-semibold text-foreground">{t('info.addressTitle')}</h4>
-                        <p>123 Avenue Mohammed V, Rabat, Maroc</p>
-                    </div>
-                </div>
-                 <div className="flex items-start gap-4">
-                    <Mail className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <div>
-                        <h4 className="font-semibold text-foreground">{t('info.emailTitle')}</h4>
-                        <p>{settings?.contactEmail || 'contact@marocsporthub.ma'}</p>
-                    </div>
-                </div>
-                 <div className="flex items-start gap-4">
-                    <Phone className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <div>
-                        <h4 className="font-semibold text-foreground">{t('info.phoneTitle')}</h4>
-                        <p>{settings?.contactPhone || '+212 5 37 00 00 00'}</p>
-                    </div>
-                </div>
-            </div>
-            )}
-        </div>
-    );
+async function getSettings() {
+  try {
+    const { firestore } = initializeFirebase();
+    const settingsDocRef = doc(firestore, 'settings', 'global');
+    const settingsSnap = await getDoc(settingsDocRef);
+    if (settingsSnap.exists()) {
+      return settingsSnap.data() as Settings;
+    }
+  } catch (error) {
+    console.error("Failed to fetch settings:", error);
+  }
+  return null;
 }
 
 
-export default function ContactPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function ContactPage({ params: { locale } }: { params: { locale: string } }) {
   unstable_setRequestLocale(locale);
-  const t = useTranslations('Contact');
+  const t = await getTranslations('Contact');
+  const settings = await getSettings();
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -94,8 +56,7 @@ export default function ContactPage({ params: { locale } }: { params: { locale: 
                     <div className="md:col-span-3">
                        <ContactForm />
                     </div>
-                    {/* @ts-expect-error Server Component */}
-                    <ContactInfo />
+                    <ContactInfo settings={settings} />
                 </div>
             </div>
         </div>
