@@ -332,7 +332,7 @@ export default function Home() {
               <div className="flex items-center gap-2 p-1 rounded-lg bg-muted border">
                 <Button
                   onClick={() => setViewMode('map')}
-                  variant={viewMode === 'map' ? 'primary' : 'ghost'}
+                  variant={viewMode === 'map' ? 'default' : 'ghost'}
                   size="sm"
                   className="gap-2"
                 >
@@ -340,7 +340,7 @@ export default function Home() {
                 </Button>
                 <Button
                   onClick={() => setViewMode('table')}
-                  variant={viewMode === 'table' ? 'primary' : 'ghost'}
+                  variant={viewMode === 'table' ? 'default' : 'ghost'}
                   size="sm"
                   className="gap-2"
                 >
