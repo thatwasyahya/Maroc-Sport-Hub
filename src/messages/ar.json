@@ -1,4 +1,3 @@
-
 {
   "Home": {
     "heroTitle": "استكشف وابحث",
@@ -233,7 +232,39 @@
       "manage": "إدارة",
       "siteSettings": {
         "title": "إعدادات الموقع",
-        "description": "إدارة الإعدادات العامة ومعلومات الاتصال ومحتوى الصفحة الرئيسية وروابط التذييل من مكان مركزي واحد."
+        "description": "إدارة الإعدادات العامة ومعلومات الاتصال ومحتوى الصفحة الرئيسية وروابط التذييل.",
+        "dialogDescription": "تعديل المعلومات العامة، الصفحة الرئيسية، جهات الاتصال، والروابط لموقعك.",
+        "general": {
+          "title": "إعدادات عامة",
+          "appNameLabel": "اسم التطبيق",
+          "footerDescriptionLabel": "وصف تذييل الصفحة",
+          "footerDescriptionPlaceholder": "الوصف الذي يظهر في تذييل موقعك."
+        },
+        "contact": {
+          "title": "معلومات الاتصال",
+          "emailLabel": "البريد الإلكتروني للاتصال",
+          "phoneLabel": "هاتف الاتصال"
+        },
+        "social": {
+          "title": "الشبكات الاجتماعية",
+          "facebookLabel": "رابط فيسبوك",
+          "instagramLabel": "رابط إنستغرام",
+          "twitterLabel": "رابط تويتر"
+        },
+        "homepage": {
+          "title": "الصفحة الرئيسية",
+          "heroTitleLabel": "عنوان قسم Hero",
+          "heroSubtitleLabel": "عنوان فرعي لقسم Hero"
+        },
+        "footer": {
+          "title": "روابط تذييل الصفحة",
+          "labelLabel": "التسمية",
+          "urlLabel": "الرابط",
+          "addLinkButton": "إضافة رابط"
+        },
+        "cancelButton": "إلغاء",
+        "saveButton": "حفظ التغييرات",
+        "savingButton": "جار الحفظ..."
       }
     }
   },
@@ -279,5 +310,3 @@
     }
   }
 }
-
-    

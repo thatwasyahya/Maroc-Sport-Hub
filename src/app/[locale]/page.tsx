@@ -287,7 +287,14 @@ export default function Home() {
   
   const appName = settings?.appName || t('appName');
   const footerDescription = settings?.footerDescription || t('footerDescription');
-
+  const heroTitle = settings?.heroTitle || t('heroTitle');
+  const heroSubtitle = settings?.heroSubtitle || t('heroSubtitle');
+  const footerLinks = settings?.footerLinks || [
+      { label: t('footerHome'), url: '/' },
+      { label: t('footerProfile'), url: '/profile' },
+      { label: t('footerDashboard'), url: '/dashboard' },
+      { label: t('footerContact'), url: '/contact' },
+  ];
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-background">
@@ -307,10 +314,10 @@ export default function Home() {
           </div>
           <div className="relative z-10 max-w-4xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold font-headline tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
-              {t('heroTitle')}
+              {heroTitle}
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              {t('heroSubtitle')}
+              {heroSubtitle}
             </p>
             <Button size="lg" onClick={scrollToMap} className="transition-transform duration-300 hover:scale-105">
               {t('exploreMap')}
@@ -443,18 +450,17 @@ export default function Home() {
             <div className="space-y-4">
               <h4 className="font-semibold text-card-foreground/90">{t('footerNavigation')}</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">{t('footerHome')}</Link></li>
-                <li><Link href="/profile" className="text-muted-foreground hover:text-primary transition-colors">{t('footerProfile')}</Link></li>
-                 <li><Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">{t('footerDashboard')}</Link></li>
-                 <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">{t('footerContact')}</Link></li>
+                 {footerLinks.map((link) => (
+                    <li key={link.url}><Link href={link.url} className="text-muted-foreground hover:text-primary transition-colors">{link.label}</Link></li>
+                ))}
               </ul>
             </div>
             <div className="space-y-4">
               <h4 className="font-semibold text-card-foreground/90">{t('footerFollowUs')}</h4>
               <div className="flex space-x-4">
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Facebook className="h-6 w-6" /></a>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Instagram className="h-6 w-6" /></a>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors"><Twitter className="h-6 w-6" /></a>
+                <a href={settings?.facebookUrl || '#'} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors"><Facebook className="h-6 w-6" /></a>
+                <a href={settings?.instagramUrl || '#'} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors"><Instagram className="h-6 w-6" /></a>
+                <a href={settings?.twitterUrl || '#'} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors"><Twitter className="h-6 w-6" /></a>
               </div>
             </div>
           </div>
@@ -466,5 +472,3 @@ export default function Home() {
     </div>
   );
 }
-
-

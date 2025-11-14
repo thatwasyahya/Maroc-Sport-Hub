@@ -158,7 +158,10 @@
             },
             "required": ["label", "url"]
           }
-        }
+        },
+        "facebookUrl": { "type": "string", "format": "uri", "description": "URL for the Facebook page." },
+        "instagramUrl": { "type": "string", "format": "uri", "description": "URL for the Instagram profile." },
+        "twitterUrl": { "type": "string", "format": "uri", "description": "URL for the Twitter profile." }
       },
       "required": ["appName"]
     }

@@ -103,4 +103,7 @@ export interface Settings {
     footerLinks?: FooterLink[];
     contactEmail?: string;
     contactPhone?: string;
+    facebookUrl?: string;
+    instagramUrl?: string;
+    twitterUrl?: string;
 }

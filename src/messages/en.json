@@ -1,4 +1,3 @@
-
 {
   "Home": {
     "heroTitle": "Explore & Find",
@@ -233,7 +232,39 @@
       "manage": "Manage",
       "siteSettings": {
         "title": "Site Settings",
-        "description": "Manage global settings, contact info, homepage content, and footer links from one central location."
+        "description": "Manage global settings, contact info, homepage, etc.",
+        "dialogDescription": "Modify general info, homepage, contacts, and links for your site.",
+        "general": {
+          "title": "General Settings",
+          "appNameLabel": "Application Name",
+          "footerDescriptionLabel": "Footer Description",
+          "footerDescriptionPlaceholder": "The description that appears in your site's footer."
+        },
+        "contact": {
+          "title": "Contact Information",
+          "emailLabel": "Contact Email",
+          "phoneLabel": "Contact Phone"
+        },
+         "social": {
+          "title": "Social Networks",
+          "facebookLabel": "Facebook URL",
+          "instagramLabel": "Instagram URL",
+          "twitterLabel": "Twitter URL"
+        },
+        "homepage": {
+          "title": "Homepage",
+          "heroTitleLabel": "Hero Section Title",
+          "heroSubtitleLabel": "Hero Section Subtitle"
+        },
+        "footer": {
+          "title": "Footer Links",
+          "labelLabel": "Label",
+          "urlLabel": "URL",
+          "addLinkButton": "Add Link"
+        },
+        "cancelButton": "Cancel",
+        "saveButton": "Save Changes",
+        "savingButton": "Saving..."
       }
     }
   },
@@ -279,5 +310,3 @@
     }
   }
 }
-
-    

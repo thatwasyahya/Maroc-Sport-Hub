@@ -32,6 +32,7 @@ import { Skeleton } from '../ui/skeleton';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { PlusCircle, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const linkSchema = z.object({
   label: z.string().min(1, "Le libellé est requis."),
@@ -46,6 +47,9 @@ const settingsSchema = z.object({
   footerLinks: z.array(linkSchema).optional(),
   contactEmail: z.string().email("Format d'email invalide.").optional().or(z.literal('')),
   contactPhone: z.string().optional(),
+  facebookUrl: z.string().url("URL invalide").or(z.literal('')).optional(),
+  instagramUrl: z.string().url("URL invalide").or(z.literal('')).optional(),
+  twitterUrl: z.string().url("URL invalide").or(z.literal('')).optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -59,6 +63,7 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const t = useTranslations('Dashboard.Admin.siteSettings');
 
   const settingsDocRef = useMemoFirebase(() => (
     firestore ? doc(firestore, 'settings', 'global') : null
@@ -76,6 +81,9 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
       footerLinks: [],
       contactEmail: '',
       contactPhone: '',
+      facebookUrl: '',
+      instagramUrl: '',
+      twitterUrl: '',
     },
   });
 
@@ -94,6 +102,9 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
         footerLinks: settings.footerLinks || [],
         contactEmail: settings.contactEmail || '',
         contactPhone: settings.contactPhone || '',
+        facebookUrl: settings.facebookUrl || '',
+        instagramUrl: settings.instagramUrl || '',
+        twitterUrl: settings.twitterUrl || '',
       });
     }
   }, [settings, form]);
@@ -124,9 +135,9 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Paramètres du Site</DialogTitle>
+          <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>
-            Modifier les informations générales, la page d'accueil, les contacts et les liens de votre site.
+            {t('dialogDescription')}
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -143,66 +154,82 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
               <div className="space-y-8 p-4">
                 {/* General Settings */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Paramètres Généraux</h3>
+                    <h3 className="font-semibold text-lg">{t('general.title')}</h3>
                     <FormField control={form.control} name="appName" render={({ field }) => (
-                        <FormItem><FormLabel>Nom de l'application</FormLabel><FormControl><Input placeholder="Maroc Sport Hub" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>{t('general.appNameLabel')}</FormLabel><FormControl><Input placeholder="Maroc Sport Hub" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField control={form.control} name="footerDescription" render={({ field }) => (
-                        <FormItem><FormLabel>Description du pied de page</FormLabel><FormControl><Textarea placeholder="La description qui apparaît dans le footer de votre site." className="resize-none" {...field}/></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>{t('general.footerDescriptionLabel')}</FormLabel><FormControl><Textarea placeholder={t('general.footerDescriptionPlaceholder')} className="resize-none" {...field}/></FormControl><FormMessage /></FormItem>
                     )}/>
                 </div>
                 <Separator />
 
                  {/* Contact Settings */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Informations de Contact</h3>
+                    <h3 className="font-semibold text-lg">{t('contact.title')}</h3>
                     <FormField control={form.control} name="contactEmail" render={({ field }) => (
-                        <FormItem><FormLabel>Email de contact</FormLabel><FormControl><Input type="email" placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>{t('contact.emailLabel')}</FormLabel><FormControl><Input type="email" placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField control={form.control} name="contactPhone" render={({ field }) => (
-                        <FormItem><FormLabel>Téléphone de contact</FormLabel><FormControl><Input placeholder="+212 5 37 00 00 00" {...field}/></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>{t('contact.phoneLabel')}</FormLabel><FormControl><Input placeholder="+212 5 37 00 00 00" {...field}/></FormControl><FormMessage /></FormItem>
+                    )}/>
+                </div>
+                <Separator />
+                
+                {/* Social Settings */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">{t('social.title')}</h3>
+                    <FormField control={form.control} name="facebookUrl" render={({ field }) => (
+                        <FormItem><FormLabel>{t('social.facebookLabel')}</FormLabel><FormControl><Input placeholder="https://facebook.com/..." {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name="instagramUrl" render={({ field }) => (
+                        <FormItem><FormLabel>{t('social.instagramLabel')}</FormLabel><FormControl><Input placeholder="https://instagram.com/..." {...field}/></FormControl><FormMessage /></FormItem>
+                    )}/>
+                     <FormField control={form.control} name="twitterUrl" render={({ field }) => (
+                        <FormItem><FormLabel>{t('social.twitterLabel')}</FormLabel><FormControl><Input placeholder="https://twitter.com/..." {...field}/></FormControl><FormMessage /></FormItem>
                     )}/>
                 </div>
                 <Separator />
 
+
                 {/* Homepage Settings */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Page d'Accueil</h3>
+                    <h3 className="font-semibold text-lg">{t('homepage.title')}</h3>
                     <FormField control={form.control} name="heroTitle" render={({ field }) => (
-                        <FormItem><FormLabel>Titre de la section "Hero"</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>{t('homepage.heroTitleLabel')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField control={form.control} name="heroSubtitle" render={({ field }) => (
-                        <FormItem><FormLabel>Sous-titre de la section "Hero"</FormLabel><FormControl><Textarea className="resize-none" {...field}/></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>{t('homepage.heroSubtitleLabel')}</FormLabel><FormControl><Textarea className="resize-none" {...field}/></FormControl><FormMessage /></FormItem>
                     )}/>
                 </div>
                 <Separator />
 
                 {/* Footer Links */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Liens du Pied de Page</h3>
+                    <h3 className="font-semibold text-lg">{t('footer.title')}</h3>
                     <div className="space-y-4">
                       {fields.map((field, index) => (
                         <div key={field.id} className="flex items-end gap-2 p-3 border rounded-lg">
                           <FormField control={form.control} name={`footerLinks.${index}.label`} render={({ field }) => (
-                              <FormItem className="flex-1"><FormLabel>Libellé</FormLabel><FormControl><Input placeholder="Accueil" {...field} /></FormControl><FormMessage /></FormItem>
+                              <FormItem className="flex-1"><FormLabel>{t('footer.labelLabel')}</FormLabel><FormControl><Input placeholder="Accueil" {...field} /></FormControl><FormMessage /></FormItem>
                           )}/>
                           <FormField control={form.control} name={`footerLinks.${index}.url`} render={({ field }) => (
-                              <FormItem className="flex-1"><FormLabel>URL</FormLabel><FormControl><Input placeholder="/contact" {...field} /></FormControl><FormMessage /></FormItem>
+                              <FormItem className="flex-1"><FormLabel>{t('footer.urlLabel')}</FormLabel><FormControl><Input placeholder="/contact" {...field} /></FormControl><FormMessage /></FormItem>
                           )}/>
                           <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4" /></Button>
                         </div>
                       ))}
                     </div>
                     <Button type="button" variant="outline" size="sm" onClick={() => append({ label: '', url: '' })}>
-                      <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un lien
+                      <PlusCircle className="mr-2 h-4 w-4" /> {t('footer.addLinkButton')}
                     </Button>
                 </div>
               </div>
             </ScrollArea>
             <DialogFooter className="pt-6 border-t">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t('cancelButton')}</Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                {isSubmitting ? t('savingButton') : t('saveButton')}
               </Button>
             </DialogFooter>
           </form>

@@ -1,4 +1,3 @@
-
 {
   "Home": {
     "heroTitle": "Explorez et Trouvez",
@@ -233,7 +232,39 @@
       "manage": "Gérer",
       "siteSettings": {
         "title": "Paramètres du Site",
-        "description": "Gérez les paramètres généraux, les informations de contact, le contenu de la page d'accueil et les liens du pied de page à partir d'un emplacement centralisé."
+        "description": "Gérez les paramètres généraux, les infos de contact, la page d'accueil, etc.",
+        "dialogDescription": "Modifier les informations générales, la page d'accueil, les contacts et les liens de votre site.",
+        "general": {
+          "title": "Paramètres Généraux",
+          "appNameLabel": "Nom de l'application",
+          "footerDescriptionLabel": "Description du pied de page",
+          "footerDescriptionPlaceholder": "La description qui apparaît dans le footer de votre site."
+        },
+        "contact": {
+          "title": "Informations de Contact",
+          "emailLabel": "Email de contact",
+          "phoneLabel": "Téléphone de contact"
+        },
+        "social": {
+          "title": "Réseaux Sociaux",
+          "facebookLabel": "URL Facebook",
+          "instagramLabel": "URL Instagram",
+          "twitterLabel": "URL Twitter"
+        },
+        "homepage": {
+          "title": "Page d'Accueil",
+          "heroTitleLabel": "Titre de la section \"Hero\"",
+          "heroSubtitleLabel": "Sous-titre de la section \"Hero\""
+        },
+        "footer": {
+          "title": "Liens du Pied de Page",
+          "labelLabel": "Libellé",
+          "urlLabel": "URL",
+          "addLinkButton": "Ajouter un lien"
+        },
+        "cancelButton": "Annuler",
+        "saveButton": "Enregistrer les modifications",
+        "savingButton": "Enregistrement..."
       }
     }
   },
@@ -279,5 +310,3 @@
     }
   }
 }
-
-    
