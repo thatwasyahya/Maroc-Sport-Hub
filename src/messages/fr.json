@@ -232,8 +232,8 @@
       "manage": "Gérer",
       "siteSettings": {
         "title": "Paramètres du Site",
-        "description": "Gérez les paramètres généraux, les infos de contact, la page d'accueil, etc.",
-        "dialogDescription": "Modifier les informations générales, la page d'accueil, les contacts et les liens de votre site.",
+        "description": "Gérez les paramètres généraux, les infos de contact, la page d'accueil et les liens du pied de page.",
+        "dialogDescription": "Modifier les informations générales, la page d'accueil, les contacts, et les liens de votre site.",
         "general": {
           "title": "Paramètres Généraux",
           "appNameLabel": "Nom de l'application",

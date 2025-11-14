@@ -232,7 +232,7 @@
       "manage": "Manage",
       "siteSettings": {
         "title": "Site Settings",
-        "description": "Manage global settings, contact info, homepage, etc.",
+        "description": "Manage global settings, contact info, homepage, and footer links.",
         "dialogDescription": "Modify general info, homepage, contacts, and links for your site.",
         "general": {
           "title": "General Settings",
