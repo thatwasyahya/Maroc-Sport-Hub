@@ -77,7 +77,7 @@ export default function Header() {
         <div className="mr-4 flex">
           <InterceptedLink href="/" className="mr-6 flex items-center space-x-2">
             <Activity className="h-6 w-6 text-primary" />
-            <span className="font-bold sm:inline-block font-headline text-lg">
+            <span className="hidden font-bold sm:inline-block font-headline text-lg">
               {isSettingsLoading ? <Skeleton className="h-6 w-36" /> : appName}
             </span>
           </InterceptedLink>
