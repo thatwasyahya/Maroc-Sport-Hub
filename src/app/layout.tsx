@@ -7,8 +7,8 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import {NextIntlClientProvider} from 'next-intl';
-import {getMessages, unstable_setRequestLocale} from 'next-intl/server';
+import {NextIntlClientProvider, useMessages} from 'next-intl';
+import {unstable_setRequestLocale} from 'next-intl/server';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,19 +28,18 @@ export const metadata: Metadata = {
 };
 
 // Even though this is the root layout, the middleware ensures that `locale` will always be present.
-export default async function RootLayout({
+export default function RootLayout({
   children,
   params: { locale },
 }: {
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  // Providing all messages to the client
-  // side is the easiest way to get started
-  const messages = await getMessages();
-  
   // Enable static rendering
   unstable_setRequestLocale(locale);
+
+  // Receive messages provided in `i18n.ts`
+  const messages = useMessages();
 
   return (
     <html lang={locale} className={`${inter.variable} ${poppins.variable} dark`} style={{ scrollBehavior: 'smooth' }}>
