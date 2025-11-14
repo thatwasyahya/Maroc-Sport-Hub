@@ -22,8 +22,6 @@ import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
 import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import {useTranslations} from 'next-intl';
@@ -31,13 +29,10 @@ import { defaultData } from '@/lib/data';
 
 export default function Home() {
   const t = useTranslations('Home');
-  const firestore = useFirestore();
-  const facilitiesCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'facilities'),
-    [firestore]
-  );
-
-  const { data: allFacilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
+  
+  // Use default data directly, ignoring Firestore for now.
+  const [allFacilities, setAllFacilities] = useState<Facility[]>(defaultData.facilities);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
 
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>([]);
@@ -56,14 +51,9 @@ export default function Home() {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!facilitiesLoading) {
-      if (allFacilities && allFacilities.length > 0) {
-        setFacilities(allFacilities);
-      } else {
-        setFacilities(defaultData.facilities);
-      }
-    }
-  }, [allFacilities, facilitiesLoading]);
+    // We already have the data, just set it.
+    setFacilities(allFacilities);
+  }, [allFacilities]);
 
   const { allSports, allRegions, allEquipments } = useMemo(() => {
     const sports = [...new Set(facilities.flatMap(f => f.sports || []))].sort();

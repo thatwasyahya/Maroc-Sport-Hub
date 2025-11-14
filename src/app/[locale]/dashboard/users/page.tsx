@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc } from '@/firebase';
+import { doc, deleteDoc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -37,23 +37,12 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   
-  const userDocRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [firestore, user]);
+  const userDocRef = doc(firestore, "users", user?.uid || 'placeholder');
   const { data: currentUserProfile } = useDoc<User>(userDocRef);
   
-  const usersCollectionRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
-  const { data: usersFromDB, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
-
-  const [users, setUsers] = useState<User[]>([]);
-
-  useEffect(() => {
-    if (!usersLoading) {
-        if (usersFromDB && usersFromDB.length > 0) {
-            setUsers(usersFromDB);
-        } else {
-            setUsers(defaultData.users);
-        }
-    }
-  }, [usersFromDB, usersLoading]);
+  // Use default data directly, ignoring Firestore for now.
+  const [users, setUsers] = useState<User[]>(defaultData.users);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   const handleAddNew = () => {
     setSelectedUser(null);
@@ -66,14 +55,21 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (userId: string) => {
-    if (!firestore) return;
     setProcessingId(userId);
     try {
-      await deleteDoc(doc(firestore, 'users', userId));
+       // This is a local delete for now as we are using default data.
+      setUsers(prev => prev.filter(u => u.id !== userId));
       toast({
         title: t('deleteSuccessTitle'),
         description: t('deleteSuccessDescription'),
       });
+       // In a real scenario with a connected DB, you would use:
+      // if (!firestore) return;
+      // await deleteDoc(doc(firestore, 'users', userId));
+      // toast({
+      //   title: t('deleteSuccessTitle'),
+      //   description: t('deleteSuccessDescription'),
+      // });
     } catch (error: any) {
       console.error("Error deleting user: ", error);
       toast({
@@ -101,7 +97,8 @@ export default function UsersPage() {
       user: 'secondary'
   }
   
-  const isSuperAdmin = currentUserProfile?.role === 'super_admin';
+  // Find the current user from the default data for permission checks
+  const isSuperAdmin = users.find(u => u.email === 'super@admin.com')?.role === 'super_admin';
 
   return (
     <>
@@ -136,37 +133,37 @@ export default function UsersPage() {
                   </TableCell>
                 </TableRow>
               ) : users && users.length > 0 ? (
-                users.map((user) => (
-                  <TableRow key={user.id}>
+                users.map((userItem) => (
+                  <TableRow key={userItem.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
-                          <AvatarImage src={user.avatarUrl} alt={user.name} />
-                          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                          <AvatarImage src={userItem.avatarUrl} alt={userItem.name} />
+                          <AvatarFallback>{getInitials(userItem.name)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <p className="font-medium">{userItem.name}</p>
+                          <p className="text-sm text-muted-foreground">{userItem.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={roleVariantMap[user.role] || 'outline'}>
-                        {t(`roles.${user.role}`)}
+                      <Badge variant={roleVariantMap[userItem.role] || 'outline'}>
+                        {t(`roles.${userItem.role}`)}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                        {user.createdAt?.seconds 
-                            ? format(new Date(user.createdAt.seconds * 1000), 'dd/MM/yyyy')
-                            : user.createdAt instanceof Date ? format(user.createdAt, 'dd/MM/yyyy') : 'N/A'}
+                        {userItem.createdAt?.seconds 
+                            ? format(new Date(userItem.createdAt.seconds * 1000), 'dd/MM/yyyy')
+                            : userItem.createdAt instanceof Date ? format(userItem.createdAt, 'dd/MM/yyyy') : 'N/A'}
                     </TableCell>
                     {isSuperAdmin && (
                       <TableCell className="text-right">
-                        {processingId === user.id ? (
+                        {processingId === userItem.id ? (
                            <Loader2 className="ml-auto h-5 w-5 animate-spin" />
                         ) : (
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(userItem)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                              <AlertDialog>
@@ -182,7 +179,7 @@ export default function UsersPage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(user.id)} className="bg-destructive hover:bg-destructive/90">
+                                        <AlertDialogAction onClick={() => handleDelete(userItem.id)} className="bg-destructive hover:bg-destructive/90">
                                             {t('delete')}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, deleteDoc } from 'firebase/firestore';
 import type { Facility } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -41,23 +41,10 @@ export default function FacilitiesPage() {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const facilitiesCollectionRef = useMemoFirebase(
-    () => collection(firestore, 'facilities'),
-    [firestore]
-  );
-  const { data: facilitiesFromDB, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
+  // Use default data directly, ignoring Firestore for now.
+  const [facilities, setFacilities] = useState<Facility[]>(defaultData.facilities);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
 
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-
-  useEffect(() => {
-    if (!facilitiesLoading) {
-      if (facilitiesFromDB && facilitiesFromDB.length > 0) {
-        setFacilities(facilitiesFromDB);
-      } else {
-        setFacilities(defaultData.facilities);
-      }
-    }
-  }, [facilitiesFromDB, facilitiesLoading]);
 
   const handleAddNew = () => {
     setSelectedFacility(null);
@@ -78,11 +65,18 @@ export default function FacilitiesPage() {
     if (!firestore || !user) return;
     setProcessingId(facilityId);
     try {
-      await deleteDoc(doc(firestore, 'facilities', facilityId));
+      // This is a local delete for now as we are using default data.
+      setFacilities(prev => prev.filter(f => f.id !== facilityId));
       toast({
-        title: "Installation supprimée",
-        description: "L'installation a été supprimée avec succès.",
+        title: "Installation supprimée (localement)",
+        description: "L'installation a été retirée de la liste actuelle.",
       });
+      // In a real scenario with a connected DB, you would use:
+      // await deleteDoc(doc(firestore, 'facilities', facilityId));
+      // toast({
+      //   title: "Installation supprimée",
+      //   description: "L'installation a été supprimée avec succès.",
+      // });
     } catch (error: any) {
       console.error("Error deleting facility: ", error);
       toast({
