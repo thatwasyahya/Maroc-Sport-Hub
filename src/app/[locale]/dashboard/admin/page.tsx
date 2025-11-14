@@ -31,11 +31,6 @@ export default function AdminPage() {
               </div>
               <Button size="sm" onClick={() => setIsGeneralSettingsOpen(true)}>{t('manage')}</Button>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('siteSettings.content')}
-              </p>
-            </CardContent>
           </Card>
         </div>
         
@@ -45,3 +40,5 @@ export default function AdminPage() {
     </>
   );
 }
+
+    

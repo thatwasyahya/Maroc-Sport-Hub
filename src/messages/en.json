@@ -117,12 +117,7 @@
       "facilityCount": "Number of facilities",
       "region": "Region",
       "topSportsTitle": "Top 5 Most Common Sports",
-      "topSportsDescription": "Ranking of the most available sports in facilities.",
-      "facilityName": "Facility Name",
-      "userName": "User Name",
-      "status": "Status",
-      "noPendingRequests": "No pending requests at the moment.",
-      "viewAllRequests": "View All Requests"
+      "topSportsDescription": "Ranking of the most available sports in facilities."
     },
     "Facilities": {
       "title": "Facilities",
@@ -238,20 +233,7 @@
       "manage": "Manage",
       "siteSettings": {
         "title": "Site Settings",
-        "description": "Manage global settings.",
-        "content": "Edit the site name, contact information, homepage content, and footer links from one central location."
-      },
-      "footerLinks": {
-        "title": "Footer Links",
-        "description": "Manage the links displayed in the site footer."
-      },
-      "generalSettings": {
-        "title": "General Settings",
-        "description": "Edit the site name, logo, and general information."
-      },
-      "homepageSettings": {
-        "title": "Homepage Settings",
-        "description": "Customize the content of the homepage."
+        "description": "Manage global settings, contact info, homepage content, and footer links from one central location."
       }
     }
   },
@@ -297,3 +279,5 @@
     }
   }
 }
+
+    

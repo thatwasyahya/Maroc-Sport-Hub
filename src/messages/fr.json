@@ -117,12 +117,7 @@
       "facilityCount": "Nombre d'installations",
       "region": "Région",
       "topSportsTitle": "Top 5 des Sports les Plus Courants",
-      "topSportsDescription": "Classement des sports les plus disponibles dans les installations.",
-      "facilityName": "Nom de l'installation",
-      "userName": "Nom de l'utilisateur",
-      "status": "Statut",
-      "noPendingRequests": "Aucune demande en attente pour le moment.",
-      "viewAllRequests": "Voir toutes les demandes"
+      "topSportsDescription": "Classement des sports les plus disponibles dans les installations."
     },
     "Facilities": {
       "title": "Installations",
@@ -238,20 +233,7 @@
       "manage": "Gérer",
       "siteSettings": {
         "title": "Paramètres du Site",
-        "description": "Gérer les paramètres globaux.",
-        "content": "Modifiez le nom du site, les informations de contact, le contenu de la page d'accueil et les liens du pied de page à partir d'un emplacement centralisé."
-      },
-      "footerLinks": {
-        "title": "Liens du Pied de Page",
-        "description": "Gérez les liens affichés dans le pied de page du site."
-      },
-      "generalSettings": {
-        "title": "Paramètres Généraux",
-        "description": "Modifiez le nom du site, le logo et les informations générales."
-      },
-      "homepageSettings": {
-        "title": "Paramètres de l'Accueil",
-        "description": "Personnalisez le contenu de la page d'accueil."
+        "description": "Gérez les paramètres généraux, les informations de contact, le contenu de la page d'accueil et les liens du pied de page à partir d'un emplacement centralisé."
       }
     }
   },
@@ -297,3 +279,5 @@
     }
   }
 }
+
+    
