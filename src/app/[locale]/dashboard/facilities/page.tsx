@@ -125,22 +125,25 @@ export default function FacilitiesPage() {
     link.click();
     document.body.removeChild(link);
   };
-
-  const handleExportCSV = () => {
-    const csv = Papa.unparse(facilities);
-    // Add BOM for Excel to recognize UTF-8
-    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-    downloadFile(blob, 'facilities.csv');
-  };
+  
+  const getCleanDataForExport = () => {
+      return facilities.map(f => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, adminId, ...rest } = f;
+          return rest;
+      });
+  }
 
   const handleExportJSON = () => {
-    const json = JSON.stringify(facilities, null, 2);
+    const dataToExport = getCleanDataForExport();
+    const json = JSON.stringify(dataToExport, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     downloadFile(blob, 'facilities.json');
   };
   
   const handleExportXLSX = () => {
-    const worksheet = XLSX.utils.json_to_sheet(facilities);
+    const dataToExport = getCleanDataForExport();
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Installations');
     const xlsxBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
@@ -170,7 +173,6 @@ export default function FacilitiesPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleExportCSV}>Exporter en CSV</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportJSON}>Exporter en JSON</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportXLSX}>Exporter en XLSX (Excel)</DropdownMenuItem>
               </DropdownMenuContent>
