@@ -86,12 +86,52 @@
       "title": "المنشآت",
       "description": "إدارة المنشآت الرياضية الخاصة بك.",
       "addButton": "إضافة منشأة",
+      "importButton": "استيراد",
+      "exportButton": "تصدير",
+      "exportJSON": "تصدير إلى JSON",
+      "exportXLSX": "تصدير إلى XLSX (Excel)",
       "tableHeaderName": "الاسم",
-      "tableHeaderRegion": "المنطقة",
-      "tableHeaderEquipments": "المعدات",
+      "tableHeaderProvince": "الإقليم",
+      "tableHeaderCommune": "الجماعة",
+      "tableHeaderState": "الحالة",
       "tableHeaderSports": "الرياضات",
+      "tableHeaderActions": "الإجراءات",
       "loading": "جار التحميل...",
-      "noFacilities": "لم يتم العثور على منشآت."
+      "noFacilities": "لم يتم العثور على منشآت.",
+      "selectedCount": "{count, plural, one {# منشأة محددة} few {# منشآت محددة} other {# منشأة محددة}}",
+      "deleteSelected": "حذف المحدد",
+      "confirmDeleteTitle": "هل أنت متأكد؟",
+      "confirmDeleteDescription": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف {count, plural, one {# منشأة} other {# منشآت}} بشكل دائم.",
+      "confirmDeleteSingleDescription": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف المنشأة بشكل دائم.",
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "viewAction": "عرض",
+      "editAction": "تعديل",
+      "deleteAction": "حذف",
+       "export": {
+        "name": "الاسم",
+        "description": "الوصف",
+        "sports": "الرياضات",
+        "equipments": "المعدات",
+        "region": "الجهة",
+        "province": "الإقليم",
+        "commune": "الجماعة",
+        "address": "العنوان",
+        "milieu": "الوسط",
+        "type": "النوع",
+        "accessible": "ولوجيات",
+        "lat": "خط العرض",
+        "lng": "خط الطول",
+        "ownership": "الملكية",
+        "managing_entity": "الجهة المدبرة",
+        "last_renovation_date": "تاريخ آخر تجديد",
+        "surface_area": "المساحة (م²)",
+        "capacity": "الطاقة الاستيعابية",
+        "staff_count": "عدد الموظفين",
+        "establishment_state": "حالة المؤسسة",
+        "building_state": "حالة البناية",
+        "equipment_state": "حالة التجهيزات"
+      }
     },
     "Equipments": {
       "title": "المعدات",
@@ -150,3 +190,5 @@
     }
   }
 }
+
+    

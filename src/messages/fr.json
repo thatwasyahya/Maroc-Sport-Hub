@@ -86,12 +86,52 @@
       "title": "Installations",
       "description": "Gérez vos installations sportives.",
       "addButton": "Ajouter une installation",
+      "importButton": "Importer",
+      "exportButton": "Exporter",
+      "exportJSON": "Exporter en JSON",
+      "exportXLSX": "Exporter en XLSX (Excel)",
       "tableHeaderName": "Nom",
-      "tableHeaderRegion": "Région",
-      "tableHeaderEquipments": "Équipements",
+      "tableHeaderProvince": "Province",
+      "tableHeaderCommune": "Commune",
+      "tableHeaderState": "État",
       "tableHeaderSports": "Sports",
+      "tableHeaderActions": "Actions",
       "loading": "Chargement...",
-      "noFacilities": "Aucune installation trouvée."
+      "noFacilities": "Aucune installation trouvée.",
+      "selectedCount": "{count, plural, one {# installation sélectionnée} other {# installations sélectionnées}}",
+      "deleteSelected": "Supprimer la sélection",
+      "confirmDeleteTitle": "Êtes-vous sûr ?",
+      "confirmDeleteDescription": "Cette action est irréversible. {count, plural, one {# installation sera} other {# installations seront}} définitivement supprimées.",
+      "confirmDeleteSingleDescription": "Cette action est irréversible. L'installation sera définitivement supprimée.",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "viewAction": "Voir",
+      "editAction": "Modifier",
+      "deleteAction": "Supprimer",
+      "export": {
+        "name": "Nom",
+        "description": "Description",
+        "sports": "Sports",
+        "equipments": "Équipements",
+        "region": "Région",
+        "province": "Province",
+        "commune": "Commune",
+        "address": "Adresse",
+        "milieu": "Milieu",
+        "type": "Type",
+        "accessible": "Accès PMR",
+        "lat": "Latitude",
+        "lng": "Longitude",
+        "ownership": "Propriété",
+        "managing_entity": "Entité gestionnaire",
+        "last_renovation_date": "Date dernière rénovation",
+        "surface_area": "Superficie (m²)",
+        "capacity": "Capacité",
+        "staff_count": "Effectif",
+        "establishment_state": "État de l'établissement",
+        "building_state": "État du bâtiment",
+        "equipment_state": "État des équipements"
+      }
     },
     "Equipments": {
       "title": "Équipements",
@@ -150,3 +190,5 @@
     }
   }
 }
+
+    

@@ -86,12 +86,52 @@
       "title": "Facilities",
       "description": "Manage your sports facilities.",
       "addButton": "Add Facility",
+      "importButton": "Import",
+      "exportButton": "Export",
+      "exportJSON": "Export to JSON",
+      "exportXLSX": "Export to XLSX (Excel)",
       "tableHeaderName": "Name",
-      "tableHeaderRegion": "Region",
-      "tableHeaderEquipments": "Equipments",
+      "tableHeaderProvince": "Province",
+      "tableHeaderCommune": "Commune",
+      "tableHeaderState": "State",
       "tableHeaderSports": "Sports",
+      "tableHeaderActions": "Actions",
       "loading": "Loading...",
-      "noFacilities": "No facilities found."
+      "noFacilities": "No facilities found.",
+      "selectedCount": "{count, plural, one {# facility selected} other {# facilities selected}}",
+      "deleteSelected": "Delete Selected",
+      "confirmDeleteTitle": "Are you sure?",
+      "confirmDeleteDescription": "This action cannot be undone. {count, plural, one {# facility will be} other {# facilities will be}} permanently deleted.",
+      "confirmDeleteSingleDescription": "This action cannot be undone. The facility will be permanently deleted.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "viewAction": "View",
+      "editAction": "Edit",
+      "deleteAction": "Delete",
+      "export": {
+        "name": "Name",
+        "description": "Description",
+        "sports": "Sports",
+        "equipments": "Equipments",
+        "region": "Region",
+        "province": "Province",
+        "commune": "Commune",
+        "address": "Address",
+        "milieu": "Milieu",
+        "type": "Type",
+        "accessible": "Accessible",
+        "lat": "Latitude",
+        "lng": "Longitude",
+        "ownership": "Ownership",
+        "managing_entity": "Managing Entity",
+        "last_renovation_date": "Last Renovation Date",
+        "surface_area": "Surface Area (m²)",
+        "capacity": "Capacity",
+        "staff_count": "Staff Count",
+        "establishment_state": "Establishment State",
+        "building_state": "Building State",
+        "equipment_state": "Equipment State"
+      }
     },
     "Equipments": {
       "title": "Equipments",
@@ -150,3 +190,5 @@
     }
   }
 }
+
+    

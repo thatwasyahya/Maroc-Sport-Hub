@@ -30,7 +30,6 @@ import { useToast } from '@/hooks/use-toast';
 import { defaultData } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
 export default function FacilitiesPage() {
@@ -142,13 +141,38 @@ export default function FacilitiesPage() {
   };
   
   const handleExportXLSX = () => {
-    const dataToExport = getCleanDataForExport();
+    const tExport = t.getTranslator('export');
+    const dataToExport = facilities.map(f => ({
+      [tExport('name')]: f.name,
+      [tExport('description')]: f.description,
+      [tExport('sports')]: f.sports?.join(', '),
+      [tExport('equipments')]: f.equipments?.map(e => `${e.name} (${e.quantity})`).join(', '),
+      [tExport('region')]: f.region,
+      [tExport('province')]: f.province,
+      [tExport('commune')]: f.commune,
+      [tExport('address')]: f.address,
+      [tExport('milieu')]: f.milieu,
+      [tExport('type')]: f.type,
+      [tExport('accessible')]: f.accessible ? 'Oui' : 'Non',
+      [tExport('lat')]: f.location?.lat,
+      [tExport('lng')]: f.location?.lng,
+      [tExport('ownership')]: f.ownership,
+      [tExport('managing_entity')]: f.managing_entity,
+      [tExport('last_renovation_date')]: f.last_renovation_date,
+      [tExport('surface_area')]: f.surface_area,
+      [tExport('capacity')]: f.capacity,
+      [tExport('staff_count')]: f.staff_count,
+      [tExport('establishment_state')]: f.establishment_state,
+      [tExport('building_state')]: f.building_state,
+      [tExport('equipment_state')]: f.equipment_state,
+    }));
+    
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Installations');
+    XLSX.utils.book_append_sheet(workbook, worksheet, t('title'));
     const xlsxBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([xlsxBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    downloadFile(blob, 'facilities.xlsx');
+    downloadFile(blob, `${t('title')}.xlsx`);
   };
 
 
@@ -163,18 +187,18 @@ export default function FacilitiesPage() {
           <div className="flex items-center gap-2 w-full md:w-auto">
              <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className="w-full md:w-auto">
               <Upload className="mr-2 h-4 w-4" />
-              Importer
+              {t('importButton')}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full md:w-auto">
                   <FileDown className="mr-2 h-4 w-4" />
-                  Exporter
+                  {t('exportButton')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleExportJSON}>Exporter en JSON</DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportXLSX}>Exporter en XLSX (Excel)</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportJSON}>{t('exportJSON')}</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportXLSX}>{t('exportXLSX')}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button onClick={handleAddNew} className="w-full md:w-auto">
@@ -187,26 +211,26 @@ export default function FacilitiesPage() {
            {selectedRowKeys.length > 0 && (
             <div className="flex items-center justify-between gap-4 p-4 mb-4 bg-muted border rounded-lg">
                 <div className="text-sm font-medium">
-                    {selectedRowKeys.length} installation(s) sélectionnée(s)
+                    {t('selectedCount', {count: selectedRowKeys.length})}
                 </div>
                 <AlertDialog open={isBulkDeleteAlertOpen} onOpenChange={setIsBulkDeleteAlertOpen}>
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="sm">
                             <Trash2 className="mr-2 h-4 w-4"/>
-                            Supprimer la sélection
+                            {t('deleteSelected')}
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                            <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                Cette action est irréversible. {selectedRowKeys.length} installations seront définitivement supprimées.
+                                {t('confirmDeleteDescription', {count: selectedRowKeys.length})}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                             <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive hover:bg-destructive/90">
-                                Supprimer
+                                {t('delete')}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -226,11 +250,11 @@ export default function FacilitiesPage() {
                     />
                   </TableHead>
                   <TableHead>{t('tableHeaderName')}</TableHead>
-                  <TableHead className="hidden sm:table-cell">Province</TableHead>
-                  <TableHead className="hidden lg:table-cell">Commune</TableHead>
-                  <TableHead>État</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t('tableHeaderProvince')}</TableHead>
+                  <TableHead className="hidden lg:table-cell">{t('tableHeaderCommune')}</TableHead>
+                  <TableHead>{t('tableHeaderState')}</TableHead>
                   <TableHead className="hidden md:table-cell">{t('tableHeaderSports')}</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">{t('tableHeaderActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -277,28 +301,28 @@ export default function FacilitiesPage() {
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => handleView(facility)}>
                                         <Eye className="mr-2 h-4 w-4" />
-                                        Voir
+                                        {t('viewAction')}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleEdit(facility)}>
                                         <Edit className="mr-2 h-4 w-4" />
-                                        Modifier
+                                        {t('editAction')}
                                     </DropdownMenuItem>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive px-2 py-1.5 font-normal text-sm relative flex cursor-default select-none items-center rounded-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                Supprimer
+                                                {t('deleteAction')}
                                             </Button>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                                                <AlertDialogDescription>Cette action est irréversible. L'installation sera définitivement supprimée.</AlertDialogDescription>
+                                                <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
+                                                <AlertDialogDescription>{t('confirmDeleteSingleDescription')}</AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                                                 <AlertDialogAction onClick={() => handleDelete(facility.id)} className="bg-destructive hover:bg-destructive/90">
-                                                    Supprimer
+                                                    {t('delete')}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
@@ -357,3 +381,5 @@ export default function FacilitiesPage() {
     </>
   );
 }
+
+    
