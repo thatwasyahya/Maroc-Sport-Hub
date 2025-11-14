@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Loader2, Edit } from 'lucide-react';
+import { PlusCircle, Loader2, Edit, Phone, VenetianMask, Mail } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import AddFacilityRequestDialog from '@/components/profile/AddFacilityRequestDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -26,11 +26,12 @@ function ProfilePageSkeleton() {
                 <div className="container mx-auto py-12 px-4">
                     <div className="grid gap-8 md:grid-cols-12">
                         <div className="md:col-span-4 lg:col-span-3">
-                            <Card className="text-center">
+                            <Card>
                                 <CardContent className="pt-6">
                                     <Skeleton className="h-28 w-28 rounded-full mb-4 mx-auto" />
                                     <Skeleton className="h-7 w-4/5 mb-2 mx-auto" />
-                                    <Skeleton className="h-5 w-full mb-4 mx-auto" />
+                                    <Skeleton className="h-5 w-full mb-2 mx-auto" />
+                                     <Skeleton className="h-5 w-full mb-4 mx-auto" />
                                     <Skeleton className="h-6 w-24 rounded-full mx-auto" />
                                 </CardContent>
                             </Card>
@@ -123,20 +124,35 @@ export default function ProfilePage() {
                     <div className="container mx-auto py-6 sm:py-12 px-4">
                         <div className="grid gap-8 md:grid-cols-12">
                             <div className="md:col-span-4 lg:col-span-3">
-                                <Card className="text-center sticky top-24">
-                                    <CardContent className="pt-8">
-                                        <div className="relative w-28 h-28 mx-auto mb-4">
+                                <Card className="sticky top-24">
+                                     <CardHeader className='items-center text-center'>
+                                        <div className="relative w-28 h-28">
                                             <Avatar className="h-full w-full border-4 border-background">
                                                 <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
                                                 <AvatarFallback className="text-3xl">{getInitials(userProfile.name)}</AvatarFallback>
                                             </Avatar>
-                                            <Button size="icon" className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-background" onClick={() => setIsEditProfileOpen(true)}>
+                                             <Button size="icon" className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-background" onClick={() => setIsEditProfileOpen(true)}>
                                                 <Edit className="h-4 w-4" />
                                             </Button>
                                         </div>
-                                        <h2 className="text-2xl font-bold font-headline">{userProfile.name}</h2>
-                                        <p className="text-muted-foreground mb-4 break-all">{userProfile.email}</p>
-                                        <Badge variant={roleVariantMap[userProfile.role] || 'outline'} className="capitalize">{userProfile.role.replace('_', ' ')}</Badge>
+                                        <div className='pt-4'>
+                                            <CardTitle className="font-headline text-2xl">{userProfile.name}</CardTitle>
+                                            <Badge variant={roleVariantMap[userProfile.role] || 'outline'} className="capitalize mt-2">{userProfile.role.replace('_', ' ')}</Badge>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="text-sm text-muted-foreground space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <Mail className="w-4 h-4" />
+                                            <span className="break-all">{userProfile.email}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Phone className="w-4 h-4" />
+                                            <span>{userProfile.phoneNumber || "Non spécifié"}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <VenetianMask className="w-4 h-4" />
+                                            <span>{userProfile.gender || "Non spécifié"}</span>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>

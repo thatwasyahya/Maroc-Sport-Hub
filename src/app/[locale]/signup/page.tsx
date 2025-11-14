@@ -13,6 +13,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { UserRole } from '@/lib/types';
 import { getAuth } from 'firebase-admin/auth';
 import { User } from 'firebase/auth';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 export default function SignupPage() {
@@ -24,6 +25,8 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>();
   const [isSigningUp, setIsSigningUp] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -57,6 +60,8 @@ export default function SignupPage() {
         name: fullName,
         firstName: firstName || '',
         lastName: lastName.join(' ') || '',
+        phoneNumber,
+        gender,
         role: role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -110,6 +115,25 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+            </div>
+             <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="phone-number">Phone Number</Label>
+                  <Input id="phone-number" placeholder="0612345678" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select onValueChange={(value: 'Male' | 'Female' | 'Other') => setGender(value)} value={gender}>
+                      <SelectTrigger id="gender">
+                          <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="Male">Male</SelectItem>
+                          <SelectItem value="Female">Female</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                  </Select>
+                </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>

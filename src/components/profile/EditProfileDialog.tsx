@@ -27,10 +27,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import type { User } from '@/lib/types';
 import { useTranslations } from 'next-intl';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Le nom est requis.'),
   avatarUrl: z.string().url("L'URL de l'avatar doit être une URL valide.").optional().or(z.literal('')),
+  phoneNumber: z.string().optional(),
+  gender: z.enum(['Male', 'Female', 'Other']).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -52,6 +55,8 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
     defaultValues: {
       name: '',
       avatarUrl: '',
+      phoneNumber: '',
+      gender: undefined,
     },
   });
 
@@ -60,6 +65,8 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
       form.reset({
         name: user.name,
         avatarUrl: user.avatarUrl || '',
+        phoneNumber: user.phoneNumber || '',
+        gender: user.gender,
       });
     }
   }, [user, open, form]);
@@ -76,6 +83,8 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
         firstName: firstName || '',
         lastName: lastName.join(' ') || '',
         avatarUrl: data.avatarUrl,
+        phoneNumber: data.phoneNumber,
+        gender: data.gender,
         updatedAt: serverTimestamp(),
       });
 
@@ -98,7 +107,7 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
@@ -131,7 +140,42 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('phoneLabel')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="0612345678" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('genderLabel')}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('genderPlaceholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          <SelectItem value="Male">{t('genders.Male')}</SelectItem>
+                          <SelectItem value="Female">{t('genders.Female')}</SelectItem>
+                          <SelectItem value="Other">{t('genders.Other')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            <DialogFooter className='pt-4'>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t('cancel')}</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? t('saving') : t('save')}

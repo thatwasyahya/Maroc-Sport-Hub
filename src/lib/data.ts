@@ -2,17 +2,22 @@ import { faker } from "@faker-js/faker";
 import type { Facility, User, UserRole, EquipmentItem, EstablishmentState, BuildingState, EquipmentState } from "./types";
 import { regions, cities } from "./maroc-api";
 
-const createRandomUser = (role: UserRole, id: number): User => ({
-  id: faker.string.uuid(),
-  name: faker.person.fullName(),
-  firstName: faker.person.firstName(),
-  lastName: faker.person.lastName(),
-  email: faker.internet.email(),
-  avatarUrl: `https://avatar.iran.liara.run/public/${id}`,
-  role,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-});
+const createRandomUser = (role: UserRole, id: number): User => {
+    const gender = faker.person.sex() as 'Male' | 'Female';
+    return {
+        id: faker.string.uuid(),
+        name: faker.person.fullName({sex: gender.toLowerCase() as 'male' | 'female'}),
+        firstName: faker.person.firstName(gender.toLowerCase() as 'male' | 'female'),
+        lastName: faker.person.lastName(gender.toLowerCase() as 'male' | 'female'),
+        email: faker.internet.email(),
+        phoneNumber: faker.phone.number(),
+        gender: gender,
+        avatarUrl: `https://avatar.iran.liara.run/public/${id}`,
+        role,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    }
+};
 
 export const sports = [
     "Aérobic", "Aïkido", "Athlétisme", "Aviron", "Badminton", "Baseball", "Basketball", 
@@ -101,7 +106,7 @@ const createRandomFacility = (): Facility => {
 };
 
 export const users: User[] = [
-    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://avatar.iran.liara.run/public/super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date() },
+    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://avatar.iran.liara.run/public/super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date(), phoneNumber: '0600000000', gender: 'Male' },
     ...Array.from({ length: 10 }, (_, i) => createRandomUser("admin", i)),
     ...Array.from({ length: 50 }, (_, i) => createRandomUser("user", i + 10)),
 ];

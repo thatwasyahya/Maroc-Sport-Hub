@@ -35,6 +35,8 @@ const userSchema = z.object({
   email: z.string().email('Invalid email address.'),
   password: z.string().optional(),
   role: z.enum(['user', 'admin', 'super_admin']),
+  phoneNumber: z.string().optional(),
+  gender: z.enum(['Male', 'Female', 'Other']).optional(),
 }).refine(data => !data.password || data.password.length >= 6, {
     message: "Password must be at least 6 characters long.",
     path: ["password"],
@@ -63,6 +65,8 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
       email: '',
       password: '',
       role: 'user',
+      phoneNumber: '',
+      gender: undefined,
     },
   });
 
@@ -73,6 +77,8 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
         email: user.email,
         role: user.role,
         password: '',
+        phoneNumber: user.phoneNumber || '',
+        gender: user.gender,
       });
     } else if (!user && open) {
       form.reset({
@@ -80,6 +86,8 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
         email: '',
         password: '',
         role: 'user',
+        phoneNumber: '',
+        gender: undefined,
       });
     }
   }, [user, open, form]);
@@ -93,10 +101,10 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
         await updateDoc(userRef, {
             name: data.name,
             role: data.role,
+            phoneNumber: data.phoneNumber,
+            gender: data.gender,
             updatedAt: serverTimestamp(),
         });
-        // Note: We are not updating email or password for existing users here
-        // as that would require re-authentication and is more complex.
         toast({
           title: t('updateSuccessTitle'),
           description: t('updateSuccessDescription'),
@@ -104,7 +112,6 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
       } else {
         // NOTE: This creates a user document in Firestore, but DOES NOT create an
         // authentication entry in Firebase Auth. This is a simplified approach.
-        // A complete solution would use a Firebase Function to create the auth user.
         if (!data.password) {
             form.setError("password", { message: "Password is required for new users."});
             setIsSubmitting(false);
@@ -115,6 +122,8 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
             name: data.name,
             email: data.email,
             role: data.role,
+            phoneNumber: data.phoneNumber,
+            gender: data.gender,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
@@ -139,7 +148,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{isEditing ? t('editUserTitle') : t('addUserTitle')}</DialogTitle>
           <DialogDescription>{isEditing ? t('editUserDescription') : t('addUserDescription')}</DialogDescription>
@@ -172,6 +181,43 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('phoneLabel')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0612345678" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('genderLabel')}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('genderPlaceholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          <SelectItem value="Male">{tUsers('genders.Male')}</SelectItem>
+                          <SelectItem value="Female">{tUsers('genders.Female')}</SelectItem>
+                          <SelectItem value="Other">{tUsers('genders.Other')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             {!isEditing && (
               <FormField
                 control={form.control}

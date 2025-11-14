@@ -10,6 +10,8 @@
         "role": { "type": "string", "description": "Role of the user (e.g., super_admin, admin, user)." },
         "firstName": { "type": "string", "description": "First name of the user." },
         "lastName": { "type": "string", "description": "Last name of the user." },
+        "phoneNumber": { "type": "string", "description": "Phone number of the user." },
+        "gender": { "type": "string", "enum": ["Male", "Female", "Other"], "description": "Gender of the user." },
         "createdAt": { "type": "string", "description": "Timestamp indicating when the user was created.", "format": "date-time" },
         "updatedAt": { "type": "string", "description": "Timestamp indicating when the user was last updated.", "format": "date-time" }
       },
