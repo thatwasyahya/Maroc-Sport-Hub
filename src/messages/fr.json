@@ -188,7 +188,33 @@
         "updateErrorTitle": "Erreur de mise à jour"
       }
     }
+  },
+  "Profile": {
+    "notConnected": "Vous devez être connecté pour voir cette page.",
+    "requestsTitle": "Mes Demandes d'Ajout",
+    "requestsDescription": "Suivez l'état de vos propositions d'installations.",
+    "newRequestButton": "Nouvelle Demande",
+    "tableHeaderName": "Nom de l'installation",
+    "tableHeaderDate": "Date",
+    "tableHeaderStatus": "Statut",
+    "noRequests": "Vous n'avez soumis aucune demande.",
+    "status": {
+      "pending": "En attente",
+      "approved": "Approuvée",
+      "rejected": "Rejetée"
+    },
+    "editDialog": {
+      "title": "Modifier le profil",
+      "description": "Mettez à jour vos informations personnelles ici.",
+      "nameLabel": "Nom complet",
+      "avatarUrlLabel": "URL de l'avatar",
+      "avatarUrlPlaceholder": "https://example.com/avatar.png",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "successTitle": "Profil mis à jour",
+      "successDescription": "Vos informations ont été mises à jour avec succès.",
+      "errorTitle": "Erreur de mise à jour"
+    }
   }
 }
-
-    

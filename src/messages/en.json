@@ -188,7 +188,33 @@
         "updateErrorTitle": "Update Error"
       }
     }
+  },
+  "Profile": {
+    "notConnected": "You must be logged in to view this page.",
+    "requestsTitle": "My Add Requests",
+    "requestsDescription": "Track the status of your facility proposals.",
+    "newRequestButton": "New Request",
+    "tableHeaderName": "Facility Name",
+    "tableHeaderDate": "Date",
+    "tableHeaderStatus": "Status",
+    "noRequests": "You have not submitted any requests.",
+     "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "editDialog": {
+      "title": "Edit Profile",
+      "description": "Update your personal information here.",
+      "nameLabel": "Full Name",
+      "avatarUrlLabel": "Avatar URL",
+      "avatarUrlPlaceholder": "https://example.com/avatar.png",
+      "cancel": "Cancel",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "successTitle": "Profile Updated",
+      "successDescription": "Your information has been successfully updated.",
+      "errorTitle": "Update Error"
+    }
   }
 }
-
-    

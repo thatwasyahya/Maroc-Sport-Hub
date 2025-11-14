@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import type { User, FacilityRequest } from '@/lib/types';
@@ -14,8 +14,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import AddFacilityRequestDialog from '@/components/profile/AddFacilityRequestDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+import { useTranslations } from 'next-intl';
+import EditProfileDialog from '@/components/profile/EditProfileDialog';
 
 function ProfilePageSkeleton() {
+    const t = useTranslations('Profile');
     return (
         <div className="min-h-screen w-full flex flex-col bg-muted/40">
             <Header />
@@ -59,6 +62,9 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const [isAddRequestOpen, setIsAddRequestOpen] = useState(false);
+    const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+    const t = useTranslations('Profile');
+
 
     const userDocRef = useMemoFirebase(
         () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -80,7 +86,7 @@ export default function ProfilePage() {
     if (!user || !userProfile) {
         return (
             <div className="flex h-screen items-center justify-center">
-                <p>Vous devez être connecté pour voir cette page.</p>
+                <p>{t('notConnected')}</p>
             </div>
         );
     }
@@ -124,7 +130,7 @@ export default function ProfilePage() {
                                                 <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
                                                 <AvatarFallback className="text-3xl">{getInitials(userProfile.name)}</AvatarFallback>
                                             </Avatar>
-                                            <Button size="icon" className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-background">
+                                            <Button size="icon" className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-background" onClick={() => setIsEditProfileOpen(true)}>
                                                 <Edit className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -138,12 +144,12 @@ export default function ProfilePage() {
                                 <Card>
                                     <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                         <div>
-                                            <CardTitle className="font-headline text-2xl">Mes Demandes d'Ajout</CardTitle>
-                                            <CardDescription>Suivez l'état de vos propositions d'installations.</CardDescription>
+                                            <CardTitle className="font-headline text-2xl">{t('requestsTitle')}</CardTitle>
+                                            <CardDescription>{t('requestsDescription')}</CardDescription>
                                         </div>
                                         <Button onClick={() => setIsAddRequestOpen(true)} className="shrink-0 w-full md:w-auto">
                                             <PlusCircle className="mr-2 h-4 w-4" />
-                                            Nouvelle Demande
+                                            {t('newRequestButton')}
                                         </Button>
                                     </CardHeader>
                                     <CardContent>
@@ -151,9 +157,9 @@ export default function ProfilePage() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
-                                                        <TableHead>Nom de l'installation</TableHead>
-                                                        <TableHead className="hidden sm:table-cell">Date</TableHead>
-                                                        <TableHead>Statut</TableHead>
+                                                        <TableHead>{t('tableHeaderName')}</TableHead>
+                                                        <TableHead className="hidden sm:table-cell">{t('tableHeaderDate')}</TableHead>
+                                                        <TableHead>{t('tableHeaderStatus')}</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -173,14 +179,14 @@ export default function ProfilePage() {
                                                                         : '...'}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    <Badge variant={getStatusBadgeVariant(request.status)} className="capitalize">{request.status}</Badge>
+                                                                    <Badge variant={getStatusBadgeVariant(request.status)} className="capitalize">{t(`status.${request.status}`)}</Badge>
                                                                 </TableCell>
                                                             </TableRow>
                                                         ))
                                                     ) : (
                                                         <TableRow>
                                                             <TableCell colSpan={3} className="h-36 text-center text-muted-foreground">
-                                                                Vous n'avez soumis aucune demande.
+                                                                {t('noRequests')}
                                                             </TableCell>
                                                         </TableRow>
                                                     )}
@@ -195,6 +201,13 @@ export default function ProfilePage() {
                 </main>
             </div>
             <AddFacilityRequestDialog open={isAddRequestOpen} onOpenChange={setIsAddRequestOpen} />
+            {userProfile && (
+              <EditProfileDialog 
+                open={isEditProfileOpen} 
+                onOpenChange={setIsEditProfileOpen} 
+                user={userProfile} 
+              />
+            )}
         </>
     );
 }

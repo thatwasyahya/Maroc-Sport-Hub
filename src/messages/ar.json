@@ -2,7 +2,7 @@
 {
   "Home": {
     "heroTitle": "استكشف وابحث",
-    "heroSubtitle": "المنصة المثالية للعثور على المنشآt الرياضية في جميع أنحاء المغرب. سواء كنت رياضيًا منفردًا أو فريقًا، فإن تدريبك القادم يبدأ هنا.",
+    "heroSubtitle": "المنصة المثالية للعثور على المنشآت الرياضية في جميع أنحاء المغرب. سواء كنت رياضيًا منفردًا أو فريقًا، فإن تدريبك القادم يبدأ هنا.",
     "exploreMap": "استكشاف الخريطة",
     "filtersTitle": "عوامل التصفية",
     "filterSport": "الرياضة",
@@ -188,7 +188,33 @@
         "updateErrorTitle": "خطأ في التحديث"
       }
     }
+  },
+  "Profile": {
+    "notConnected": "يجب عليك تسجيل الدخول لعرض هذه الصفحة.",
+    "requestsTitle": "طلبات الإضافة الخاصة بي",
+    "requestsDescription": "تتبع حالة مقترحات المنشآت الخاصة بك.",
+    "newRequestButton": "طلب جديد",
+    "tableHeaderName": "اسم المنشأة",
+    "tableHeaderDate": "التاريخ",
+    "tableHeaderStatus": "الحالة",
+    "noRequests": "لم تقم بتقديم أي طلبات.",
+    "status": {
+      "pending": "قيد الانتظار",
+      "approved": "موافق عليه",
+      "rejected": "مرفوض"
+    },
+    "editDialog": {
+      "title": "تعديل الملف الشخصي",
+      "description": "قم بتحديث معلوماتك الشخصية هنا.",
+      "nameLabel": "الاسم الكامل",
+      "avatarUrlLabel": "رابط الصورة الرمزية",
+      "avatarUrlPlaceholder": "https://example.com/avatar.png",
+      "cancel": "إلغاء",
+      "save": "حفظ التغييرات",
+      "saving": "جاري الحفظ...",
+      "successTitle": "تم تحديث الملف الشخصي",
+      "successDescription": "تم تحديث معلوماتك بنجاح.",
+      "errorTitle": "خطأ في التحديث"
+    }
   }
 }
-
-    
