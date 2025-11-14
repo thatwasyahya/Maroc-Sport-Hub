@@ -11,6 +11,7 @@ import {NextIntlClientProvider} from 'next-intl';
 import {getMessages, unstable_setRequestLocale} from 'next-intl/server';
 import { NavigationProvider } from '@/components/providers/navigation-provider';
 import { NavigationLoader } from '@/components/navigation-loader';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -44,17 +45,24 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${inter.variable} ${poppins.variable} dark`} style={{ scrollBehavior: 'smooth' }}>
+    <html lang={locale} className={`${inter.variable} ${poppins.variable}`} style={{ scrollBehavior: 'smooth' }} suppressHydrationWarning>
       <body className="font-body antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <FirebaseClientProvider>
-            <NavigationProvider>
-              <NavigationLoader />
-              {children}
-              <Toaster />
-            </NavigationProvider>
-          </FirebaseClientProvider>
-        </NextIntlClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <FirebaseClientProvider>
+              <NavigationProvider>
+                <NavigationLoader />
+                {children}
+                <Toaster />
+              </NavigationProvider>
+            </FirebaseClientProvider>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

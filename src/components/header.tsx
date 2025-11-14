@@ -7,18 +7,24 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser, useAuth, useDoc, useMemoFirebase, useFirestore } from "@/firebase";
 import { doc } from 'firebase/firestore';
-import { Activity, LayoutDashboard, LogOut, User as UserIcon, LogIn, UserPlus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Activity, LayoutDashboard, LogOut, User as UserIcon, LogIn, UserPlus, Moon, Sun, Languages } from "lucide-react";
+import { useRouter, usePathname } from 'next/navigation';
 import { signOut } from "firebase/auth";
 import type { User, Settings } from "@/lib/types";
 import { Skeleton } from "./ui/skeleton";
 import { InterceptedLink } from "./intercepted-link";
+import { useTheme } from "next-themes";
+import { useLocale } from "next-intl";
 
 export default function Header() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = useLocale();
+
+  const { setTheme } = useTheme();
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -37,6 +43,14 @@ export default function Header() {
     await signOut(auth);
     router.push("/");
   };
+  
+  const handleLocaleChange = (newLocale: string) => {
+    // This will switch the locale and keep the user on the same page.
+    // The pathname is the part of the URL after the domain, without the locale.
+    // next-intl's middleware will handle the redirection.
+    router.replace(pathname, { locale: newLocale });
+  };
+
 
   const getInitials = (name?: string) => {
     if (!name) return "";
@@ -50,6 +64,12 @@ export default function Header() {
   const displayName = userProfile?.name || user?.email;
   const appName = settings?.appName || "Maroc Sport Hub";
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
+  
+  const locales = [
+    { code: 'fr', name: 'Français' },
+    { code: 'en', name: 'English' },
+    { code: 'ar', name: 'العربية' },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
@@ -63,6 +83,44 @@ export default function Header() {
           </InterceptedLink>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Languages className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Changer de langue</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {locales.map(locale => (
+                 <DropdownMenuItem key={locale.code} onClick={() => handleLocaleChange(locale.code)} disabled={currentLocale === locale.code}>
+                   {locale.name}
+                 </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Changer de thème</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                Clair
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                Sombre
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                Système
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {(isUserLoading || isProfileLoading) ? (
             <Skeleton className="h-10 w-10 rounded-full" />
           ) : user && userProfile ? (
