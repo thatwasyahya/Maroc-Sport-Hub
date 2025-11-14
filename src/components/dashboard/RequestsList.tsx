@@ -48,7 +48,7 @@ export default function RequestsList() {
 
     const isLoading = pendingLoading || processedLoading;
 
-    const handleApprove = async (request: FacilityRequest) => {
+    const handleApprove = (request: FacilityRequest) => {
         if (!firestore) return;
         setProcessingId(request.id);
 
@@ -93,7 +93,7 @@ export default function RequestsList() {
             });
     };
     
-    const handleReject = async (request: FacilityRequest) => {
+    const handleReject = (request: FacilityRequest) => {
         if (!firestore) return;
         setProcessingId(request.id);
         const reason = prompt("Raison du rejet (optionnel):");
@@ -126,7 +126,7 @@ export default function RequestsList() {
             });
     };
     
-    const handleDelete = async (requestId: string) => {
+    const handleDelete = (requestId: string) => {
         if (!firestore) return;
         setProcessingId(requestId);
         

@@ -7,8 +7,8 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import {NextIntlClientProvider, useMessages} from 'next-intl';
-import {unstable_setRequestLocale} from 'next-intl/server';
+import {NextIntlClientProvider} from 'next-intl';
+import {getMessages, unstable_setRequestLocale} from 'next-intl/server';
 import { NavigationProvider } from '@/components/providers/navigation-provider';
 import { NavigationLoader } from '@/components/navigation-loader';
 
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 // Even though this is the root layout, the middleware ensures that `locale` will always be present.
-export default function RootLayout({
+export default async function RootLayout({
   children,
   params: { locale },
 }: {
@@ -41,7 +41,7 @@ export default function RootLayout({
   unstable_setRequestLocale(locale);
 
   // Receive messages provided in `i18n.ts`
-  const messages = useMessages();
+  const messages = await getMessages();
 
   return (
     <html lang={locale} className={`${inter.variable} ${poppins.variable} dark`} style={{ scrollBehavior: 'smooth' }}>
@@ -49,7 +49,6 @@ export default function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <FirebaseClientProvider>
             <NavigationProvider>
-              <FirebaseErrorListener />
               <NavigationLoader />
               {children}
               <Toaster />

@@ -21,8 +21,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useFirestore } from '@/firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import type { User } from '@/lib/types';
@@ -90,43 +90,33 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
     }
   }, [user, open, form]);
 
-  const onSubmit = async (data: ProfileFormValues) => {
+  const onSubmit = (data: ProfileFormValues) => {
     setIsSubmitting(true);
-    try {
-      const userRef = doc(firestore, 'users', user.id);
-      
-      const [firstName, ...lastName] = data.name.split(' ');
+    const userRef = doc(firestore, 'users', user.id);
+    
+    const [firstName, ...lastName] = data.name.split(' ');
 
-      const updateData: Partial<User> = {
-        name: data.name,
-        firstName: firstName || '',
-        lastName: lastName.join(' ') || '',
-        phoneNumber: data.phoneNumber,
-        gender: data.gender || null,
-        birthDate: data.birthDate || null,
-        jobTitle: data.jobTitle,
-        city: data.city,
-        favoriteSports: data.favoriteSports,
-        updatedAt: serverTimestamp(),
-      };
-      
-      await updateDoc(userRef, updateData);
+    const updateData: Partial<User> = {
+      name: data.name,
+      firstName: firstName || '',
+      lastName: lastName.join(' ') || '',
+      phoneNumber: data.phoneNumber,
+      gender: data.gender || null,
+      birthDate: data.birthDate || null,
+      jobTitle: data.jobTitle,
+      city: data.city,
+      favoriteSports: data.favoriteSports,
+      updatedAt: serverTimestamp(),
+    };
+    
+    updateDocumentNonBlocking(userRef, updateData);
 
-      toast({
-        title: t('successTitle'),
-        description: t('successDescription'),
-      });
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      toast({
-        variant: 'destructive',
-        title: t('errorTitle'),
-        description: error.message,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    toast({
+      title: t('successTitle'),
+      description: t('successDescription'),
+    });
+    onOpenChange(false);
+    setIsSubmitting(false);
   };
 
   return (

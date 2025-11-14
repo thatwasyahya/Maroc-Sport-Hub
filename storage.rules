@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service firebase.storage {
@@ -14,10 +15,8 @@ service firebase.storage {
     }
     
     // Allow admins to write to the 'facilities' folder.
-    // This is a placeholder; you should implement a proper role check (e.g., using custom claims).
-    // For now, we will allow any authenticated user to write here for simplicity.
     match /facilities/{allPaths=**} {
-        allow write: if request.auth != null; 
+        allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin']; 
     }
   }
 }

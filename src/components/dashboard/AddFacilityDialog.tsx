@@ -23,8 +23,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser, useFirestore } from '@/firebase';
-import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import type { Facility, EstablishmentState, BuildingState, EquipmentState } from '@/lib/types';
@@ -222,54 +222,44 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
     }
   };
 
-  const onSubmit = async (data: FacilityFormValues) => {
+  const onSubmit = (data: FacilityFormValues) => {
     if (!user) {
       toast({ variant: 'destructive', title: 'Erreur d\'authentification', description: 'Vous devez être connecté.' });
       return;
     }
     
     setIsSubmitting(true);
-    try {
-      const { lat, lng, ...restOfData } = data;
-      
-      const facilityPayload: Partial<Facility> = {
-        ...restOfData,
-        adminId: facility?.adminId || user.uid, // Keep original admin on edit
-        updatedAt: serverTimestamp(),
-      };
+    const { lat, lng, ...restOfData } = data;
+    
+    const facilityPayload: Partial<Facility> = {
+      ...restOfData,
+      adminId: facility?.adminId || user.uid, // Keep original admin on edit
+      updatedAt: serverTimestamp(),
+    };
 
-      if (lat && lng) {
-        facilityPayload.location = { lat, lng };
-      }
-      
-      if (isEditing && facility) {
-        const facilityRef = doc(firestore, 'facilities', facility.id);
-        await setDoc(facilityRef, facilityPayload, { merge: true });
-        toast({
-          title: 'Installation mise à jour',
-          description: `L'installation "${data.name}" a été mise à jour avec succès.`,
-        });
-      } else {
-        const facilitiesCollectionRef = collection(firestore, 'facilities');
-        await addDoc(facilitiesCollectionRef, { ...facilityPayload, createdAt: serverTimestamp() });
-        toast({
-          title: 'Installation ajoutée',
-          description: `L'installation "${data.name}" a été créée avec succès.`,
-        });
-      }
-
-      form.reset();
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur inattendue est survenue lors de la sauvegarde de l\'installation.',
-      });
-    } finally {
-      setIsSubmitting(false);
+    if (lat && lng) {
+      facilityPayload.location = { lat, lng };
     }
+    
+    if (isEditing && facility) {
+      const facilityRef = doc(firestore, 'facilities', facility.id);
+      setDocumentNonBlocking(facilityRef, facilityPayload, { merge: true });
+      toast({
+        title: 'Installation mise à jour',
+        description: `L'installation "${data.name}" a été mise à jour avec succès.`,
+      });
+    } else {
+      const facilitiesCollectionRef = collection(firestore, 'facilities');
+      addDocumentNonBlocking(facilitiesCollectionRef, { ...facilityPayload, createdAt: serverTimestamp() });
+      toast({
+        title: 'Installation ajoutée',
+        description: `L'installation "${data.name}" a été créée avec succès.`,
+      });
+    }
+
+    form.reset();
+    onOpenChange(false);
+    setIsSubmitting(false);
   };
   
   const establishmentStates: EstablishmentState[] = ['Opérationnel', 'En arrêt', 'Prêt', 'En cours de transformation', 'En cours de construction', 'Non défini'];

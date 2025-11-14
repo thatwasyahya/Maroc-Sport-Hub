@@ -23,8 +23,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFirestore } from '@/firebase';
-import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import type { User, UserRole } from '@/lib/types';
@@ -118,73 +118,60 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
     }
   }, [user, open, form]);
 
-  const onSubmit = async (data: UserFormValues) => {
+  const onSubmit = (data: UserFormValues) => {
     setIsSubmitting(true);
-    try {
-      if (isEditing && user) {
-        // Update existing user
-        const userRef = doc(firestore, 'users', user.id);
-        
-        const updateData: Partial<User> = {
-            name: data.name,
-            role: data.role,
-            phoneNumber: data.phoneNumber,
-            gender: data.gender || null,
-            birthDate: data.birthDate || null,
-            jobTitle: data.jobTitle,
-            city: data.city,
-            favoriteSports: data.favoriteSports,
-            updatedAt: serverTimestamp(),
-        };
+    if (isEditing && user) {
+      const userRef = doc(firestore, 'users', user.id);
+      
+      const updateData: Partial<User> = {
+          name: data.name,
+          role: data.role,
+          phoneNumber: data.phoneNumber,
+          gender: data.gender || null,
+          birthDate: data.birthDate || null,
+          jobTitle: data.jobTitle,
+          city: data.city,
+          favoriteSports: data.favoriteSports,
+          updatedAt: serverTimestamp(),
+      };
 
-        await updateDoc(userRef, updateData);
-        toast({
-          title: t('updateSuccessTitle'),
-          description: t('updateSuccessDescription'),
-        });
-      } else {
-        // NOTE: This creates a user document in Firestore, but DOES NOT create an
-        // authentication entry in Firebase Auth. This is a simplified approach.
-        if (!data.password) {
-            form.setError("password", { message: "Password is required for new users."});
-            setIsSubmitting(false);
-            return;
-        }
-        const userDocRef = doc(firestore, 'users', data.email); // Using email as ID for simplicity
-        const [firstName, ...lastName] = data.name.split(' ');
-
-        await setDoc(userDocRef, {
-            name: data.name,
-            firstName: firstName || '',
-            lastName: lastName.join(' ') || '',
-            email: data.email,
-            role: data.role,
-            phoneNumber: data.phoneNumber,
-            gender: data.gender || null,
-            birthDate: data.birthDate || null,
-            jobTitle: data.jobTitle,
-            city: data.city,
-            favoriteSports: data.favoriteSports,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
-        toast({
-          title: t('addSuccessTitle'),
-          description: t('addSuccessDescription'),
-        });
-      }
-      form.reset();
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Error saving user:', error);
+      updateDocumentNonBlocking(userRef, updateData);
       toast({
-        variant: 'destructive',
-        title: isEditing ? t('updateErrorTitle') : t('addErrorTitle'),
-        description: error.message,
+        title: t('updateSuccessTitle'),
+        description: t('updateSuccessDescription'),
       });
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      if (!data.password) {
+          form.setError("password", { message: "Password is required for new users."});
+          setIsSubmitting(false);
+          return;
+      }
+      const userDocRef = doc(firestore, 'users', data.email); // Using email as ID for simplicity
+      const [firstName, ...lastName] = data.name.split(' ');
+
+      setDocumentNonBlocking(userDocRef, {
+          name: data.name,
+          firstName: firstName || '',
+          lastName: lastName.join(' ') || '',
+          email: data.email,
+          role: data.role,
+          phoneNumber: data.phoneNumber,
+          gender: data.gender || null,
+          birthDate: data.birthDate || null,
+          jobTitle: data.jobTitle,
+          city: data.city,
+          favoriteSports: data.favoriteSports,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+      }, { merge: false });
+      toast({
+        title: t('addSuccessTitle'),
+        description: t('addSuccessDescription'),
+      });
     }
+    form.reset();
+    onOpenChange(false);
+    setIsSubmitting(false);
   };
 
   return (

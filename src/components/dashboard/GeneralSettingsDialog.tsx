@@ -23,8 +23,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import type { Settings } from '@/lib/types';
@@ -109,26 +109,16 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
     }
   }, [settings, form]);
 
-  const onSubmit = async (data: SettingsFormValues) => {
+  const onSubmit = (data: SettingsFormValues) => {
     if (!settingsDocRef) return;
     setIsSubmitting(true);
-    try {
-      await setDoc(settingsDocRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-      toast({
-        title: 'Paramètres mis à jour',
-        description: 'Les paramètres généraux du site ont été enregistrés.',
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error updating settings:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur est survenue lors de la mise à jour des paramètres.',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setDocumentNonBlocking(settingsDocRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    toast({
+      title: 'Paramètres mis à jour',
+      description: 'Les paramètres généraux du site ont été enregistrés.',
+    });
+    onOpenChange(false);
+    setIsSubmitting(false);
   };
 
   return (

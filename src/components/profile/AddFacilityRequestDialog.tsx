@@ -23,11 +23,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser, useFirestore } from '@/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import { Checkbox } from '../ui/checkbox';
 import { ScrollArea } from '../ui/scroll-area';
 import { sports } from '@/lib/data';
 import { getRegions } from '@/lib/maroc-api';
@@ -193,50 +192,41 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     }
   };
 
-  const onSubmit = async (data: FacilityRequestFormValues) => {
+  const onSubmit = (data: FacilityRequestFormValues) => {
     if (!user) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
       return;
     }
 
     setIsSubmitting(true);
-    try {
-      const newRequestData: Omit<FacilityRequest, 'id' | 'city'> = {
-        ...data,
-        userId: user.uid,
-        userName: user.displayName || user.email || 'Anonymous',
-        userEmail: user.email || '',
-        status: 'pending',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
 
-      if (lat !== null && lng !== null) {
-          newRequestData.location = { lat, lng };
-      }
+    const newRequestData: Omit<FacilityRequest, 'id' | 'city'> = {
+      ...data,
+      userId: user.uid,
+      userName: user.displayName || user.email || 'Anonymous',
+      userEmail: user.email || '',
+      status: 'pending',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
 
-      const requestsCollectionRef = collection(firestore, 'facilityRequests');
-      await addDoc(requestsCollectionRef, newRequestData);
-
-      toast({
-        title: 'Demande Soumise',
-        description: `Votre demande pour ${data.name} a été soumise pour examen.`,
-      });
-      form.reset();
-      setLat(null);
-      setLng(null);
-      setGeocodingStatus('idle');
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de la demande:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Une erreur inattendue est survenue lors de la soumission de votre demande.',
-      });
-    } finally {
-      setIsSubmitting(false);
+    if (lat !== null && lng !== null) {
+        newRequestData.location = { lat, lng };
     }
+
+    const requestsCollectionRef = collection(firestore, 'facilityRequests');
+    addDocumentNonBlocking(requestsCollectionRef, newRequestData);
+
+    toast({
+      title: 'Demande Soumise',
+      description: `Votre demande pour ${data.name} a été soumise pour examen.`,
+    });
+    form.reset();
+    setLat(null);
+    setLng(null);
+    setGeocodingStatus('idle');
+    onOpenChange(false);
+    setIsSubmitting(false);
   };
   
   const establishmentStates: EstablishmentState[] = ['Opérationnel', 'En arrêt', 'Prêt', 'En cours de transformation', 'En cours de construction', 'Non défini'];
