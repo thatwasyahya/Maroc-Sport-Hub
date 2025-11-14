@@ -91,6 +91,8 @@
       "region": "Region",
       "recentRequestsTitle": "Recent Add Requests",
       "recentRequestsDescription": "The last 5 requests submitted by users.",
+      "topSportsTitle": "Top 5 Most Common Sports",
+      "topSportsDescription": "Ranking of the most available sports in facilities.",
       "facilityName": "Facility Name",
       "userName": "User Name",
       "status": "Status",

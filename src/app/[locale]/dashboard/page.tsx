@@ -4,11 +4,11 @@
 import { useMemo } from 'react';
 import type { Facility, User, FacilityRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Users, FileText, Loader2, ListOrdered, BarChart3, PieChartIcon } from 'lucide-react';
+import { Building, Users, FileText, Loader2, ListOrdered, BarChart3, PieChartIcon, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslations } from 'next-intl';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Pie, PieChart, Cell } from 'recharts';
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Pie, PieChart, Cell, LabelList } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -99,11 +99,27 @@ export default function DashboardPage() {
     }, {} as Record<string, number>);
     return Object.entries(counts).map(([name, value]) => ({ name, value, fill: `hsl(var(--chart-${Object.keys(counts).indexOf(name) + 1}))` }));
   }, [facilities]);
+
+  const topSports = useMemo(() => {
+    if (!facilities) return [];
+    const sportCounts = facilities.flatMap(f => f.sports || []).reduce((acc, sport) => {
+        acc[sport] = (acc[sport] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(sportCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+  }, [facilities]);
   
   const chartConfig: ChartConfig = {
     count: { label: t('facilityCount'), color: "hsl(var(--chart-1))" },
     region: { label: t('region') },
   };
+
+  const topSportsChartConfig: ChartConfig = {
+      count: { label: t('facilityCount'), color: "hsl(var(--chart-2))" },
+  }
 
   const pieChartConfig = useMemo(() => {
     if (!facilitiesByState) return {}
@@ -223,41 +239,21 @@ export default function DashboardPage() {
 
        <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><ListOrdered />{t('recentRequestsTitle')}</CardTitle>
-          <CardDescription>{t('recentRequestsDescription')}</CardDescription>
+          <CardTitle className="flex items-center gap-2"><Trophy />{t('topSportsTitle')}</CardTitle>
+          <CardDescription>{t('topSportsDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>{t('facilityName')}</TableHead>
-                        <TableHead className="hidden md:table-cell">{t('userName')}</TableHead>
-                        <TableHead className="text-right">{t('status')}</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {isLoading ? (
-                        <TableRow><TableCell colSpan={3} className="h-24 text-center"><Loader2 className="animate-spin h-6 w-6 mx-auto" /></TableCell></TableRow>
-                    ) : pendingRequests && pendingRequests.length > 0 ? (
-                        pendingRequests.map(req => (
-                            <TableRow key={req.id}>
-                                <TableCell className="font-medium">{req.name}</TableCell>
-                                <TableCell className="hidden md:table-cell">{req.userName}</TableCell>
-                                <TableCell className="text-right"><Badge variant="secondary">{req.status}</Badge></TableCell>
-                            </TableRow>
-                        ))
-                    ) : (
-                        <TableRow><TableCell colSpan={3} className="h-24 text-center">{t('noPendingRequests')}</TableCell></TableRow>
-                    )}
-                </TableBody>
-            </Table>
-             {pendingRequests && pendingRequests.length > 0 && (
-                <div className="flex justify-end pt-4">
-                    <Button asChild variant="outline">
-                        <Link href="/dashboard/requests">{t('viewAllRequests')}</Link>
-                    </Button>
-                </div>
-            )}
+            <ChartContainer config={topSportsChartConfig} className="min-h-64 w-full">
+                <BarChart data={topSports} layout="vertical" accessibilityLayer>
+                    <CartesianGrid horizontal={false} />
+                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={100} />
+                    <XAxis dataKey="count" type="number" hide />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                    <Bar dataKey="count" fill="var(--color-count)" radius={5}>
+                        <LabelList dataKey="count" position="right" offset={8} className="fill-foreground text-sm" />
+                    </Bar>
+                </BarChart>
+            </ChartContainer>
         </CardContent>
       </Card>
     </div>

@@ -91,6 +91,8 @@
       "region": "Région",
       "recentRequestsTitle": "Demandes d'Ajout Récentes",
       "recentRequestsDescription": "Les 5 dernières demandes soumises par les utilisateurs.",
+      "topSportsTitle": "Top 5 des Sports les Plus Courants",
+      "topSportsDescription": "Classement des sports les plus disponibles dans les installations.",
       "facilityName": "Nom de l'installation",
       "userName": "Nom de l'utilisateur",
       "status": "Statut",
