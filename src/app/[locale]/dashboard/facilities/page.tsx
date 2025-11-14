@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trash2, Loader2, Upload, Eye } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2, Upload, Eye, FileDown, MoreHorizontal } from 'lucide-react';
 import AddFacilityDialog from '@/components/dashboard/AddFacilityDialog';
 import ImportFacilitiesDialog from '@/components/dashboard/ImportFacilitiesDialog';
 import { useTranslations } from 'next-intl';
@@ -28,6 +28,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import FacilityDetails from '@/components/facility-details';
 import { useToast } from '@/hooks/use-toast';
 import { defaultData } from '@/lib/data';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import Papa from 'papaparse';
 
 export default function FacilitiesPage() {
   const firestore = useFirestore();
@@ -40,11 +43,32 @@ export default function FacilitiesPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [isBulkDeleteAlertOpen, setIsBulkDeleteAlertOpen] = useState(false);
 
   // Use default data directly, ignoring Firestore for now.
   const [facilities, setFacilities] = useState<Facility[]>(defaultData.facilities);
   const [facilitiesLoading, setFacilitiesLoading] = useState(false);
+  
+  const isAllSelected = selectedRowKeys.length > 0 && selectedRowKeys.length === facilities.length;
+  const isSomeSelected = selectedRowKeys.length > 0 && selectedRowKeys.length < facilities.length;
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRowKeys(facilities.map(f => f.id));
+    } else {
+      setSelectedRowKeys([]);
+    }
+  };
+
+  const handleRowSelect = (rowId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRowKeys(prev => [...prev, rowId]);
+    } else {
+      setSelectedRowKeys(prev => prev.filter(id => id !== rowId));
+    }
+  };
 
   const handleAddNew = () => {
     setSelectedFacility(null);
@@ -65,18 +89,11 @@ export default function FacilitiesPage() {
     if (!firestore || !user) return;
     setProcessingId(facilityId);
     try {
-      // This is a local delete for now as we are using default data.
       setFacilities(prev => prev.filter(f => f.id !== facilityId));
       toast({
         title: "Installation supprimée (localement)",
         description: "L'installation a été retirée de la liste actuelle.",
       });
-      // In a real scenario with a connected DB, you would use:
-      // await deleteDoc(doc(firestore, 'facilities', facilityId));
-      // toast({
-      //   title: "Installation supprimée",
-      //   description: "L'installation a été supprimée avec succès.",
-      // });
     } catch (error: any) {
       console.error("Error deleting facility: ", error);
       toast({
@@ -88,6 +105,36 @@ export default function FacilitiesPage() {
       setProcessingId(null);
     }
   };
+  
+  const handleBulkDelete = async () => {
+    setFacilities(prev => prev.filter(f => !selectedRowKeys.includes(f.id)));
+    toast({
+        title: `${selectedRowKeys.length} installations supprimées`,
+        description: "Les installations sélectionnées ont été retirées de la liste.",
+    });
+    setSelectedRowKeys([]);
+    setIsBulkDeleteAlertOpen(false);
+  };
+  
+  const downloadFile = (content: string, fileName: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportCSV = () => {
+    const csv = Papa.unparse(facilities);
+    downloadFile(csv, 'facilities.csv', 'text/csv;charset=utf-8;');
+  };
+
+  const handleExportJSON = () => {
+    const json = JSON.stringify(facilities, null, 2);
+    downloadFile(json, 'facilities.json', 'application/json');
+  };
 
 
   return (
@@ -98,11 +145,23 @@ export default function FacilitiesPage() {
             <CardTitle>{t('title')}</CardTitle>
             <CardDescription>{t('description')}</CardDescription>
           </div>
-          <div className="flex gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full md:w-auto">
              <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className="w-full md:w-auto">
               <Upload className="mr-2 h-4 w-4" />
               Importer
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full md:w-auto">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Exporter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleExportCSV}>Exporter en CSV</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportJSON}>Exporter en JSON</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button onClick={handleAddNew} className="w-full md:w-auto">
               <PlusCircle className="mr-2 h-4 w-4" />
               {t('addButton')}
@@ -110,10 +169,47 @@ export default function FacilitiesPage() {
           </div>
         </CardHeader>
         <CardContent>
+           {selectedRowKeys.length > 0 && (
+            <div className="flex items-center justify-between gap-4 p-4 mb-4 bg-muted border rounded-lg">
+                <div className="text-sm font-medium">
+                    {selectedRowKeys.length} installation(s) sélectionnée(s)
+                </div>
+                <AlertDialog open={isBulkDeleteAlertOpen} onOpenChange={setIsBulkDeleteAlertOpen}>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                            <Trash2 className="mr-2 h-4 w-4"/>
+                            Supprimer la sélection
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Cette action est irréversible. {selectedRowKeys.length} installations seront définitivement supprimées.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive hover:bg-destructive/90">
+                                Supprimer
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+           )}
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
+                   <TableHead padding="checkbox">
+                    <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                        aria-label="Select all"
+                        indeterminate={isSomeSelected}
+                    />
+                  </TableHead>
                   <TableHead>{t('tableHeaderName')}</TableHead>
                   <TableHead className="hidden sm:table-cell">Province</TableHead>
                   <TableHead className="hidden lg:table-cell">Commune</TableHead>
@@ -125,13 +221,20 @@ export default function FacilitiesPage() {
               <TableBody>
                 {facilitiesLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       {t('loading')}
                     </TableCell>
                   </TableRow>
                 ) : facilities && facilities.length > 0 ? (
                   facilities.map((facility) => (
-                    <TableRow key={facility.id}>
+                    <TableRow key={facility.id} data-state={selectedRowKeys.includes(facility.id) && "selected"}>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                            checked={selectedRowKeys.includes(facility.id)}
+                            onCheckedChange={(checked) => handleRowSelect(facility.id, !!checked)}
+                            aria-label="Select row"
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{facility.name}</TableCell>
                       <TableCell className="hidden sm:table-cell">{facility.province}</TableCell>
                       <TableCell className="hidden lg:table-cell">{facility.commune}</TableCell>
@@ -149,32 +252,44 @@ export default function FacilitiesPage() {
                           {processingId === facility.id ? (
                              <Loader2 className="ml-auto h-5 w-5 animate-spin" />
                           ) : (
-                            <div className="flex justify-end gap-1 md:gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => handleView(facility)}>
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(facility)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                               <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                        <Trash2 className="h-4 w-4" />
+                            <div className="flex justify-end gap-1 md:gap-0">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
                                     </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                                          <AlertDialogDescription>Cette action est irréversible. L'installation sera définitivement supprimée.</AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => handleDelete(facility.id)} className="bg-destructive hover:bg-destructive/90">
-                                              Supprimer
-                                          </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                  </AlertDialogContent>
-                              </AlertDialog>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleView(facility)}>
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        Voir
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleEdit(facility)}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Modifier
+                                    </DropdownMenuItem>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive px-2 py-1.5 font-normal text-sm relative flex cursor-default select-none items-center rounded-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Supprimer
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                                                <AlertDialogDescription>Cette action est irréversible. L'installation sera définitivement supprimée.</AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(facility.id)} className="bg-destructive hover:bg-destructive/90">
+                                                    Supprimer
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           )}
                         </TableCell>
@@ -182,7 +297,7 @@ export default function FacilitiesPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       {t('noFacilities')}
                     </TableCell>
                   </TableRow>
