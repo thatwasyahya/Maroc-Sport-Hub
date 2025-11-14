@@ -78,15 +78,17 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
       
       const [firstName, ...lastName] = data.name.split(' ');
 
-      await updateDoc(userRef, {
+      const updateData: Partial<User> = {
         name: data.name,
         firstName: firstName || '',
         lastName: lastName.join(' ') || '',
         avatarUrl: data.avatarUrl,
         phoneNumber: data.phoneNumber,
-        gender: data.gender,
+        gender: data.gender || null, // Ensure we send null instead of undefined
         updatedAt: serverTimestamp(),
-      });
+      };
+      
+      await updateDoc(userRef, updateData);
 
       toast({
         title: t('successTitle'),
@@ -134,7 +136,7 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
                 <FormItem>
                   <FormLabel>{t('avatarUrlLabel')}</FormLabel>
                   <FormControl>
-                    <Input placeholder={t('avatarUrlPlaceholder')} {...field} />
+                    <Input placeholder={t('avatarUrlPlaceholder')} {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,7 +149,7 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
                 <FormItem>
                   <FormLabel>{t('phoneLabel')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="0612345678" {...field} />
+                    <Input placeholder="0612345678" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

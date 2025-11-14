@@ -98,13 +98,16 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
       if (isEditing && user) {
         // Update existing user
         const userRef = doc(firestore, 'users', user.id);
-        await updateDoc(userRef, {
+        
+        const updateData: Partial<User> = {
             name: data.name,
             role: data.role,
             phoneNumber: data.phoneNumber,
-            gender: data.gender,
+            gender: data.gender || null,
             updatedAt: serverTimestamp(),
-        });
+        };
+
+        await updateDoc(userRef, updateData);
         toast({
           title: t('updateSuccessTitle'),
           description: t('updateSuccessDescription'),
@@ -118,12 +121,16 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
             return;
         }
         const userDocRef = doc(firestore, 'users', data.email); // Using email as ID for simplicity
+        const [firstName, ...lastName] = data.name.split(' ');
+
         await setDoc(userDocRef, {
             name: data.name,
+            firstName: firstName || '',
+            lastName: lastName.join(' ') || '',
             email: data.email,
             role: data.role,
             phoneNumber: data.phoneNumber,
-            gender: data.gender,
+            gender: data.gender || null,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
@@ -189,7 +196,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
                   <FormItem>
                     <FormLabel>{t('phoneLabel')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="0612345678" {...field} />
+                      <Input placeholder="0612345678" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

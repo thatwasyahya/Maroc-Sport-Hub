@@ -6,8 +6,8 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber?: string;
-  gender?: 'Male' | 'Female' | 'Other';
+  phoneNumber?: string | null;
+  gender?: 'Male' | 'Female' | 'Other' | null;
   avatarUrl?: string;
   role: UserRole;
   createdAt: any; // Can be a server timestamp
