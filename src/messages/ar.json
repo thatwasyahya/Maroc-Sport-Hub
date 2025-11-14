@@ -2,7 +2,7 @@
 {
   "Home": {
     "heroTitle": "استكشف وابحث",
-    "heroSubtitle": "المنصة المثالية للعثور على المنشآت الرياضية في جميع أنحاء المغرب. سواء كنت رياضيًا منفردًا أو فريقًا، فإن تدريبك القادم يبدأ هنا.",
+    "heroSubtitle": "المنصة المثالية للعثور على المنشآt الرياضية في جميع أنحاء المغرب. سواء كنت رياضيًا منفردًا أو فريقًا، فإن تدريبك القادم يبدأ هنا.",
     "exploreMap": "استكشاف الخريطة",
     "filtersTitle": "عوامل التصفية",
     "filterSport": "الرياضة",
@@ -65,7 +65,6 @@
       "overview": "نظرة عامة",
       "requests": "الطلبات",
       "facilities": "المنشآت",
-      "equipments": "المعدات",
       "users": "المستخدمون",
       "dashboard": "لوحة التحكم",
       "backToSite": "العودة إلى الموقع"
@@ -76,15 +75,31 @@
       "homeButton": "اذهب إلى الصفحة الرئيسية"
     },
     "Overview": {
+      "title": "نظرة عامة على لوحة التحكم",
       "welcome": "مرحباً {name}!",
       "totalFacilities": "إجمالي المنشآت",
       "totalFacilitiesDescription": "عدد المنشآت الرياضية المدارة.",
-      "overviewTitle": "نظرة عامة",
-      "overviewDescription": "هذه هي لوحة التحكم الرئيسية الخاصة بك. من هنا، يمكنك إدارة جميع جوانب منصة Maroc Sport Hub. استخدم التنقل على اليسار لإدارة المنشآت."
+      "totalUsers": "إجمالي المستخدمين",
+      "totalUsersDescription": "عدد المستخدمين المسجلين على المنصة.",
+      "pendingRequests": "الطلبات المعلقة",
+      "pendingRequestsDescription": "طلبات إضافة المنشآت التي سيتم التحقق منها.",
+      "facilitiesByRegionTitle": "التوزيع حسب المنطقة",
+      "facilitiesByRegionDescription": "عدد المنشآت الرياضية في كل منطقة.",
+      "facilitiesByStateTitle": "حالة المنشآت",
+      "facilitiesByStateDescription": "نسبة المنشآت حسب حالة التشغيل.",
+      "facilityCount": "عدد المنشآت",
+      "region": "المنطقة",
+      "recentRequestsTitle": "طلبات الإضافة الأخيرة",
+      "recentRequestsDescription": "آخر 5 طلبات قدمها المستخدمون.",
+      "facilityName": "اسم المنشأة",
+      "userName": "اسم المستخدم",
+      "status": "الحالة",
+      "noPendingRequests": "لا توجد طلبات معلقة في الوقت الحالي.",
+      "viewAllRequests": "عرض جميع الطلبات"
     },
     "Facilities": {
-      "title": "المنشآت",
-      "description": "إدارة المنشآت الرياضية الخاصة بك.",
+      "title": "المنشآt",
+      "description": "إدارة المنشآt الرياضية الخاصة بك.",
       "addButton": "إضافة منشأة",
       "importButton": "استيراد",
       "exportButton": "تصدير",
@@ -133,17 +148,6 @@
         "equipment_state": "حالة التجهيزات"
       }
     },
-    "Equipments": {
-      "title": "المعدات",
-      "description": "إدارة المعدات الرياضية الخاصة بك.",
-      "addButton": "إضافة معدات",
-      "tableHeaderName": "الاسم",
-      "tableHeaderRentalCost": "تكلفة الإيجار",
-      "tableHeaderDepositCost": "تكلفة الوديعة",
-      "currency": "درهم/ساعة",
-      "loading": "جار التحميل...",
-      "noEquipments": "لم يتم العثور على معدات."
-    },
     "Users": {
       "title": "المستخدمون",
       "description": "إدارة جميع مستخدمي المنصة.",
@@ -151,7 +155,6 @@
       "tableHeaderUser": "المستخدم",
       "tableHeaderRole": "الدور",
       "tableHeaderPhone": "الهاتف",
-      "tableHeaderGender": "الجنس",
       "tableHeaderJoined": "تاريخ الانضمام",
       "tableHeaderJob": "الوظيفة",
       "tableHeaderActions": "الإجراءات",
@@ -161,10 +164,6 @@
         "super_admin": "مدير عام",
         "admin": "مدير",
         "user": "مستخدم"
-      },
-      "genders": {
-        "Male": "ذكر",
-        "Female": "أنثى"
       },
       "deleteConfirmTitle": "هل أنت متأكد؟",
       "deleteConfirmDescription": "هذا الإجراء لا يمكن التراجع عنه. سيؤدي هذا إلى حذف حساب المستخدم بشكل دائم.",
@@ -210,7 +209,7 @@
   "Profile": {
     "notConnected": "يجب عليك تسجيل الدخول لعرض هذه الصفحة.",
     "requestsTitle": "طلبات الإضافة الخاصة بي",
-    "requestsDescription": "تتبع حالة مقترحات المنشآت الخاصة بك.",
+    "requestsDescription": "تتبع حالة مقترحات المنشآt الخاصة بك.",
     "newRequestButton": "طلب جديد",
     "tableHeaderName": "اسم المنشأة",
     "tableHeaderDate": "التاريخ",
@@ -225,8 +224,6 @@
       "title": "تعديل الملف الشخصي",
       "description": "قم بتحديث معلوماتك الشخصية هنا.",
       "nameLabel": "الاسم الكامل",
-      "avatarUrlLabel": "رابط الصورة الرمزية",
-      "avatarUrlPlaceholder": "https://example.com/avatar.png",
       "phoneLabel": "رقم الهاتف",
       "genderLabel": "الجنس",
       "genderPlaceholder": "اختر الجنس...",

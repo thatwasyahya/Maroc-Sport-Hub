@@ -65,7 +65,6 @@
       "overview": "Aperçu",
       "requests": "Demandes",
       "facilities": "Installations",
-      "equipments": "Équipements",
       "users": "Utilisateurs",
       "dashboard": "Tableau de bord",
       "backToSite": "Retour au site"
@@ -76,11 +75,27 @@
       "homeButton": "Aller à la page d'accueil"
     },
     "Overview": {
+      "title": "Aperçu du Tableau de Bord",
       "welcome": "Bienvenue, {name} !",
       "totalFacilities": "Total des installations",
       "totalFacilitiesDescription": "Nombre d'installations sportives gérées.",
-      "overviewTitle": "Aperçu",
-      "overviewDescription": "Ceci est votre tableau de bord principal. D'ici, vous pouvez gérer tous les aspects de la plateforme Maroc Sport Hub. Utilisez la navigation à gauche pour gérer les installations."
+      "totalUsers": "Total des utilisateurs",
+      "totalUsersDescription": "Nombre d'utilisateurs inscrits sur la plateforme.",
+      "pendingRequests": "Demandes en attente",
+      "pendingRequestsDescription": "Demandes d'ajout d'installations à valider.",
+      "facilitiesByRegionTitle": "Répartition par Région",
+      "facilitiesByRegionDescription": "Nombre d'installations sportives dans chaque région.",
+      "facilitiesByStateTitle": "État des Installations",
+      "facilitiesByStateDescription": "Proportion des installations par état de fonctionnement.",
+      "facilityCount": "Nombre d'installations",
+      "region": "Région",
+      "recentRequestsTitle": "Demandes d'Ajout Récentes",
+      "recentRequestsDescription": "Les 5 dernières demandes soumises par les utilisateurs.",
+      "facilityName": "Nom de l'installation",
+      "userName": "Nom de l'utilisateur",
+      "status": "Statut",
+      "noPendingRequests": "Aucune demande en attente pour le moment.",
+      "viewAllRequests": "Voir toutes les demandes"
     },
     "Facilities": {
       "title": "Installations",
@@ -133,17 +148,6 @@
         "equipment_state": "État des équipements"
       }
     },
-    "Equipments": {
-      "title": "Équipements",
-      "description": "Gérez vos équipements sportifs.",
-      "addButton": "Ajouter un équipement",
-      "tableHeaderName": "Nom",
-      "tableHeaderRentalCost": "Coût de location",
-      "tableHeaderDepositCost": "Coût de la caution",
-      "currency": "MAD/hr",
-      "loading": "Chargement...",
-      "noEquipments": "Aucun équipement trouvé."
-    },
     "Users": {
       "title": "Utilisateurs",
       "description": "Gérez tous les utilisateurs de la plateforme.",
@@ -151,7 +155,6 @@
       "tableHeaderUser": "Utilisateur",
       "tableHeaderRole": "Rôle",
       "tableHeaderPhone": "Téléphone",
-      "tableHeaderGender": "Genre",
       "tableHeaderJoined": "Inscrit le",
       "tableHeaderJob": "Fonction",
       "tableHeaderActions": "Actions",
@@ -161,10 +164,6 @@
         "super_admin": "Super Admin",
         "admin": "Admin",
         "user": "Utilisateur"
-      },
-      "genders": {
-        "Male": "Homme",
-        "Female": "Femme"
       },
       "deleteConfirmTitle": "Êtes-vous sûr ?",
       "deleteConfirmDescription": "Cette action est irréversible et supprimera définitivement l'utilisateur.",
@@ -225,8 +224,6 @@
       "title": "Modifier le profil",
       "description": "Mettez à jour vos informations personnelles ici.",
       "nameLabel": "Nom complet",
-      "avatarUrlLabel": "URL de l'avatar",
-      "avatarUrlPlaceholder": "https://example.com/avatar.png",
       "phoneLabel": "Numéro de téléphone",
       "genderLabel": "Genre",
       "genderPlaceholder": "Sélectionner un genre...",
@@ -239,8 +236,8 @@
       "favoriteSportsLabel": "Sports favoris",
       "favoriteSportsPlaceholder": "Sélectionner des sports...",
       "genders": {
-          "Male": "Homme",
-          "Female": "Femme"
+        "Male": "Homme",
+        "Female": "Femme"
       },
       "cancel": "Annuler",
       "save": "Enregistrer",

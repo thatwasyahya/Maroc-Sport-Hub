@@ -65,7 +65,6 @@
       "overview": "Overview",
       "requests": "Requests",
       "facilities": "Facilities",
-      "equipments": "Equipments",
       "users": "Users",
       "dashboard": "Dashboard",
       "backToSite": "Back to Site"
@@ -76,11 +75,27 @@
       "homeButton": "Go to Homepage"
     },
     "Overview": {
+      "title": "Dashboard Overview",
       "welcome": "Welcome, {name}!",
       "totalFacilities": "Total Facilities",
       "totalFacilitiesDescription": "Number of managed sports facilities.",
-      "overviewTitle": "Overview",
-      "overviewDescription": "This is your main dashboard. From here, you can manage all aspects of the Maroc Sport Hub platform. Use the navigation on the left to manage facilities."
+      "totalUsers": "Total Users",
+      "totalUsersDescription": "Number of registered users on the platform.",
+      "pendingRequests": "Pending Requests",
+      "pendingRequestsDescription": "Facility addition requests to be validated.",
+      "facilitiesByRegionTitle": "Distribution by Region",
+      "facilitiesByRegionDescription": "Number of sports facilities in each region.",
+      "facilitiesByStateTitle": "Facility Status",
+      "facilitiesByStateDescription": "Proportion of facilities by operational status.",
+      "facilityCount": "Number of facilities",
+      "region": "Region",
+      "recentRequestsTitle": "Recent Add Requests",
+      "recentRequestsDescription": "The last 5 requests submitted by users.",
+      "facilityName": "Facility Name",
+      "userName": "User Name",
+      "status": "Status",
+      "noPendingRequests": "No pending requests at the moment.",
+      "viewAllRequests": "View All Requests"
     },
     "Facilities": {
       "title": "Facilities",
@@ -133,17 +148,6 @@
         "equipment_state": "Equipment State"
       }
     },
-    "Equipments": {
-      "title": "Equipments",
-      "description": "Manage your sports equipments.",
-      "addButton": "Add Equipment",
-      "tableHeaderName": "Name",
-      "tableHeaderRentalCost": "Rental Cost",
-      "tableHeaderDepositCost": "Deposit Cost",
-      "currency": "MAD/hr",
-      "loading": "Loading...",
-      "noEquipments": "No equipments found."
-    },
      "Users": {
       "title": "Users",
       "description": "Manage all users of the platform.",
@@ -151,7 +155,6 @@
       "tableHeaderUser": "User",
       "tableHeaderRole": "Role",
       "tableHeaderPhone": "Phone",
-      "tableHeaderGender": "Gender",
       "tableHeaderJoined": "Joined On",
       "tableHeaderJob": "Job Title",
       "tableHeaderActions": "Actions",
@@ -161,10 +164,6 @@
         "super_admin": "Super Admin",
         "admin": "Admin",
         "user": "User"
-      },
-      "genders": {
-        "Male": "Male",
-        "Female": "Female"
       },
       "deleteConfirmTitle": "Are you absolutely sure?",
       "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user account.",
@@ -225,8 +224,6 @@
       "title": "Edit Profile",
       "description": "Update your personal information here.",
       "nameLabel": "Full Name",
-      "avatarUrlLabel": "Avatar URL",
-      "avatarUrlPlaceholder": "https://example.com/avatar.png",
       "phoneLabel": "Phone Number",
       "genderLabel": "Gender",
       "genderPlaceholder": "Select a gender...",
