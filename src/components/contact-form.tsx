@@ -6,11 +6,26 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function ContactForm() {
-  const t = useTranslations('Contact');
+interface ContactFormProps {
+  translations: {
+    title: string;
+    description: string;
+    nameLabel: string;
+    namePlaceholder: string;
+    emailLabel: string;
+    emailPlaceholder: string;
+    messageLabel: string;
+    messagePlaceholder: string;
+    submitButton: string;
+    submittingButton: string;
+    successTitle: string;
+    successDescription: string;
+  };
+}
+
+export default function ContactForm({ translations }: ContactFormProps) {
   const { toast } = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,8 +38,8 @@ export default function ContactForm() {
     // Simulate API call
     setTimeout(() => {
       toast({
-        title: t('form.successTitle'),
-        description: t('form.successDescription'),
+        title: translations.successTitle,
+        description: translations.successDescription,
       });
       setName('');
       setEmail('');
@@ -35,31 +50,31 @@ export default function ContactForm() {
 
   return (
     <Card>
-        <CardHeader>
-            <CardTitle>{t('form.title')}</CardTitle>
-            <CardDescription>{t('form.description')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid sm:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">{t('form.nameLabel')}</Label>
-                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder={t('form.namePlaceholder')} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="email">{t('form.emailLabel')}</Label>
-                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder={t('form.emailPlaceholder')} />
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="message">{t('form.messageLabel')}</Label>
-                    <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} required placeholder={t('form.messagePlaceholder')} className="min-h-[150px]" />
-                </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? t('form.submittingButton') : t('form.submitButton')}
-                </Button>
-            </form>
-        </CardContent>
+      <CardHeader>
+        <CardTitle>{translations.title}</CardTitle>
+        <CardDescription>{translations.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">{translations.nameLabel}</Label>
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder={translations.namePlaceholder} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">{translations.emailLabel}</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder={translations.emailPlaceholder} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="message">{translations.messageLabel}</Label>
+            <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} required placeholder={translations.messagePlaceholder} className="min-h-[150px]" />
+          </div>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? translations.submittingButton : translations.submitButton}
+          </Button>
+        </form>
+      </CardContent>
     </Card>
   );
 }
