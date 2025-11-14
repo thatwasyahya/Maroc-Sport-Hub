@@ -16,7 +16,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import EditProfileDialog from '@/components/profile/EditProfileDialog';
-import {unstable_setRequestLocale} from 'next-intl/server';
 
 function ProfilePageSkeleton() {
     const t = useTranslations('Profile');
@@ -60,8 +59,7 @@ function ProfilePageSkeleton() {
     );
 }
 
-export default function ProfilePage({ params: { locale } }: { params: { locale: string } }) {
-    unstable_setRequestLocale(locale);
+export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const [isAddRequestOpen, setIsAddRequestOpen] = useState(false);

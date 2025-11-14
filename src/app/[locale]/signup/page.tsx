@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {unstable_setRequestLocale} from 'next-intl/server';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 48 48" {...props}>
@@ -22,8 +21,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default function SignupPage({ params: { locale } }: { params: { locale: string } }) {
-  unstable_setRequestLocale(locale);
+export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
   const auth = useAuth();

@@ -26,10 +26,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { defaultData } from '@/lib/data';
-import {unstable_setRequestLocale} from 'next-intl/server';
 
-export default function UsersPage({ params: { locale } }: { params: { locale: string } }) {
-  unstable_setRequestLocale(locale);
+export default function UsersPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();

@@ -16,10 +16,8 @@ import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { Settings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import {unstable_setRequestLocale} from 'next-intl/server';
 
-export default function ContactPage({ params: { locale } }: { params: { locale: string } }) {
-  unstable_setRequestLocale(locale);
+export default function ContactPage() {
   const t = useTranslations('Contact');
   const { toast } = useToast();
   const [name, setName] = useState('');

@@ -14,7 +14,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { defaultData } from '@/lib/data';
 import { useState } from 'react';
-import {unstable_setRequestLocale} from 'next-intl/server';
 
 function DashboardSkeleton() {
   const t = useTranslations('Dashboard.Overview');
@@ -59,8 +58,7 @@ function DashboardSkeleton() {
   );
 }
 
-export default function DashboardPage({ params: { locale } }: { params: { locale: string } }) {
-  unstable_setRequestLocale(locale);
+export default function DashboardPage() {
   const t = useTranslations('Dashboard.Overview');
 
   // Using local data ONLY to avoid any Firestore permission errors.
