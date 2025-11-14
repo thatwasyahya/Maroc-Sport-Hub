@@ -20,6 +20,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { getRegions } from '@/lib/maroc-api';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { sports } from '@/lib/data';
+import { InterceptedLink } from '@/components/intercepted-link';
 
 
 export default function SignupPage() {
@@ -206,9 +207,9 @@ export default function SignupPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href="/login" className="underline">
+            <InterceptedLink href="/login" className="underline">
               Login
-            </Link>
+            </InterceptedLink>
           </div>
         </CardContent>
       </Card>

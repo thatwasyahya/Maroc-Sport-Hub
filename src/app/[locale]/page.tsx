@@ -21,7 +21,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 import Image from 'next/image';
-import Link from 'next/link';
 import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import {useTranslations} from 'next-intl';
@@ -33,6 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { InterceptedLink } from '@/components/intercepted-link';
 
 
 function Filters({ allSports, allRegions, allEquipments, selectedSports, setSelectedSports, selectedRegions, setSelectedRegions, selectedEquipment, setSelectedEquipment, isIndoor, setIsIndoor, isOutdoor, setIsOutdoor, isAccessible, setIsAccessible, clearFilters }: any) {
@@ -451,7 +451,7 @@ export default function Home() {
               <h4 className="font-semibold text-card-foreground/90">{t('footerNavigation')}</h4>
               <ul className="space-y-2 text-sm">
                  {footerLinks.map((link) => (
-                    <li key={link.url}><Link href={link.url} className="text-muted-foreground hover:text-primary transition-colors">{link.label}</Link></li>
+                    <li key={link.url}><InterceptedLink href={link.url} className="text-muted-foreground hover:text-primary transition-colors">{link.label}</InterceptedLink></li>
                 ))}
               </ul>
             </div>

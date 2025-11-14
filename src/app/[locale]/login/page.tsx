@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { InterceptedLink } from '@/components/intercepted-link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,9 +62,9 @@ export default function LoginPage() {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                <Link href="#" className="ml-auto inline-block text-sm underline">
+                <InterceptedLink href="#" className="ml-auto inline-block text-sm underline">
                   Forgot your password?
-                </Link>
+                </InterceptedLink>
               </div>
               <Input 
                 id="password" 
@@ -80,9 +80,9 @@ export default function LoginPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="underline">
+            <InterceptedLink href="/signup" className="underline">
               Sign up
-            </Link>
+            </InterceptedLink>
           </div>
         </CardContent>
       </Card>

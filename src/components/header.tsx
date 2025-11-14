@@ -1,7 +1,6 @@
 
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import type { User, Settings } from "@/lib/types";
 import { Skeleton } from "./ui/skeleton";
+import { InterceptedLink } from "./intercepted-link";
 
 export default function Header() {
   const { user, isUserLoading } = useUser();
@@ -55,12 +55,12 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
       <div className="container flex h-16 max-w-screen-2xl items-center">
         <div className="mr-4 flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
+          <InterceptedLink href="/" className="mr-6 flex items-center space-x-2">
             <Activity className="h-6 w-6 text-primary" />
             <span className="font-bold sm:inline-block font-headline text-lg">
               {isSettingsLoading ? <Skeleton className="h-6 w-36" /> : appName}
             </span>
-          </Link>
+          </InterceptedLink>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
           {(isUserLoading || isProfileLoading) ? (
@@ -85,17 +85,17 @@ export default function Header() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile">
+                  <InterceptedLink href="/profile">
                     <UserIcon className="mr-2 h-4 w-4" />
                     <span>Mon Profil</span>
-                  </Link>
+                  </InterceptedLink>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard">
+                    <InterceptedLink href="/dashboard">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
-                    </Link>
+                    </InterceptedLink>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
@@ -108,10 +108,10 @@ export default function Header() {
           ) : (
             <nav className="flex items-center gap-2">
               <Button asChild variant="ghost">
-                <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Se connecter</Link>
+                <InterceptedLink href="/login"><LogIn className="mr-2 h-4 w-4" />Se connecter</InterceptedLink>
               </Button>
               <Button asChild>
-                <Link href="/signup"><UserPlus className="mr-2 h-4 w-4"/>S'inscrire</Link>
+                <InterceptedLink href="/signup"><UserPlus className="mr-2 h-4 w-4"/>S'inscrire</InterceptedLink>
               </Button>
             </nav>
           )}

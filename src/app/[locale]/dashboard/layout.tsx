@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -12,16 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { InterceptedLink } from '@/components/intercepted-link';
 
 function DashboardLayoutSkeleton() {
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
       <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
         <div className="flex h-16 items-center border-b px-6">
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+          <div className="flex items-center gap-2 font-semibold">
             <Activity className="h-6 w-6 text-primary" />
             <span>Admin Panel</span>
-          </Link>
+          </div>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <div className="h-8 w-full animate-pulse rounded-md bg-muted"></div>
@@ -60,7 +60,7 @@ function NoPermission() {
                 <CardContent>
                     <p className="text-muted-foreground">{t('description')}</p>
                     <Button asChild className="mt-4">
-                        <Link href="/">{t('homeButton')}</Link>
+                        <InterceptedLink href="/">{t('homeButton')}</InterceptedLink>
                     </Button>
                 </CardContent>
             </Card>
@@ -74,7 +74,7 @@ function NavLinks({ links, currentPathname, onLinkClick }: { links: any[], curre
       <ul className="space-y-1">
         {links.map(({ href, label, icon: Icon }) => (
           <li key={href}>
-            <Link
+            <InterceptedLink
               href={href}
               onClick={onLinkClick}
               className={cn(
@@ -84,7 +84,7 @@ function NavLinks({ links, currentPathname, onLinkClick }: { links: any[], curre
             >
               <Icon className="h-4 w-4" />
               {label}
-            </Link>
+            </InterceptedLink>
           </li>
         ))}
       </ul>
@@ -138,10 +138,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Desktop Sidebar */}
         <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
           <div className="flex h-16 items-center border-b px-6">
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+            <InterceptedLink href="/dashboard" className="flex items-center gap-2 font-semibold">
               <Activity className="h-6 w-6 text-primary" />
               <span>{t('adminPanel')}</span>
-            </Link>
+            </InterceptedLink>
           </div>
           <NavLinks links={navLinks} currentPathname={pathname} />
         </aside>
@@ -159,10 +159,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <SheetContent side="left" className="sm:hidden p-0 w-64" >
                       <SheetHeader className="p-6 pb-2">
                         <SheetTitle>
-                          <Link href="/dashboard" onClick={handleLinkClick} className="flex items-center gap-2 font-semibold">
+                          <InterceptedLink href="/dashboard" onClick={handleLinkClick} className="flex items-center gap-2 font-semibold">
                               <Activity className="h-6 w-6 text-primary" />
                               <span>{t('adminPanel')}</span>
-                          </Link>
+                          </InterceptedLink>
                         </SheetTitle>
                       </SheetHeader>
                       <NavLinks links={navLinks} currentPathname={pathname} onLinkClick={handleLinkClick} />
@@ -171,10 +171,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <div className="font-semibold text-lg hidden sm:block">{t('dashboard')}</div>
 
-              <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+              <InterceptedLink href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                   <Home className="h-4 w-4" />
                   <span className="hidden md:inline">{t('backToSite')}</span>
-              </Link>
+              </InterceptedLink>
           </header>
           <main className="flex-1 p-4 sm:p-6">{children}</main>
         </div>

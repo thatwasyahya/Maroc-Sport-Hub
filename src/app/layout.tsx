@@ -9,6 +9,8 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import {NextIntlClientProvider, useMessages} from 'next-intl';
 import {unstable_setRequestLocale} from 'next-intl/server';
+import { NavigationProvider } from '@/components/providers/navigation-provider';
+import { NavigationLoader } from '@/components/navigation-loader';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -46,9 +48,12 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <FirebaseClientProvider>
-            <FirebaseErrorListener />
-            {children}
-            <Toaster />
+            <NavigationProvider>
+              <FirebaseErrorListener />
+              <NavigationLoader />
+              {children}
+              <Toaster />
+            </NavigationProvider>
           </FirebaseClientProvider>
         </NextIntlClientProvider>
       </body>
