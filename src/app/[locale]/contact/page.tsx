@@ -12,6 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Mail, Phone, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { Settings } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ContactPage() {
   const t = useTranslations('Contact');
@@ -20,6 +24,13 @@ export default function ContactPage() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const firestore = useFirestore();
+  const settingsDocRef = useMemoFirebase(() => (
+    firestore ? doc(firestore, 'settings', 'global') : null
+  ), [firestore]);
+  const { data: settings, isLoading: isSettingsLoading } = useDoc<Settings>(settingsDocRef);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +102,13 @@ export default function ContactPage() {
                     </div>
                     <div className="md:col-span-2 space-y-6">
                         <h3 className="text-2xl font-semibold font-headline">{t('info.title')}</h3>
+                        { isSettingsLoading ? (
+                            <div className="space-y-4">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        ) : (
                         <div className="space-y-4 text-muted-foreground">
                             <div className="flex items-start gap-4">
                                 <MapPin className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
@@ -103,17 +121,18 @@ export default function ContactPage() {
                                 <Mail className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-foreground">{t('info.emailTitle')}</h4>
-                                    <p>contact@marocsporthub.ma</p>
+                                    <p>{settings?.contactEmail || 'contact@marocsporthub.ma'}</p>
                                 </div>
                             </div>
                              <div className="flex items-start gap-4">
                                 <Phone className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-foreground">{t('info.phoneTitle')}</h4>
-                                    <p>+212 5 37 00 00 00</p>
+                                    <p>{settings?.contactPhone || '+212 5 37 00 00 00'}</p>
                                 </div>
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             </div>

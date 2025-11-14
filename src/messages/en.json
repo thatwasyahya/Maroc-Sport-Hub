@@ -236,6 +236,11 @@
       "title": "Site Administration",
       "description": "Configure general aspects of your platform.",
       "manage": "Manage",
+      "siteSettings": {
+        "title": "Site Settings",
+        "description": "Manage global settings.",
+        "content": "Edit the site name, contact information, homepage content, and footer links from one central location."
+      },
       "footerLinks": {
         "title": "Footer Links",
         "description": "Manage the links displayed in the site footer."

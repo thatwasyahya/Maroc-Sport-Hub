@@ -101,4 +101,6 @@ export interface Settings {
     heroTitle: string;
     heroSubtitle: string;
     footerLinks?: FooterLink[];
+    contactEmail?: string;
+    contactPhone?: string;
 }

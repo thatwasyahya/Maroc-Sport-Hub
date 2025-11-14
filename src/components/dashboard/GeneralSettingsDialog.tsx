@@ -44,6 +44,8 @@ const settingsSchema = z.object({
   heroTitle: z.string().min(5, 'Le titre doit comporter au moins 5 caractères.'),
   heroSubtitle: z.string().min(10, 'Le sous-titre doit comporter au moins 10 caractères.'),
   footerLinks: z.array(linkSchema).optional(),
+  contactEmail: z.string().email("Format d'email invalide.").optional().or(z.literal('')),
+  contactPhone: z.string().optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -72,6 +74,8 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
       heroTitle: '',
       heroSubtitle: '',
       footerLinks: [],
+      contactEmail: '',
+      contactPhone: '',
     },
   });
 
@@ -88,6 +92,8 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
         heroTitle: settings.heroTitle || '',
         heroSubtitle: settings.heroSubtitle || '',
         footerLinks: settings.footerLinks || [],
+        contactEmail: settings.contactEmail || '',
+        contactPhone: settings.contactPhone || '',
       });
     }
   }, [settings, form]);
@@ -120,7 +126,7 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
         <DialogHeader>
           <DialogTitle>Paramètres du Site</DialogTitle>
           <DialogDescription>
-            Modifier les informations générales, la page d'accueil et les liens de votre site.
+            Modifier les informations générales, la page d'accueil, les contacts et les liens de votre site.
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -143,6 +149,18 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
                     )}/>
                     <FormField control={form.control} name="footerDescription" render={({ field }) => (
                         <FormItem><FormLabel>Description du pied de page</FormLabel><FormControl><Textarea placeholder="La description qui apparaît dans le footer de votre site." className="resize-none" {...field}/></FormControl><FormMessage /></FormItem>
+                    )}/>
+                </div>
+                <Separator />
+
+                 {/* Contact Settings */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Informations de Contact</h3>
+                    <FormField control={form.control} name="contactEmail" render={({ field }) => (
+                        <FormItem><FormLabel>Email de contact</FormLabel><FormControl><Input type="email" placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name="contactPhone" render={({ field }) => (
+                        <FormItem><FormLabel>Téléphone de contact</FormLabel><FormControl><Input placeholder="+212 5 37 00 00 00" {...field}/></FormControl><FormMessage /></FormItem>
                     )}/>
                 </div>
                 <Separator />

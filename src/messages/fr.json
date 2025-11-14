@@ -236,6 +236,11 @@
       "title": "Administration du Site",
       "description": "Configurez les aspects généraux de votre plateforme.",
       "manage": "Gérer",
+      "siteSettings": {
+        "title": "Paramètres du Site",
+        "description": "Gérer les paramètres globaux.",
+        "content": "Modifiez le nom du site, les informations de contact, le contenu de la page d'accueil et les liens du pied de page à partir d'un emplacement centralisé."
+      },
       "footerLinks": {
         "title": "Liens du Pied de Page",
         "description": "Gérez les liens affichés dans le pied de page du site."
