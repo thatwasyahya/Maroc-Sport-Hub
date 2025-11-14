@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -6,7 +7,6 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ import HomeMapContainer from "@/components/home-map-container";
 import type { Facility } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from "@/components/ui/button";
-import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter, SlidersHorizontal, Trash2, Activity, Menu } from 'lucide-react';
+import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter, SlidersHorizontal, Trash2, Activity, Menu, Map, List, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import FacilityDetails from '@/components/facility-details';
 import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
@@ -26,8 +26,11 @@ import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import {useTranslations} from 'next-intl';
 import { defaultData } from '@/lib/data';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 
 function Filters({ allSports, allRegions, allEquipments, selectedSports, setSelectedSports, selectedRegions, setSelectedRegions, selectedEquipment, setSelectedEquipment, isIndoor, setIsIndoor, isOutdoor, setIsOutdoor, isAccessible, setIsAccessible, clearFilters }: any) {
@@ -118,13 +121,59 @@ function Filters({ allSports, allRegions, allEquipments, selectedSports, setSele
   )
 }
 
+function FacilitiesTable({ facilities, onRowClick }: { facilities: Facility[], onRowClick: (facility: Facility) => void }) {
+  const t = useTranslations('Dashboard.Facilities');
+  return (
+    <div className="overflow-x-auto h-full w-full">
+      <Table>
+        <TableHeader className="sticky top-0 bg-card/80 backdrop-blur-sm z-10">
+          <TableRow>
+            <TableHead>{t('tableHeaderName')}</TableHead>
+            <TableHead className="hidden sm:table-cell">Province</TableHead>
+            <TableHead className="hidden lg:table-cell">Commune</TableHead>
+            <TableHead className="hidden md:table-cell">{t('tableHeaderSports')}</TableHead>
+            <TableHead className="text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {facilities.length > 0 ? facilities.map(facility => (
+            <TableRow key={facility.id} className="cursor-pointer" onClick={() => onRowClick(facility)}>
+              <TableCell className="font-medium">{facility.name}</TableCell>
+              <TableCell className="hidden sm:table-cell">{facility.province}</TableCell>
+              <TableCell className="hidden lg:table-cell">{facility.commune}</TableCell>
+              <TableCell className="hidden md:table-cell">
+                <div className="flex flex-wrap gap-1 max-w-xs">
+                  {(facility.sports || []).slice(0, 3).map((sport) => (
+                    <Badge key={sport} variant="outline">{sport}</Badge>
+                  ))}
+                  {(facility.sports || []).length > 3 && <Badge variant="outline">...</Badge>}
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <Button variant="ghost" size="icon">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          )) : (
+            <TableRow>
+              <TableCell colSpan={5} className="h-24 text-center">
+                {t('noFacilities')}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
 export default function Home() {
   const t = useTranslations('Home');
   const isMobile = useIsMobile();
   
-  // Use default data directly, ignoring Firestore for now.
-  const [allFacilities, setAllFacilities] = useState<Facility[]>(defaultData.facilities);
-  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
+  const [allFacilities] = useState<Facility[]>(defaultData.facilities);
+  const [facilitiesLoading] = useState(false);
 
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [filteredFacilities, setFilteredFacilities] = useState<Facility[]>([]);
@@ -140,10 +189,11 @@ export default function Home() {
   const [mapZoom, setMapZoom] = useState(6);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
 
+  const [viewMode, setViewMode] = useState<'map' | 'table'>('map');
+
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // We already have the data, just set it.
     setFacilities(allFacilities);
   }, [allFacilities]);
 
@@ -259,12 +309,36 @@ export default function Home() {
 
         <section ref={mapRef} id="map-section" className="py-16 md:py-24 bg-muted/30">
           <div className="container mx-auto">
+            <div className="flex justify-between items-center mb-6 px-4 md:px-0">
+              <div className="flex items-center gap-2 p-1 rounded-lg bg-muted border">
+                <Button
+                  onClick={() => setViewMode('map')}
+                  variant={viewMode === 'map' ? 'primary' : 'ghost'}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Map className="h-4 w-4" /> Carte
+                </Button>
+                <Button
+                  onClick={() => setViewMode('table')}
+                  variant={viewMode === 'table' ? 'primary' : 'ghost'}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <List className="h-4 w-4" /> Liste
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground hidden md:block">
+                {filteredFacilities.length} installations trouvées
+              </p>
+            </div>
+
             <div className="relative h-[85vh] rounded-xl overflow-hidden shadow-2xl border border-border/50">
                 
                 {/* Desktop Sidebar */}
                 {!isMobile && (
                    <SidebarProvider>
-                        <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card/80 backdrop-blur-sm border-border/50 shadow-lg rounded-xl">
+                        <Sidebar collapsible="icon" variant="floating" className={cn("absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card/80 backdrop-blur-sm border-border/50 shadow-lg rounded-xl", viewMode === 'table' && "hidden")}>
                             <SidebarHeader className="flex items-center justify-between p-4 border-b border-border/50">
                                 <h2 className="text-lg font-bold font-headline flex items-center gap-2"><SlidersHorizontal className="w-5 h-5"/> {t('filtersTitle')}</h2>
                                 <Button onClick={handleLocateMe} variant="ghost" size="icon" className="h-8 w-8">
@@ -299,22 +373,28 @@ export default function Home() {
                     </Sheet>
                 )}
 
-                <Button onClick={handleLocateMe} variant="secondary" size="icon" className="absolute top-4 right-4 z-20 shadow-lg">
-                  <LocateFixed className="h-5 w-5" />
-                </Button>
+                {viewMode === 'map' && (
+                  <Button onClick={handleLocateMe} variant="secondary" size="icon" className="absolute top-4 right-4 z-20 shadow-lg">
+                    <LocateFixed className="h-5 w-5" />
+                  </Button>
+                )}
                     
                 <div className="absolute inset-0 z-10 w-full h-full">
                     {facilitiesLoading ? (
                       <div className="w-full h-full flex items-center justify-center bg-muted">
                         <Skeleton className="w-full h-full" />
                       </div>
-                    ) : (
+                    ) : viewMode === 'map' ? (
                       <HomeMapContainer 
                           facilities={filteredFacilities} 
                           center={mapCenter} 
                           zoom={mapZoom} 
                           onMarkerClick={handleMarkerClick}
                       />
+                    ) : (
+                      <ScrollArea className="h-full">
+                        <FacilitiesTable facilities={filteredFacilities} onRowClick={handleMarkerClick} />
+                      </ScrollArea>
                     )}
                 </div>
             </div>
@@ -373,3 +453,4 @@ export default function Home() {
     </div>
   );
 }
+
