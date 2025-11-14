@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import Header from "@/components/header";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import HomeMapContainer from "@/components/home-map-container";
-import type { Facility } from '@/lib/types';
+import type { Facility, Settings } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from "@/components/ui/button";
 import { LocateFixed, ArrowDown, Facebook, Instagram, Twitter, SlidersHorizontal, Trash2, Activity, Menu, Map, List, Eye } from 'lucide-react';
@@ -31,6 +31,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 
 function Filters({ allSports, allRegions, allEquipments, selectedSports, setSelectedSports, selectedRegions, setSelectedRegions, selectedEquipment, setSelectedEquipment, isIndoor, setIsIndoor, isOutdoor, setIsOutdoor, isAccessible, setIsAccessible, clearFilters }: any) {
@@ -171,6 +173,12 @@ function FacilitiesTable({ facilities, onRowClick }: { facilities: Facility[], o
 export default function Home() {
   const t = useTranslations('Home');
   const isMobile = useIsMobile();
+  const firestore = useFirestore();
+
+  const settingsDocRef = useMemoFirebase(() => (
+    firestore ? doc(firestore, 'settings', 'global') : null
+  ), [firestore]);
+  const { data: settings } = useDoc<Settings>(settingsDocRef);
   
   const [allFacilities] = useState<Facility[]>(defaultData.facilities);
   const [facilitiesLoading] = useState(false);
@@ -276,6 +284,10 @@ export default function Home() {
   };
   
   const filterProps = { allSports, allRegions, allEquipments, selectedSports, setSelectedSports, selectedRegions, setSelectedRegions, selectedEquipment, setSelectedEquipment, isIndoor, setIsIndoor, isOutdoor, setIsOutdoor, isAccessible, setIsAccessible, clearFilters };
+  
+  const appName = settings?.appName || t('appName');
+  const footerDescription = settings?.footerDescription || t('footerDescription');
+
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-background">
@@ -424,9 +436,9 @@ export default function Home() {
             <div className="space-y-4 col-span-1 md:col-span-2">
               <h3 className="text-xl font-headline font-semibold flex items-center gap-2">
                 <Activity className="text-primary"/>
-                {t('appName')}
+                {appName}
               </h3>
-              <p className="text-muted-foreground text-sm max-w-md">{t('footerDescription')}</p>
+              <p className="text-muted-foreground text-sm max-w-md">{footerDescription}</p>
             </div>
             <div className="space-y-4">
               <h4 className="font-semibold text-card-foreground/90">{t('footerNavigation')}</h4>
@@ -447,11 +459,12 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} {t('appName')}. {t('footerRights')}</p>
+            <p>&copy; {new Date().getFullYear()} {appName}. {t('footerRights')}</p>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+
 

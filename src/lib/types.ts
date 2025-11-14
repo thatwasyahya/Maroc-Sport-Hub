@@ -89,3 +89,8 @@ export interface FacilityRequest extends Omit<Facility, 'id' | 'adminId' | 'crea
   createdAt: any;
   updatedAt: any;
 }
+
+export interface Settings {
+    appName: string;
+    footerDescription: string;
+}

@@ -5,26 +5,31 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useUser, useAuth, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, getFirestore } from 'firebase/firestore';
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useUser, useAuth, useDoc, useMemoFirebase, useFirestore } from "@/firebase";
+import { doc } from 'firebase/firestore';
 import { Activity, LayoutDashboard, LogOut, User as UserIcon, LogIn, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
-import type { User } from "@/lib/types";
+import type { User, Settings } from "@/lib/types";
 import { Skeleton } from "./ui/skeleton";
 
 export default function Header() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
 
-  const firestore = useMemo(() => getFirestore(), []);
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
     [user, firestore]
   );
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
+  
+  const settingsDocRef = useMemoFirebase(() => (
+    firestore ? doc(firestore, 'settings', 'global') : null
+  ), [firestore]);
+  const { data: settings, isLoading: isSettingsLoading } = useDoc<Settings>(settingsDocRef);
 
 
   const handleLogout = async () => {
@@ -43,6 +48,7 @@ export default function Header() {
   };
   
   const displayName = userProfile?.name || user?.email;
+  const appName = settings?.appName || "Maroc Sport Hub";
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
 
   return (
@@ -52,7 +58,7 @@ export default function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Activity className="h-6 w-6 text-primary" />
             <span className="font-bold sm:inline-block font-headline text-lg">
-              Maroc Sport Hub
+              {isSettingsLoading ? <Skeleton className="h-6 w-36" /> : appName}
             </span>
           </Link>
         </div>

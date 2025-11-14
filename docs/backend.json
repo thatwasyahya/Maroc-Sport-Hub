@@ -8,6 +8,7 @@
         "id": { "type": "string", "description": "Unique identifier for the user." },
         "email": { "type": "string", "description": "Email address of the user.", "format": "email" },
         "role": { "type": "string", "description": "Role of the user (e.g., super_admin, admin, user)." },
+        "name": { "type": "string", "description": "Full name of the user." },
         "firstName": { "type": "string", "description": "First name of the user." },
         "lastName": { "type": "string", "description": "Last name of the user." },
         "phoneNumber": { "type": "string", "description": "Phone number of the user." },
@@ -134,6 +135,16 @@
         "observations": { "type": "string" }
       },
       "required": ["userId", "userName", "userEmail", "status", "name", "region", "city", "sports", "type", "createdAt"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "type": "object",
+      "description": "Global settings for the application.",
+      "properties": {
+        "appName": { "type": "string", "description": "The name of the application." },
+        "footerDescription": { "type": "string", "description": "The description text displayed in the site footer." }
+      },
+      "required": ["appName"]
     }
   },
   "auth": {
@@ -160,6 +171,13 @@
         "definition": {
           "schema": { "$ref": "#/entities/FacilityRequest" },
           "description": "Stores user submissions for new facilities. Awaits admin approval."
+        }
+      },
+      {
+        "path": "/settings/{settingId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Settings" },
+          "description": "Stores global application settings. The main document ID is 'global'."
         }
       }
     ]
