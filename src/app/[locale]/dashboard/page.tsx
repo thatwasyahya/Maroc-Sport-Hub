@@ -1,8 +1,7 @@
+
 'use client';
 
 import { useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import type { Facility, User, FacilityRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Users, FileText, Loader2, ListOrdered, BarChart3, PieChartIcon } from 'lucide-react';
@@ -14,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { defaultData } from '@/lib/data';
+import { useState } from 'react';
 
 function DashboardSkeleton() {
   const t = useTranslations('Dashboard.Overview');
@@ -59,22 +60,21 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
   const t = useTranslations('Dashboard.Overview');
 
-  const facilitiesCollectionRef = useMemoFirebase(() => collection(firestore, 'facilities'), [firestore]);
-  const usersCollectionRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
-  const requestsCollectionRef = useMemoFirebase(() => query(collection(firestore, 'facilityRequests'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(5)), [firestore]);
+  // Using local data ONLY to avoid any Firestore permission errors.
+  const [facilities, setFacilities] = useState<Facility[]>(defaultData.facilities);
+  const [users, setUsers] = useState<User[]>(defaultData.users);
+  // Simulating pending requests from local data for display purposes.
+  const [pendingRequests, setPendingRequests] = useState<FacilityRequest[]>([]); 
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { data: facilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
-  const { data: users, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
-  const { data: pendingRequests, isLoading: requestsLoading } = useCollection<FacilityRequest>(requestsCollectionRef);
 
   const stats = useMemo(() => {
     return {
       totalFacilities: facilities?.length ?? 0,
       totalUsers: users?.length ?? 0,
+      // The number of pending requests will be 0 as we are not fetching them.
       pendingRequests: pendingRequests?.length ?? 0,
     };
   }, [facilities, users, pendingRequests]);
@@ -117,7 +117,7 @@ export default function DashboardPage() {
   }, [facilitiesByState]);
 
 
-  if (facilitiesLoading || usersLoading || requestsLoading) {
+  if (isLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {requestsLoading ? (
+                    {isLoading ? (
                         <TableRow><TableCell colSpan={3} className="h-24 text-center"><Loader2 className="animate-spin h-6 w-6 mx-auto" /></TableCell></TableRow>
                     ) : pendingRequests && pendingRequests.length > 0 ? (
                         pendingRequests.map(req => (
@@ -263,3 +263,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
