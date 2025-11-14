@@ -1,4 +1,4 @@
-import { unstable_setRequestLocale, getTranslations } from 'next-intl/server';
+import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import { getDoc, doc } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase/config-server';
 import type { Settings } from '@/lib/types';

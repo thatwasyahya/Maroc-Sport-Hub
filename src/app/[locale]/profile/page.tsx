@@ -60,7 +60,8 @@ function ProfilePageSkeleton() {
     );
 }
 
-export default function ProfilePage() {
+export default function ProfilePage({ params: { locale } }: { params: { locale: string } }) {
+    unstable_setRequestLocale(locale);
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     const [isAddRequestOpen, setIsAddRequestOpen] = useState(false);
