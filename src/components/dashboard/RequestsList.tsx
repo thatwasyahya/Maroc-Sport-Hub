@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp, deleteDoc, query, where } from 'firebase/firestore';
 import type { Facility, FacilityRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -30,11 +30,19 @@ export default function RequestsList() {
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [selectedRequest, setSelectedRequest] = useState<FacilityRequest | null>(null);
 
-    const requestsCollectionRef = useMemoFirebase(
-        () => collection(firestore, 'facilityRequests'),
+    const pendingRequestsQuery = useMemoFirebase(
+        () => query(collection(firestore, 'facilityRequests'), where('status', '==', 'pending')),
         [firestore]
     );
-    const { data: requests, isLoading } = useCollection<FacilityRequest>(requestsCollectionRef);
+    const processedRequestsQuery = useMemoFirebase(
+        () => query(collection(firestore, 'facilityRequests'), where('status', 'in', ['approved', 'rejected'])),
+        [firestore]
+    );
+
+    const { data: pendingRequests, isLoading: pendingLoading } = useCollection<FacilityRequest>(pendingRequestsQuery);
+    const { data: processedRequests, isLoading: processedLoading } = useCollection<FacilityRequest>(processedRequestsQuery);
+
+    const isLoading = pendingLoading || processedLoading;
 
     const handleApprove = async (request: FacilityRequest) => {
         if (!firestore) return;
@@ -147,9 +155,6 @@ export default function RequestsList() {
         }
     };
 
-    const pendingRequests = requests?.filter(r => r.status === 'pending') || [];
-    const processedRequests = requests?.filter(r => r.status !== 'pending') || [];
-
     return (
         <>
             <div className="space-y-8">
@@ -176,7 +181,7 @@ export default function RequestsList() {
                                                 <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                                             </TableCell>
                                         </TableRow>
-                                    ) : pendingRequests.length > 0 ? (
+                                    ) : pendingRequests && pendingRequests.length > 0 ? (
                                         pendingRequests.map((request) => (
                                             <TableRow key={request.id}>
                                                 <TableCell className="font-medium">{request.name}</TableCell>
@@ -237,7 +242,7 @@ export default function RequestsList() {
                                                 <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                                             </TableCell>
                                         </TableRow>
-                                    ) : processedRequests.length > 0 ? (
+                                    ) : processedRequests && processedRequests.length > 0 ? (
                                         processedRequests.map((request) => (
                                             <TableRow key={request.id}>
                                                 <TableCell className="font-medium">{request.name}</TableCell>
