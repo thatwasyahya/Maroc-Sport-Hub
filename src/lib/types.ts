@@ -90,7 +90,15 @@ export interface FacilityRequest extends Omit<Facility, 'id' | 'adminId' | 'crea
   updatedAt: any;
 }
 
+export interface FooterLink {
+  label: string;
+  url: string;
+}
+
 export interface Settings {
     appName: string;
     footerDescription: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    footerLinks?: FooterLink[];
 }

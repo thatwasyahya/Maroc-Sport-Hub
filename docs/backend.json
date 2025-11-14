@@ -142,7 +142,21 @@
       "description": "Global settings for the application.",
       "properties": {
         "appName": { "type": "string", "description": "The name of the application." },
-        "footerDescription": { "type": "string", "description": "The description text displayed in the site footer." }
+        "footerDescription": { "type": "string", "description": "The description text displayed in the site footer." },
+        "heroTitle": { "type": "string", "description": "The main title on the homepage hero section." },
+        "heroSubtitle": { "type": "string", "description": "The subtitle on the homepage hero section." },
+        "footerLinks": {
+          "type": "array",
+          "description": "List of links to display in the site footer.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "url": { "type": "string" }
+            },
+            "required": ["label", "url"]
+          }
+        }
       },
       "required": ["appName"]
     }

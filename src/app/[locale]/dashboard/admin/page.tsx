@@ -26,7 +26,7 @@ export default function AdminPage() {
                 <Link className="h-5 w-5"/>
                 {t('footerLinks.title')}
               </CardTitle>
-              <Button size="sm" disabled>{t('manage')}</Button>
+              <Button size="sm" onClick={() => setIsGeneralSettingsOpen(true)}>{t('manage')}</Button>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{t('footerLinks.description')}</p>
@@ -52,7 +52,7 @@ export default function AdminPage() {
                 <SlidersHorizontal className="h-5 w-5"/>
                 {t('homepageSettings.title')}
               </CardTitle>
-              <Button size="sm" disabled>{t('manage')}</Button>
+              <Button size="sm" onClick={() => setIsGeneralSettingsOpen(true)}>{t('manage')}</Button>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{t('homepageSettings.description')}</p>

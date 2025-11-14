@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,10 +29,21 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import type { Settings } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
+import { ScrollArea } from '../ui/scroll-area';
+import { Separator } from '../ui/separator';
+import { PlusCircle, Trash2 } from 'lucide-react';
+
+const linkSchema = z.object({
+  label: z.string().min(1, "Le libellé est requis."),
+  url: z.string().min(1, "L'URL est requise."),
+});
 
 const settingsSchema = z.object({
   appName: z.string().min(3, 'Le nom de l\'application doit comporter au moins 3 caractères.'),
   footerDescription: z.string().min(10, 'La description doit comporter au moins 10 caractères.'),
+  heroTitle: z.string().min(5, 'Le titre doit comporter au moins 5 caractères.'),
+  heroSubtitle: z.string().min(10, 'Le sous-titre doit comporter au moins 10 caractères.'),
+  footerLinks: z.array(linkSchema).optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -57,7 +69,15 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
     defaultValues: {
       appName: '',
       footerDescription: '',
+      heroTitle: '',
+      heroSubtitle: '',
+      footerLinks: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "footerLinks"
   });
 
   useEffect(() => {
@@ -65,6 +85,9 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
       form.reset({
         appName: settings.appName || '',
         footerDescription: settings.footerDescription || '',
+        heroTitle: settings.heroTitle || '',
+        heroSubtitle: settings.heroSubtitle || '',
+        footerLinks: settings.footerLinks || [],
       });
     }
   }, [settings, form]);
@@ -93,11 +116,11 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Paramètres Généraux</DialogTitle>
+          <DialogTitle>Paramètres du Site</DialogTitle>
           <DialogDescription>
-            Modifier les informations principales de votre site.
+            Modifier les informations générales, la page d'accueil et les liens de votre site.
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -109,41 +132,59 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
             </div>
         ) : (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
-            <FormField
-              control={form.control}
-              name="appName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom de l'application</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Maroc Sport Hub" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="footerDescription"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description du pied de page</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="La description qui apparaît dans le footer de votre site."
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <ScrollArea className="h-[60vh] p-1">
+              <div className="space-y-8 p-4">
+                {/* General Settings */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Paramètres Généraux</h3>
+                    <FormField control={form.control} name="appName" render={({ field }) => (
+                        <FormItem><FormLabel>Nom de l'application</FormLabel><FormControl><Input placeholder="Maroc Sport Hub" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name="footerDescription" render={({ field }) => (
+                        <FormItem><FormLabel>Description du pied de page</FormLabel><FormControl><Textarea placeholder="La description qui apparaît dans le footer de votre site." className="resize-none" {...field}/></FormControl><FormMessage /></FormItem>
+                    )}/>
+                </div>
+                <Separator />
+
+                {/* Homepage Settings */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Page d'Accueil</h3>
+                    <FormField control={form.control} name="heroTitle" render={({ field }) => (
+                        <FormItem><FormLabel>Titre de la section "Hero"</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name="heroSubtitle" render={({ field }) => (
+                        <FormItem><FormLabel>Sous-titre de la section "Hero"</FormLabel><FormControl><Textarea className="resize-none" {...field}/></FormControl><FormMessage /></FormItem>
+                    )}/>
+                </div>
+                <Separator />
+
+                {/* Footer Links */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Liens du Pied de Page</h3>
+                    <div className="space-y-4">
+                      {fields.map((field, index) => (
+                        <div key={field.id} className="flex items-end gap-2 p-3 border rounded-lg">
+                          <FormField control={form.control} name={`footerLinks.${index}.label`} render={({ field }) => (
+                              <FormItem className="flex-1"><FormLabel>Libellé</FormLabel><FormControl><Input placeholder="Accueil" {...field} /></FormControl><FormMessage /></FormItem>
+                          )}/>
+                          <FormField control={form.control} name={`footerLinks.${index}.url`} render={({ field }) => (
+                              <FormItem className="flex-1"><FormLabel>URL</FormLabel><FormControl><Input placeholder="/contact" {...field} /></FormControl><FormMessage /></FormItem>
+                          )}/>
+                          <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                      ))}
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={() => append({ label: '', url: '' })}>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un lien
+                    </Button>
+                </div>
+              </div>
+            </ScrollArea>
+            <DialogFooter className="pt-6 border-t">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
+                {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
               </Button>
             </DialogFooter>
           </form>
