@@ -23,13 +23,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import RequestDetailsDialog from './RequestDetailsDialog';
-import { errorEmitter, FirestorePermissionError } from '@/firebase';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { useTranslations } from 'next-intl';
 
 export default function RequestsList() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [selectedRequest, setSelectedRequest] = useState<FacilityRequest | null>(null);
+    const t = useTranslations('Dashboard.Facilities'); // Using facilities translations for common words
 
     const pendingRequestsQuery = useMemoFirebase(
         () => firestore ? query(collection(firestore, 'facilityRequests'), where('status', '==', 'pending')) : null,
@@ -52,7 +55,7 @@ export default function RequestsList() {
         const batch = writeBatch(firestore);
         const newFacilityRef = doc(collection(firestore, 'facilities'));
         
-        // Remove user-specific and request-specific fields before creating the facility
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, userId, userName, userEmail, status, rejectionReason, ...facilityData } = request;
 
         const newFacilityData: Partial<Facility> = {
@@ -69,8 +72,8 @@ export default function RequestsList() {
         batch.commit()
             .then(() => {
                 toast({
-                    title: 'Request Approved',
-                    description: `Facility "${request.name}" has been created.`,
+                    title: 'Demande Approuvée',
+                    description: `L'installation "${request.name}" a été créée.`,
                 });
             })
             .catch(error => {
@@ -98,7 +101,7 @@ export default function RequestsList() {
         const requestRef = doc(firestore, 'facilityRequests', request.id);
         const updateData = { 
             status: 'rejected', 
-            rejectionReason: reason || 'No reason provided',
+            rejectionReason: reason || 'Aucune raison fournie',
             updatedAt: serverTimestamp() 
         };
         const batch = writeBatch(firestore);
@@ -107,8 +110,8 @@ export default function RequestsList() {
         batch.commit()
             .then(() => {
                 toast({
-                    title: 'Request Rejected',
-                    description: `Request for "${request.name}" has been rejected.`,
+                    title: 'Demande Rejetée',
+                    description: `La demande pour "${request.name}" a été rejetée.`,
                 });
             })
             .catch(error => {
@@ -132,8 +135,8 @@ export default function RequestsList() {
         deleteDoc(docRef)
             .then(async () => {
                 toast({
-                    title: 'Request Deleted',
-                    description: 'The request has been permanently deleted from database.',
+                    title: 'Demande Supprimée',
+                    description: 'La demande a été supprimée définitivement de la base de données.',
                 });
             })
             .catch(error => {
@@ -187,7 +190,7 @@ export default function RequestsList() {
                                             <TableRow key={request.id}>
                                                 <TableCell className="font-medium">{request.name}</TableCell>
                                                 <TableCell className="hidden md:table-cell">{request.userName}</TableCell>
-                                                <TableCell className="hidden lg:table-cell">{request.city}</TableCell>
+                                                <TableCell className="hidden lg:table-cell">{request.commune}</TableCell>
                                                 <TableCell className="text-right">
                                                     {processingId === request.id ? (
                                                         <Loader2 className="ml-auto h-5 w-5 animate-spin" />
@@ -267,15 +270,15 @@ export default function RequestsList() {
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                        <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            This will permanently delete the request. This action cannot be undone.
+                                                                            Cette action est irréversible et supprimera la demande.
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                        <AlertDialogAction onClick={() => handleDelete(request.id)}>
-                                                                            Delete
+                                                                        <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => handleDelete(request.id)} className="bg-destructive hover:bg-destructive/90">
+                                                                            {t('delete')}
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
