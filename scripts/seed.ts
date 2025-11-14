@@ -4,11 +4,17 @@ import { initializeApp, App } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { users, facilities } from '../src/lib/data';
-import { firebaseConfig } from '../src/firebase/config';
 
 let app: App;
-// DO NOT connect to emulators. The script should target production.
-app = initializeApp({ projectId: firebaseConfig.projectId });
+// Initialize without specific credentials to use Application Default Credentials
+// This is the most reliable way in many cloud environments.
+try {
+  app = initializeApp();
+} catch (error: any) {
+  console.error("Failed to initialize Firebase Admin SDK. This might happen if the script is run multiple times in a hot-reload environment. If seeding fails, try again.", error.message);
+  process.exit(1);
+}
+
 
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -26,7 +32,6 @@ async function seedDatabase() {
                 password: 'password123', // Set a default password
                 displayName: user.name,
             });
-            console.log(`Created auth user: ${user.email}`);
 
             const userDocRef = db.collection('users').doc(user.id);
             await userDocRef.set({
@@ -35,7 +40,6 @@ async function seedDatabase() {
                 updatedAt: Timestamp.fromDate(user.updatedAt as Date),
             });
 
-            console.log(`Seeded user profile: ${user.name}`);
         } catch (error: any) {
             if (error.code === 'auth/uid-already-exists' || error.code === 'auth/email-already-exists') {
                 // This is expected if you run the script multiple times.
