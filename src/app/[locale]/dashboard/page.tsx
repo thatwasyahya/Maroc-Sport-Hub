@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Building, Users, FileText, Loader2, ListOrdered, BarChart3, PieChartIcon, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslations } from 'next-intl';
+import {unstable_setRequestLocale} from 'next-intl/server';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Pie, PieChart, Cell, LabelList } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -59,7 +60,8 @@ function DashboardSkeleton() {
   );
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({params}: {params: {locale: string}}) {
+  unstable_setRequestLocale(params.locale);
   const t = useTranslations('Dashboard.Overview');
 
   // Using local data ONLY to avoid any Firestore permission errors.
@@ -259,5 +261,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

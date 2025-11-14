@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import {unstable_setRequestLocale} from 'next-intl/server';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import Image from 'next/image';
@@ -17,7 +18,8 @@ import { doc } from 'firebase/firestore';
 import type { Settings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ContactPage() {
+export default function ContactPage({params}: {params: {locale: string}}) {
+  unstable_setRequestLocale(params.locale);
   const t = useTranslations('Contact');
   const { toast } = useToast();
   const [name, setName] = useState('');

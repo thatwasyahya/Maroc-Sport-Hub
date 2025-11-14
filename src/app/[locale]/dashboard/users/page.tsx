@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
+import {unstable_setRequestLocale} from 'next-intl/server';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { defaultData } from '@/lib/data';
 
-export default function UsersPage() {
+export default function UsersPage({params}: {params: {locale: string}}) {
+  unstable_setRequestLocale(params.locale);
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -181,7 +183,7 @@ export default function UsersPage() {
                                           <AlertDialogDescription>{t('deleteConfirmDescription')}</AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                          <AlertDialogCancel>{tUsers('cancel')}</AlertDialogCancel>
                                           <AlertDialogAction onClick={() => handleDelete(userItem.id)} className="bg-destructive hover:bg-destructive/90">
                                               {t('delete')}
                                           </AlertDialogAction>
@@ -216,5 +218,3 @@ export default function UsersPage() {
     </>
   );
 }
-
-    

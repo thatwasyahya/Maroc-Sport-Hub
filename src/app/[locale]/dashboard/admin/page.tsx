@@ -1,13 +1,15 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import {unstable_setRequestLocale} from 'next-intl/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import GeneralSettingsDialog from '@/components/dashboard/GeneralSettingsDialog';
 
-export default function AdminPage() {
+export default function AdminPage({params}: {params: {locale: string}}) {
+  unstable_setRequestLocale(params.locale);
   const t = useTranslations('Dashboard.Admin');
   const [isGeneralSettingsOpen, setIsGeneralSettingsOpen] = useState(false);
 
@@ -40,5 +42,3 @@ export default function AdminPage() {
     </>
   );
 }
-
-    

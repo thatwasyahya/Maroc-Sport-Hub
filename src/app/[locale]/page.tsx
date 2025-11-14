@@ -23,7 +23,8 @@ import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 import Image from 'next/image';
 import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
-import {useTranslations} from 'next-intl';
+import {useTranslations, useLocale} from 'next-intl';
+import {unstable_setRequestLocale} from 'next-intl/server';
 import { defaultData } from '@/lib/data';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -170,7 +171,8 @@ function FacilitiesTable({ facilities, onRowClick }: { facilities: Facility[], o
   )
 }
 
-export default function Home() {
+export default function Home({params}: {params: {locale: string}}) {
+  unstable_setRequestLocale(params.locale);
   const t = useTranslations('Home');
   const isMobile = useIsMobile();
   const firestore = useFirestore();
