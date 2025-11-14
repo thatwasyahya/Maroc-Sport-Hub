@@ -27,6 +27,7 @@ import { collection } from 'firebase/firestore';
 import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import {useTranslations} from 'next-intl';
+import { defaultData } from '@/lib/data';
 
 export default function Home() {
   const t = useTranslations('Home');
@@ -55,10 +56,14 @@ export default function Home() {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (allFacilities) {
-      setFacilities(allFacilities);
+    if (!facilitiesLoading) {
+      if (allFacilities && allFacilities.length > 0) {
+        setFacilities(allFacilities);
+      } else {
+        setFacilities(defaultData.facilities);
+      }
     }
-  }, [allFacilities]);
+  }, [allFacilities, facilitiesLoading]);
 
   const { allSports, allRegions, allEquipments } = useMemo(() => {
     const sports = [...new Set(facilities.flatMap(f => f.sports || []))].sort();

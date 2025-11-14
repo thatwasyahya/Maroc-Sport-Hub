@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, doc, deleteDoc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { defaultData } from '@/lib/data';
 
 export default function UsersPage() {
   const firestore = useFirestore();
@@ -40,7 +41,19 @@ export default function UsersPage() {
   const { data: currentUserProfile } = useDoc<User>(userDocRef);
   
   const usersCollectionRef = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
-  const { data: users, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
+  const { data: usersFromDB, isLoading: usersLoading } = useCollection<User>(usersCollectionRef);
+
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (!usersLoading) {
+        if (usersFromDB && usersFromDB.length > 0) {
+            setUsers(usersFromDB);
+        } else {
+            setUsers(defaultData.users);
+        }
+    }
+  }, [usersFromDB, usersLoading]);
 
   const handleAddNew = () => {
     setSelectedUser(null);
@@ -145,7 +158,7 @@ export default function UsersPage() {
                     <TableCell>
                         {user.createdAt?.seconds 
                             ? format(new Date(user.createdAt.seconds * 1000), 'dd/MM/yyyy')
-                            : 'N/A'}
+                            : user.createdAt instanceof Date ? format(user.createdAt, 'dd/MM/yyyy') : 'N/A'}
                     </TableCell>
                     {isSuperAdmin && (
                       <TableCell className="text-right">

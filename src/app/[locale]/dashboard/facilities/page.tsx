@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, deleteDoc } from 'firebase/firestore';
 import type { Facility } from '@/lib/types';
@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FacilityDetails from '@/components/facility-details';
 import { useToast } from '@/hooks/use-toast';
+import { defaultData } from '@/lib/data';
 
 export default function FacilitiesPage() {
   const firestore = useFirestore();
@@ -44,7 +45,19 @@ export default function FacilitiesPage() {
     () => collection(firestore, 'facilities'),
     [firestore]
   );
-  const { data: facilities, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
+  const { data: facilitiesFromDB, isLoading: facilitiesLoading } = useCollection<Facility>(facilitiesCollectionRef);
+
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+
+  useEffect(() => {
+    if (!facilitiesLoading) {
+      if (facilitiesFromDB && facilitiesFromDB.length > 0) {
+        setFacilities(facilitiesFromDB);
+      } else {
+        setFacilities(defaultData.facilities);
+      }
+    }
+  }, [facilitiesFromDB, facilitiesLoading]);
 
   const handleAddNew = () => {
     setSelectedFacility(null);

@@ -10,8 +10,8 @@ const createRandomUser = (role: UserRole, id: number): User => ({
   email: faker.internet.email(),
   avatarUrl: `https://avatar.iran.liara.run/public/${id}`,
   role,
-  createdAt: faker.date.recent(),
-  updatedAt: faker.date.recent(),
+  createdAt: new Date(),
+  updatedAt: new Date(),
 });
 
 export const sports = [
@@ -107,3 +107,8 @@ export const users: User[] = [
 ];
 
 export const facilities: Facility[] = Array.from({ length: 150 }, () => createRandomFacility());
+
+export const defaultData = {
+    users,
+    facilities
+};
