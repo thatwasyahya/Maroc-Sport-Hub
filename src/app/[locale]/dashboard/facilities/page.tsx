@@ -32,8 +32,10 @@ import { defaultData } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
+import {unstable_setRequestLocale} from 'next-intl/server';
 
-export default function FacilitiesPage() {
+export default function FacilitiesPage({ params: { locale } }: { params: { locale: string } }) {
+  unstable_setRequestLocale(locale);
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();

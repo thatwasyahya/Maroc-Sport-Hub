@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { InterceptedLink } from '@/components/intercepted-link';
 import { Separator } from '@/components/ui/separator';
+import {unstable_setRequestLocale} from 'next-intl/server';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 48 48" {...props}>
@@ -22,7 +23,8 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 
-export default function LoginPage() {
+export default function LoginPage({ params: { locale } }: { params: { locale: string } }) {
+  unstable_setRequestLocale(locale);
   const router = useRouter();
   const auth = useAuth();
   const { toast } = useToast();

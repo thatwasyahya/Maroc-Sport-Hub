@@ -23,7 +23,7 @@ import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 import Image from 'next/image';
 import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
-import {useTranslations, useLocale} from 'next-intl';
+import {useTranslations} from 'next-intl';
 import { defaultData } from '@/lib/data';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { InterceptedLink } from '@/components/intercepted-link';
+import {unstable_setRequestLocale} from 'next-intl/server';
 
 
 function Filters({ allSports, allRegions, allEquipments, selectedSports, setSelectedSports, selectedRegions, setSelectedRegions, selectedEquipment, setSelectedEquipment, isIndoor, setIsIndoor, isOutdoor, setIsOutdoor, isAccessible, setIsAccessible, clearFilters }: any) {
@@ -170,7 +171,8 @@ function FacilitiesTable({ facilities, onRowClick }: { facilities: Facility[], o
   )
 }
 
-export default function Home() {
+export default function Home({ params: { locale } }: { params: { locale: string } }) {
+  unstable_setRequestLocale(locale);
   const t = useTranslations('Home');
   const isMobile = useIsMobile();
   const firestore = useFirestore();
