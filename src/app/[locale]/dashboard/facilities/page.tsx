@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -141,30 +142,29 @@ export default function FacilitiesPage() {
   };
   
   const handleExportXLSX = () => {
-    const tExport = t.getTranslator('export');
     const dataToExport = facilities.map(f => ({
-      [tExport('name')]: f.name,
-      [tExport('description')]: f.description,
-      [tExport('sports')]: f.sports?.join(', '),
-      [tExport('equipments')]: f.equipments?.map(e => `${e.name} (${e.quantity})`).join(', '),
-      [tExport('region')]: f.region,
-      [tExport('province')]: f.province,
-      [tExport('commune')]: f.commune,
-      [tExport('address')]: f.address,
-      [tExport('milieu')]: f.milieu,
-      [tExport('type')]: f.type,
-      [tExport('accessible')]: f.accessible ? 'Oui' : 'Non',
-      [tExport('lat')]: f.location?.lat,
-      [tExport('lng')]: f.location?.lng,
-      [tExport('ownership')]: f.ownership,
-      [tExport('managing_entity')]: f.managing_entity,
-      [tExport('last_renovation_date')]: f.last_renovation_date,
-      [tExport('surface_area')]: f.surface_area,
-      [tExport('capacity')]: f.capacity,
-      [tExport('staff_count')]: f.staff_count,
-      [tExport('establishment_state')]: f.establishment_state,
-      [tExport('building_state')]: f.building_state,
-      [tExport('equipment_state')]: f.equipment_state,
+      [t('export.name')]: f.name,
+      [t('export.description')]: f.description,
+      [t('export.sports')]: f.sports?.join(', '),
+      [t('export.equipments')]: f.equipments?.map(e => `${e.name} (${e.quantity})`).join(', '),
+      [t('export.region')]: f.region,
+      [t('export.province')]: f.province,
+      [t('export.commune')]: f.commune,
+      [t('export.address')]: f.address,
+      [t('export.milieu')]: f.milieu,
+      [t('export.type')]: f.type,
+      [t('export.accessible')]: f.accessible ? 'Oui' : 'Non',
+      [t('export.lat')]: f.location?.lat,
+      [t('export.lng')]: f.location?.lng,
+      [t('export.ownership')]: f.ownership,
+      [t('export.managing_entity')]: f.managing_entity,
+      [t('export.last_renovation_date')]: f.last_renovation_date,
+      [t('export.surface_area')]: f.surface_area,
+      [t('export.capacity')]: f.capacity,
+      [t('export.staff_count')]: f.staff_count,
+      [t('export.establishment_state')]: f.establishment_state,
+      [t('export.building_state')]: f.building_state,
+      [t('export.equipment_state')]: f.equipment_state,
     }));
     
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -381,5 +381,7 @@ export default function FacilitiesPage() {
     </>
   );
 }
+
+    
 
     
