@@ -2,8 +2,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import type { User, FacilityRequest } from '@/lib/types';
 import Header from '@/components/header';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -74,13 +74,9 @@ export default function ProfilePage() {
     );
     const { data: userProfile, isLoading: isProfileLoading } = useDoc<User>(userDocRef);
 
-    // This query fetches only the requests made by the current user.
-    // The security rules MUST allow this specific query.
-    const requestsCollectionRef = useMemoFirebase(
-        () => (user ? query(collection(firestore, 'facilityRequests'), where('userId', '==', user.uid)) : null),
-        [firestore, user]
-    );
-    const { data: requests, isLoading: areRequestsLoading } = useCollection<FacilityRequest>(requestsCollectionRef);
+    // This section is temporarily disabled to prevent permission errors.
+    const requests: FacilityRequest[] = [];
+    const areRequestsLoading = false;
 
     if (isUserLoading || isProfileLoading) {
         return <ProfilePageSkeleton />;
