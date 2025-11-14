@@ -114,7 +114,7 @@ export default function ProfilePage() {
             <div className="min-h-screen w-full flex flex-col bg-muted/40">
                 <Header />
                 <main className="flex-1">
-                    <div className="container mx-auto py-12 px-4">
+                    <div className="container mx-auto py-6 sm:py-12 px-4">
                         <div className="grid gap-8 md:grid-cols-12">
                             <div className="md:col-span-4 lg:col-span-3">
                                 <Card className="text-center sticky top-24">
@@ -129,62 +129,64 @@ export default function ProfilePage() {
                                             </Button>
                                         </div>
                                         <h2 className="text-2xl font-bold font-headline">{userProfile.name}</h2>
-                                        <p className="text-muted-foreground mb-4">{userProfile.email}</p>
+                                        <p className="text-muted-foreground mb-4 break-all">{userProfile.email}</p>
                                         <Badge variant={roleVariantMap[userProfile.role] || 'outline'} className="capitalize">{userProfile.role.replace('_', ' ')}</Badge>
                                     </CardContent>
                                 </Card>
                             </div>
                             <div className="md:col-span-8 lg:col-span-9">
                                 <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between">
+                                    <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                         <div>
                                             <CardTitle className="font-headline text-2xl">Mes Demandes d'Ajout</CardTitle>
                                             <CardDescription>Suivez l'état de vos propositions d'installations.</CardDescription>
                                         </div>
-                                        <Button onClick={() => setIsAddRequestOpen(true)} className="shrink-0">
+                                        <Button onClick={() => setIsAddRequestOpen(true)} className="shrink-0 w-full md:w-auto">
                                             <PlusCircle className="mr-2 h-4 w-4" />
                                             Nouvelle Demande
                                         </Button>
                                     </CardHeader>
                                     <CardContent>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Nom de l'installation</TableHead>
-                                                    <TableHead>Date</TableHead>
-                                                    <TableHead>Statut</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {areRequestsLoading ? (
+                                        <div className="overflow-x-auto">
+                                            <Table>
+                                                <TableHeader>
                                                     <TableRow>
-                                                        <TableCell colSpan={3} className="h-36 text-center">
-                                                            <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
-                                                        </TableCell>
+                                                        <TableHead>Nom de l'installation</TableHead>
+                                                        <TableHead className="hidden sm:table-cell">Date</TableHead>
+                                                        <TableHead>Statut</TableHead>
                                                     </TableRow>
-                                                ) : requests && requests.length > 0 ? (
-                                                    requests.map((request) => (
-                                                        <TableRow key={request.id} className="hover:bg-muted/50">
-                                                            <TableCell className="font-medium">{request.name}</TableCell>
-                                                            <TableCell>
-                                                                {request.createdAt?.seconds 
-                                                                    ? format(new Date(request.createdAt.seconds * 1000), 'dd/MM/yyyy')
-                                                                    : '...'}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Badge variant={getStatusBadgeVariant(request.status)} className="capitalize">{request.status}</Badge>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {areRequestsLoading ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={3} className="h-36 text-center">
+                                                                <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
                                                             </TableCell>
                                                         </TableRow>
-                                                    ))
-                                                ) : (
-                                                    <TableRow>
-                                                        <TableCell colSpan={3} className="h-36 text-center text-muted-foreground">
-                                                            Vous n'avez soumis aucune demande.
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )}
-                                            </TableBody>
-                                        </Table>
+                                                    ) : requests && requests.length > 0 ? (
+                                                        requests.map((request) => (
+                                                            <TableRow key={request.id} className="hover:bg-muted/50">
+                                                                <TableCell className="font-medium">{request.name}</TableCell>
+                                                                <TableCell className="hidden sm:table-cell">
+                                                                    {request.createdAt?.seconds 
+                                                                        ? format(new Date(request.createdAt.seconds * 1000), 'dd/MM/yyyy')
+                                                                        : '...'}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Badge variant={getStatusBadgeVariant(request.status)} className="capitalize">{request.status}</Badge>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))
+                                                    ) : (
+                                                        <TableRow>
+                                                            <TableCell colSpan={3} className="h-36 text-center text-muted-foreground">
+                                                                Vous n'avez soumis aucune demande.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>

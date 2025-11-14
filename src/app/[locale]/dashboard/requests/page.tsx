@@ -46,5 +46,9 @@ export default function RequestsPage() {
         return <p>You do not have permission to view this page.</p>;
     }
 
-    return <RequestsList />;
+    return (
+      <div className="space-y-6">
+        <RequestsList />
+      </div>
+    );
 }

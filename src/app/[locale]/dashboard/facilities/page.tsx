@@ -93,101 +93,103 @@ export default function FacilitiesPage() {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <CardTitle>{t('title')}</CardTitle>
             <CardDescription>{t('description')}</CardDescription>
           </div>
-          <div className="flex gap-2">
-             <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
+          <div className="flex gap-2 w-full md:w-auto">
+             <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className="w-full md:w-auto">
               <Upload className="mr-2 h-4 w-4" />
               Importer
             </Button>
-            <Button onClick={handleAddNew}>
+            <Button onClick={handleAddNew} className="w-full md:w-auto">
               <PlusCircle className="mr-2 h-4 w-4" />
               {t('addButton')}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('tableHeaderName')}</TableHead>
-                <TableHead>Province</TableHead>
-                <TableHead>Commune</TableHead>
-                <TableHead>État</TableHead>
-                <TableHead>{t('tableHeaderSports')}</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {facilitiesLoading ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    {t('loading')}
-                  </TableCell>
+                  <TableHead>{t('tableHeaderName')}</TableHead>
+                  <TableHead className="hidden sm:table-cell">Province</TableHead>
+                  <TableHead className="hidden lg:table-cell">Commune</TableHead>
+                  <TableHead>État</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('tableHeaderSports')}</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ) : facilities && facilities.length > 0 ? (
-                facilities.map((facility) => (
-                  <TableRow key={facility.id}>
-                    <TableCell className="font-medium">{facility.name}</TableCell>
-                    <TableCell>{facility.province}</TableCell>
-                    <TableCell>{facility.commune}</TableCell>
-                    <TableCell>
-                        {facility.establishment_state && <Badge variant="secondary">{facility.establishment_state}</Badge>}
+              </TableHeader>
+              <TableBody>
+                {facilitiesLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      {t('loading')}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {(facility.sports || []).map((sport) => (
-                          <Badge key={sport} variant="outline">{sport}</Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                        {processingId === facility.id ? (
-                           <Loader2 className="ml-auto h-5 w-5 animate-spin" />
-                        ) : (
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleView(facility)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(facility)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                             <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                      <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                                        <AlertDialogDescription>Cette action est irréversible. L'installation sera définitivement supprimée.</AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(facility.id)} className="bg-destructive hover:bg-destructive/90">
-                                            Supprimer
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        )}
-                      </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    {t('noFacilities')}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ) : facilities && facilities.length > 0 ? (
+                  facilities.map((facility) => (
+                    <TableRow key={facility.id}>
+                      <TableCell className="font-medium">{facility.name}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{facility.province}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{facility.commune}</TableCell>
+                      <TableCell>
+                          {facility.establishment_state && <Badge variant="secondary">{facility.establishment_state}</Badge>}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {(facility.sports || []).map((sport) => (
+                            <Badge key={sport} variant="outline">{sport}</Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                          {processingId === facility.id ? (
+                             <Loader2 className="ml-auto h-5 w-5 animate-spin" />
+                          ) : (
+                            <div className="flex justify-end gap-1 md:gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => handleView(facility)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(facility)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                               <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                                          <AlertDialogDescription>Cette action est irréversible. L'installation sera définitivement supprimée.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDelete(facility.id)} className="bg-destructive hover:bg-destructive/90">
+                                              Supprimer
+                                          </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                  </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          )}
+                        </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      {t('noFacilities')}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
       
@@ -214,7 +216,7 @@ export default function FacilitiesPage() {
                           <DialogTitle className="font-headline text-3xl">{selectedFacility.name}</DialogTitle>
                           <DialogDescription>{selectedFacility.address}</DialogDescription>
                       </DialogHeader>
-                      <ScrollArea className="max-h-[70vh]">
+                      <ScrollArea className="max-h-[70vh] md:max-h-[80vh]">
                         <FacilityDetails facility={selectedFacility} />
                       </ScrollArea>
                   </>

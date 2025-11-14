@@ -159,56 +159,58 @@ export default function RequestsList() {
                         <CardDescription>Passez en revue et approuvez les nouvelles propositions d'installations.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Installation</TableHead>
-                                    <TableHead>Utilisateur</TableHead>
-                                    <TableHead>Ville</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {isLoading ? (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
-                                            <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                                        </TableCell>
+                                        <TableHead>Installation</TableHead>
+                                        <TableHead className="hidden md:table-cell">Utilisateur</TableHead>
+                                        <TableHead className="hidden lg:table-cell">Ville</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
-                                ) : pendingRequests.length > 0 ? (
-                                    pendingRequests.map((request) => (
-                                        <TableRow key={request.id}>
-                                            <TableCell className="font-medium">{request.name}</TableCell>
-                                            <TableCell>{request.userName}</TableCell>
-                                            <TableCell>{request.city}</TableCell>
-                                            <TableCell className="text-right">
-                                                {processingId === request.id ? (
-                                                    <Loader2 className="ml-auto h-5 w-5 animate-spin" />
-                                                ) : (
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button size="sm" variant="ghost" onClick={() => setSelectedRequest(request)}>
-                                                            <Eye className="mr-2 h-4 w-4" /> Détails
-                                                        </Button>
-                                                        <Button size="sm" variant="outline" onClick={() => handleApprove(request)}>
-                                                            <CheckCircle className="mr-2 h-4 w-4" /> Approuver
-                                                        </Button>
-                                                        <Button size="sm" variant="destructive" onClick={() => handleReject(request)}>
-                                                            <XCircle className="mr-2 h-4 w-4" /> Rejeter
-                                                        </Button>
-                                                    </div>
-                                                )}
+                                </TableHeader>
+                                <TableBody>
+                                    {isLoading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
-                                            Aucune demande en attente.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                    ) : pendingRequests.length > 0 ? (
+                                        pendingRequests.map((request) => (
+                                            <TableRow key={request.id}>
+                                                <TableCell className="font-medium">{request.name}</TableCell>
+                                                <TableCell className="hidden md:table-cell">{request.userName}</TableCell>
+                                                <TableCell className="hidden lg:table-cell">{request.city}</TableCell>
+                                                <TableCell className="text-right">
+                                                    {processingId === request.id ? (
+                                                        <Loader2 className="ml-auto h-5 w-5 animate-spin" />
+                                                    ) : (
+                                                        <div className="flex justify-end items-center gap-1">
+                                                            <Button size="icon" variant="ghost" onClick={() => setSelectedRequest(request)}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button size="icon" variant="outline" className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700" onClick={() => handleApprove(request)}>
+                                                                <CheckCircle className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button size="icon" variant="destructive" onClick={() => handleReject(request)}>
+                                                                <XCircle className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                Aucune demande en attente.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -218,73 +220,75 @@ export default function RequestsList() {
                         <CardDescription>Historique des demandes approuvées et rejetées.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Installation</TableHead>
-                                    <TableHead>Utilisateur</TableHead>
-                                    <TableHead>Statut</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {isLoading ? (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
-                                            <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                                        </TableCell>
+                                        <TableHead>Installation</TableHead>
+                                        <TableHead className="hidden md:table-cell">Utilisateur</TableHead>
+                                        <TableHead>Statut</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
-                                ) : processedRequests.length > 0 ? (
-                                    processedRequests.map((request) => (
-                                        <TableRow key={request.id}>
-                                            <TableCell className="font-medium">{request.name}</TableCell>
-                                            <TableCell>{request.userName}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {processingId === request.id ? (
-                                                    <Loader2 className="ml-auto h-5 w-5 animate-spin" />
-                                                ) : (
-                                                    <div className='flex items-center justify-end gap-2'>
-                                                        <Button size="sm" variant="ghost" onClick={() => setSelectedRequest(request)}>
-                                                            <Eye className="mr-2 h-4 w-4" /> Détails
-                                                        </Button>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="text-destructive">
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        This will permanently delete the request. This action cannot be undone.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={() => handleDelete(request.id)}>
-                                                                        Delete
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </div>
-                                                )}
+                                </TableHeader>
+                                <TableBody>
+                                    {isLoading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
-                                            Aucune demande traitée.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                    ) : processedRequests.length > 0 ? (
+                                        processedRequests.map((request) => (
+                                            <TableRow key={request.id}>
+                                                <TableCell className="font-medium">{request.name}</TableCell>
+                                                <TableCell className="hidden md:table-cell">{request.userName}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={getStatusBadgeVariant(request.status)}>{request.status}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {processingId === request.id ? (
+                                                        <Loader2 className="ml-auto h-5 w-5 animate-spin" />
+                                                    ) : (
+                                                        <div className='flex items-center justify-end gap-1'>
+                                                            <Button size="icon" variant="ghost" onClick={() => setSelectedRequest(request)}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button variant="ghost" size="icon" className="text-destructive">
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            This will permanently delete the request. This action cannot be undone.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => handleDelete(request.id)}>
+                                                                            Delete
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                Aucune demande traitée.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
