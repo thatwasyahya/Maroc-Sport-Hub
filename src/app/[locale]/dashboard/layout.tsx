@@ -11,7 +11,7 @@ import { useMemo, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 function DashboardLayoutSkeleton() {
   return (
@@ -157,12 +157,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="sm:hidden p-0 w-64" >
-                      <div className="flex h-16 items-center border-b px-6">
+                      <SheetHeader className="p-6 pb-2">
+                        <SheetTitle>
                           <Link href="/dashboard" onClick={handleLinkClick} className="flex items-center gap-2 font-semibold">
                               <Activity className="h-6 w-6 text-primary" />
                               <span>{t('adminPanel')}</span>
                           </Link>
-                      </div>
+                        </SheetTitle>
+                      </SheetHeader>
                       <NavLinks links={navLinks} currentPathname={pathname} onLinkClick={handleLinkClick} />
                   </SheetContent>
               </Sheet>
