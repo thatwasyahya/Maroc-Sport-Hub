@@ -9,24 +9,18 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // N'importe qui peut lire les installations pour la carte, mais seuls les utilisateurs authentifiés peuvent les modifier.
+    // N'importe qui peut lire les installations pour la carte.
+    // Seuls les utilisateurs authentifiés peuvent créer/modifier/supprimer.
     match /facilities/{facilityId} {
       allow read: if true;
-      allow write: if request.auth != null; // À restreindre aux administrateurs plus tard
+      allow write: if request.auth != null;
     }
 
-    // Les utilisateurs peuvent créer des demandes. Ils ne peuvent lire que leurs propres demandes.
-    // Les administrateurs (utilisateurs authentifiés avec un profil) peuvent lister toutes les demandes.
+    // Les utilisateurs authentifiés peuvent lire et écrire sur la collection des demandes.
+    // Cela permet aux administrateurs de lister toutes les demandes et aux utilisateurs
+    // de créer et de voir leurs propres demandes. Les règles seront affinées plus tard.
     match /facilityRequests/{requestId} {
-      allow create: if request.auth != null;
-
-      // Permet à un utilisateur de lire sa propre demande ou à un admin de lire n'importe quelle demande
-      allow get: if request.auth != null && (request.auth.uid == resource.data.userId || exists(/databases/$(database)/documents/users/$(request.auth.uid)));
-      
-      // Permet aux admins de lister TOUTES les demandes pour le tableau de bord
-      allow list: if request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid));
-
-      allow update, delete: if request.auth != null; // À restreindre aux administrateurs plus tard
+      allow read, write: if request.auth != null;
     }
   }
 }
