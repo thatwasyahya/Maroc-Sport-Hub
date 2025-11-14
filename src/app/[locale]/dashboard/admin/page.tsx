@@ -6,10 +6,8 @@ import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import GeneralSettingsDialog from '@/components/dashboard/GeneralSettingsDialog';
-import {unstable_setRequestLocale} from 'next-intl/server';
 
-export default function AdminPage({ params: { locale } }: { params: { locale: string } }) {
-  unstable_setRequestLocale(locale);
+export default function AdminPage() {
   const t = useTranslations('Dashboard.Admin');
   const [isGeneralSettingsOpen, setIsGeneralSettingsOpen] = useState(false);
 
