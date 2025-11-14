@@ -6,9 +6,9 @@ import { users, facilities } from '../src/lib/data';
 import { firebaseConfig } from '../src/firebase/config';
 
 let app: App;
-// Always connect to emulators for seeding
-process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
-process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
+// DO NOT connect to emulators. The script should target production.
+// process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+// process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
 app = initializeApp({ projectId: firebaseConfig.projectId });
 
 const db = getFirestore(app);
@@ -36,12 +36,6 @@ async function seedDatabase() {
                 updatedAt: Timestamp.fromDate(user.updatedAt as Date),
             });
 
-            if (user.role === 'admin') {
-                await db.collection('roles_admin').doc(user.id).set({ assignedAt: Timestamp.now() });
-            }
-            if (user.role === 'super_admin') {
-                await db.collection('roles_super_admin').doc(user.id).set({ assignedAt: Timestamp.now() });
-            }
             console.log(`Seeded user profile: ${user.name}`);
         } catch (error: any) {
             if (error.code === 'auth/uid-already-exists' || error.code === 'auth/email-already-exists') {
@@ -57,7 +51,15 @@ async function seedDatabase() {
     const facilityBatch = db.batch();
     facilities.forEach(facility => {
         const docRef = db.collection('facilities').doc(facility.id);
-        facilityBatch.set(docRef, facility);
+        const facilityData = { ...facility };
+        
+        // Firestore Admin SDK does not allow 'undefined' values.
+        // If location is undefined, we remove the key entirely.
+        if (facilityData.location === undefined) {
+            delete facilityData.location;
+        }
+
+        facilityBatch.set(docRef, facilityData);
     });
     await facilityBatch.commit();
     console.log('Facilities seeded.');
