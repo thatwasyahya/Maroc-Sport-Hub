@@ -31,6 +31,7 @@ import { defaultData } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 export default function FacilitiesPage() {
   const firestore = useFirestore();
@@ -116,10 +117,9 @@ export default function FacilitiesPage() {
     setIsBulkDeleteAlertOpen(false);
   };
   
-  const downloadFile = (content: string, fileName: string, mimeType: string) => {
-    const blob = new Blob([content], { type: mimeType });
+  const downloadFile = (content: Blob, fileName: string) => {
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    link.href = URL.createObjectURL(content);
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
@@ -128,12 +128,24 @@ export default function FacilitiesPage() {
 
   const handleExportCSV = () => {
     const csv = Papa.unparse(facilities);
-    downloadFile(csv, 'facilities.csv', 'text/csv;charset=utf-8;');
+    // Add BOM for Excel to recognize UTF-8
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    downloadFile(blob, 'facilities.csv');
   };
 
   const handleExportJSON = () => {
     const json = JSON.stringify(facilities, null, 2);
-    downloadFile(json, 'facilities.json', 'application/json');
+    const blob = new Blob([json], { type: 'application/json' });
+    downloadFile(blob, 'facilities.json');
+  };
+  
+  const handleExportXLSX = () => {
+    const worksheet = XLSX.utils.json_to_sheet(facilities);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Installations');
+    const xlsxBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([xlsxBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    downloadFile(blob, 'facilities.xlsx');
   };
 
 
@@ -160,6 +172,7 @@ export default function FacilitiesPage() {
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleExportCSV}>Exporter en CSV</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportJSON}>Exporter en JSON</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportXLSX}>Exporter en XLSX (Excel)</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button onClick={handleAddNew} className="w-full md:w-auto">
@@ -202,12 +215,12 @@ export default function FacilitiesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                   <TableHead padding="checkbox">
+                   <TableHead className="w-[40px]">
                     <Checkbox
                         checked={isAllSelected}
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                         aria-label="Select all"
-                        indeterminate={isSomeSelected ? true : undefined}
+                        indeterminate={isSomeSelected}
                     />
                   </TableHead>
                   <TableHead>{t('tableHeaderName')}</TableHead>
@@ -228,7 +241,7 @@ export default function FacilitiesPage() {
                 ) : facilities && facilities.length > 0 ? (
                   facilities.map((facility) => (
                     <TableRow key={facility.id} data-state={selectedRowKeys.includes(facility.id) && "selected"}>
-                      <TableCell padding="checkbox">
+                      <TableCell>
                         <Checkbox
                             checked={selectedRowKeys.includes(facility.id)}
                             onCheckedChange={(checked) => handleRowSelect(facility.id, !!checked)}
@@ -342,3 +355,5 @@ export default function FacilitiesPage() {
     </>
   );
 }
+
+    
