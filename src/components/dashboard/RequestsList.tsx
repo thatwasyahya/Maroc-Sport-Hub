@@ -2,9 +2,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, writeBatch, serverTimestamp, deleteDoc, query, where } from 'firebase/firestore';
-import type { Facility, FacilityRequest } from '@/lib/types';
+import type { Facility, FacilityRequest, User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -31,24 +31,19 @@ export default function RequestsList() {
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [selectedRequest, setSelectedRequest] = useState<FacilityRequest | null>(null);
 
-    // Using empty arrays for now to avoid Firestore connection issues
-    const [pendingRequests, setPendingRequests] = useState<FacilityRequest[]>([]);
-    const [processedRequests, setProcessedRequests] = useState<FacilityRequest[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const pendingRequestsQuery = useMemoFirebase(
+        () => firestore ? query(collection(firestore, 'facilityRequests'), where('status', '==', 'pending')) : null,
+        [firestore]
+    );
+    const processedRequestsQuery = useMemoFirebase(
+        () => firestore ? query(collection(firestore, 'facilityRequests'), where('status', 'in', ['approved', 'rejected'])) : null,
+        [firestore]
+    );
 
-    // const pendingRequestsQuery = useMemoFirebase(
-    //     () => query(collection(firestore, 'facilityRequests'), where('status', '==', 'pending')),
-    //     [firestore]
-    // );
-    // const processedRequestsQuery = useMemoFirebase(
-    //     () => query(collection(firestore, 'facilityRequests'), where('status', 'in', ['approved', 'rejected'])),
-    //     [firestore]
-    // );
+    const { data: pendingRequests, isLoading: pendingLoading } = useCollection<FacilityRequest>(pendingRequestsQuery);
+    const { data: processedRequests, isLoading: processedLoading } = useCollection<FacilityRequest>(processedRequestsQuery);
 
-    // const { data: pendingRequests, isLoading: pendingLoading } = useCollection<FacilityRequest>(pendingRequestsQuery);
-    // const { data: processedRequests, isLoading: processedLoading } = useCollection<FacilityRequest>(processedRequestsQuery);
-
-    // const isLoading = pendingLoading || processedLoading;
+    const isLoading = pendingLoading || processedLoading;
 
     const handleApprove = async (request: FacilityRequest) => {
         if (!firestore) return;
@@ -266,7 +261,7 @@ export default function RequestsList() {
                                                             </Button>
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="text-destructive">
+                                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </Button>
                                                                 </AlertDialogTrigger>
@@ -313,5 +308,3 @@ export default function RequestsList() {
         </>
     );
 }
-
-    
