@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -27,12 +26,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { defaultData } from '@/lib/data';
+import {unstable_setRequestLocale} from 'next-intl/server';
 
-export default function UsersPage() {
+export default function UsersPage({ params: { locale } }: { params: { locale: string } }) {
+  unstable_setRequestLocale(locale);
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
   const t = useTranslations('Dashboard.Users');
+  const tUsers = useTranslations('Dashboard.Users.form');
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);

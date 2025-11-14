@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -33,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { InterceptedLink } from '@/components/intercepted-link';
+import {unstable_setRequestLocale} from 'next-intl/server';
 
 
 function Filters({ allSports, allRegions, allEquipments, selectedSports, setSelectedSports, selectedRegions, setSelectedRegions, selectedEquipment, setSelectedEquipment, isIndoor, setIsIndoor, isOutdoor, setIsOutdoor, isAccessible, setIsAccessible, clearFilters }: any) {
@@ -170,7 +170,8 @@ function FacilitiesTable({ facilities, onRowClick }: { facilities: Facility[], o
   )
 }
 
-export default function Home() {
+export default function Home({ params: { locale } }: { params: { locale: string } }) {
+  unstable_setRequestLocale(locale);
   const t = useTranslations('Home');
   const isMobile = useIsMobile();
   const firestore = useFirestore();
