@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Loader2, Edit, Phone, VenetianMask, Mail } from 'lucide-react';
+import { PlusCircle, Loader2, Edit, Phone, VenetianMask, Mail, Cake } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import AddFacilityRequestDialog from '@/components/profile/AddFacilityRequestDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -116,6 +116,8 @@ export default function ProfilePage() {
         user: 'secondary'
     }
 
+    const birthDate = userProfile.birthDate ? (userProfile.birthDate.seconds ? new Date(userProfile.birthDate.seconds * 1000) : userProfile.birthDate) : null;
+
     return (
         <>
             <div className="min-h-screen w-full flex flex-col bg-muted/40">
@@ -152,6 +154,10 @@ export default function ProfilePage() {
                                         <div className="flex items-center gap-3">
                                             <VenetianMask className="w-4 h-4" />
                                             <span>{userProfile.gender || "Non spécifié"}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Cake className="w-4 h-4" />
+                                            <span>{birthDate ? format(birthDate, 'dd/MM/yyyy') : "Non spécifié"}</span>
                                         </div>
                                     </CardContent>
                                 </Card>

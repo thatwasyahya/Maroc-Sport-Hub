@@ -11,9 +11,12 @@ import { useAuth, useFirestore } from '@/firebase';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { UserRole } from '@/lib/types';
-import { getAuth } from 'firebase-admin/auth';
-import { User } from 'firebase/auth';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
 
 
 export default function SignupPage() {
@@ -26,7 +29,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>();
+  const [gender, setGender] = useState<'Male' | 'Female'>();
+  const [birthDate, setBirthDate] = useState<Date>();
   const [isSigningUp, setIsSigningUp] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -62,6 +66,7 @@ export default function SignupPage() {
         lastName: lastName.join(' ') || '',
         phoneNumber,
         gender,
+        birthDate,
         role: role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -92,7 +97,7 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-headline">Sign Up</CardTitle>
           <CardDescription>
@@ -116,24 +121,51 @@ export default function SignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-             <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="phone-number">Phone Number</Label>
                   <Input id="phone-number" placeholder="0612345678" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="gender">Gender</Label>
-                  <Select onValueChange={(value: 'Male' | 'Female' | 'Other') => setGender(value)} value={gender}>
+                  <Select onValueChange={(value: 'Male' | 'Female') => setGender(value)} value={gender}>
                       <SelectTrigger id="gender">
                           <SelectValue placeholder="Select..." />
                       </SelectTrigger>
                       <SelectContent>
                           <SelectItem value="Male">Male</SelectItem>
                           <SelectItem value="Female">Female</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                   </Select>
                 </div>
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="birthdate">Birth Date</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !birthDate && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {birthDate ? format(birthDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={birthDate}
+                            onSelect={setBirthDate}
+                            initialFocus
+                            captionLayout="dropdown-buttons"
+                            fromYear={1950}
+                            toYear={new Date().getFullYear() - 10}
+                        />
+                    </PopoverContent>
+                </Popover>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>

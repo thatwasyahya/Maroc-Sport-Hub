@@ -163,8 +163,7 @@
       },
       "genders": {
         "Male": "Male",
-        "Female": "Female",
-        "Other": "Other"
+        "Female": "Female"
       },
       "deleteConfirmTitle": "Are you absolutely sure?",
       "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user account.",
@@ -183,6 +182,8 @@
         "phoneLabel": "Phone Number",
         "genderLabel": "Gender",
         "genderPlaceholder": "Select a gender",
+        "birthDateLabel": "Birth Date",
+        "birthDatePlaceholder": "Pick a date",
         "passwordLabel": "Password",
         "passwordHelp": "Required for new users only. Leave blank to keep current password.",
         "roleLabel": "Role",
@@ -222,10 +223,11 @@
       "phoneLabel": "Phone Number",
       "genderLabel": "Gender",
       "genderPlaceholder": "Select a gender...",
+      "birthDateLabel": "Birth Date",
+      "birthDatePlaceholder": "Pick a date",
       "genders": {
           "Male": "Male",
-          "Female": "Female",
-          "Other": "Other"
+          "Female": "Female"
       },
       "cancel": "Cancel",
       "save": "Save Changes",

@@ -28,12 +28,18 @@ import { useState, useEffect } from 'react';
 import type { User } from '@/lib/types';
 import { useTranslations } from 'next-intl';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '../ui/calendar';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Le nom est requis.'),
   avatarUrl: z.string().url("L'URL de l'avatar doit être une URL valide.").optional().or(z.literal('')),
   phoneNumber: z.string().optional(),
-  gender: z.enum(['Male', 'Female', 'Other']).optional(),
+  gender: z.enum(['Male', 'Female']).optional(),
+  birthDate: z.date().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -57,17 +63,20 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
       avatarUrl: '',
       phoneNumber: '',
       gender: undefined,
+      birthDate: undefined,
     },
   });
 
   useEffect(() => {
     if (user && open) {
-      form.reset({
-        name: user.name || '',
-        avatarUrl: user.avatarUrl || '',
-        phoneNumber: user.phoneNumber || '',
-        gender: user.gender,
-      });
+        const birthDate = user.birthDate ? (user.birthDate.seconds ? new Date(user.birthDate.seconds * 1000) : user.birthDate) : undefined;
+        form.reset({
+            name: user.name || '',
+            avatarUrl: user.avatarUrl || '',
+            phoneNumber: user.phoneNumber || '',
+            gender: user.gender as 'Male' | 'Female' | undefined,
+            birthDate: birthDate,
+        });
     }
   }, [user, open, form]);
 
@@ -84,7 +93,8 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
         lastName: lastName.join(' ') || '',
         avatarUrl: data.avatarUrl,
         phoneNumber: data.phoneNumber,
-        gender: data.gender || null, // Ensure we send null instead of undefined
+        gender: data.gender || null,
+        birthDate: data.birthDate || null,
         updatedAt: serverTimestamp(),
       };
       
@@ -170,13 +180,56 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
                       <SelectContent>
                           <SelectItem value="Male">{t('genders.Male')}</SelectItem>
                           <SelectItem value="Female">{t('genders.Female')}</SelectItem>
-                          <SelectItem value="Other">{t('genders.Other')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="birthDate"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>{t('birthDateLabel')}</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full pl-3 text-left font-normal",
+                                            !field.value && "text-muted-foreground"
+                                        )}
+                                    >
+                                        {field.value ? (
+                                            format(field.value, "PPP")
+                                        ) : (
+                                            <span>{t('birthDatePlaceholder')}</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) =>
+                                        date > new Date() || date < new Date("1900-01-01")
+                                    }
+                                    initialFocus
+                                    captionLayout="dropdown-buttons"
+                                    fromYear={1950}
+                                    toYear={new Date().getFullYear() - 10}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
             <DialogFooter className='pt-4'>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t('cancel')}</Button>
               <Button type="submit" disabled={isSubmitting}>

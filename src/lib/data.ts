@@ -12,6 +12,7 @@ const createRandomUser = (role: UserRole, id: number): User => {
         email: faker.internet.email(),
         phoneNumber: faker.phone.number(),
         gender: gender,
+        birthDate: faker.date.birthdate({ min: 18, max: 65, mode: 'age' }),
         avatarUrl: `https://avatar.iran.liara.run/public/${id}`,
         role,
         createdAt: new Date(),
@@ -106,7 +107,7 @@ const createRandomFacility = (): Facility => {
 };
 
 export const users: User[] = [
-    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://avatar.iran.liara.run/public/super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date(), phoneNumber: '0600000000', gender: 'Male' },
+    { id: 'super-admin-0', name: 'Super Admin', firstName: 'Super', lastName: 'Admin', email: 'super@admin.com', avatarUrl: `https://avatar.iran.liara.run/public/super-admin`, role: 'super_admin', createdAt: new Date(), updatedAt: new Date(), phoneNumber: '0600000000', gender: 'Male', birthDate: new Date('1980-01-01') },
     ...Array.from({ length: 10 }, (_, i) => createRandomUser("admin", i)),
     ...Array.from({ length: 50 }, (_, i) => createRandomUser("user", i + 10)),
 ];

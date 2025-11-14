@@ -29,6 +29,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import type { User, UserRole } from '@/lib/types';
 import { useTranslations } from 'next-intl';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '../ui/calendar';
 
 const userSchema = z.object({
   name: z.string().min(2, 'Name is required.'),
@@ -36,7 +41,8 @@ const userSchema = z.object({
   password: z.string().optional(),
   role: z.enum(['user', 'admin', 'super_admin']),
   phoneNumber: z.string().optional(),
-  gender: z.enum(['Male', 'Female', 'Other']).optional(),
+  gender: z.enum(['Male', 'Female']).optional(),
+  birthDate: z.date().optional(),
 }).refine(data => !data.password || data.password.length >= 6, {
     message: "Password must be at least 6 characters long.",
     path: ["password"],
@@ -67,18 +73,21 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
       role: 'user',
       phoneNumber: '',
       gender: undefined,
+      birthDate: undefined,
     },
   });
 
   useEffect(() => {
     if (user && open) {
+      const birthDate = user.birthDate ? (user.birthDate.seconds ? new Date(user.birthDate.seconds * 1000) : user.birthDate) : undefined;
       form.reset({
         name: user.name,
         email: user.email,
         role: user.role,
         password: '',
         phoneNumber: user.phoneNumber || '',
-        gender: user.gender,
+        gender: user.gender as 'Male' | 'Female' | undefined,
+        birthDate: birthDate,
       });
     } else if (!user && open) {
       form.reset({
@@ -88,6 +97,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
         role: 'user',
         phoneNumber: '',
         gender: undefined,
+        birthDate: undefined,
       });
     }
   }, [user, open, form]);
@@ -104,6 +114,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
             role: data.role,
             phoneNumber: data.phoneNumber,
             gender: data.gender || null,
+            birthDate: data.birthDate || null,
             updatedAt: serverTimestamp(),
         };
 
@@ -131,6 +142,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
             role: data.role,
             phoneNumber: data.phoneNumber,
             gender: data.gender || null,
+            birthDate: data.birthDate || null,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
@@ -217,7 +229,6 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
                       <SelectContent>
                           <SelectItem value="Male">{tUsers('genders.Male')}</SelectItem>
                           <SelectItem value="Female">{tUsers('genders.Female')}</SelectItem>
-                          <SelectItem value="Other">{tUsers('genders.Other')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -225,6 +236,50 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
                 )}
               />
             </div>
+             <FormField
+                control={form.control}
+                name="birthDate"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>{t('birthDateLabel')}</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full pl-3 text-left font-normal",
+                                            !field.value && "text-muted-foreground"
+                                        )}
+                                    >
+                                        {field.value ? (
+                                            format(field.value, "PPP")
+                                        ) : (
+                                            <span>{t('birthDatePlaceholder')}</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) =>
+                                        date > new Date() || date < new Date("1900-01-01")
+                                    }
+                                    initialFocus
+                                    captionLayout="dropdown-buttons"
+                                    fromYear={1950}
+                                    toYear={new Date().getFullYear() - 10}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
             {!isEditing && (
               <FormField
                 control={form.control}

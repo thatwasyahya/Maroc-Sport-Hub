@@ -163,8 +163,7 @@
       },
       "genders": {
         "Male": "Homme",
-        "Female": "Femme",
-        "Other": "Autre"
+        "Female": "Femme"
       },
       "deleteConfirmTitle": "Êtes-vous sûr ?",
       "deleteConfirmDescription": "Cette action est irréversible et supprimera définitivement l'utilisateur.",
@@ -183,6 +182,8 @@
         "phoneLabel": "Numéro de téléphone",
         "genderLabel": "Genre",
         "genderPlaceholder": "Sélectionner un genre",
+        "birthDateLabel": "Date de naissance",
+        "birthDatePlaceholder": "Choisir une date",
         "passwordLabel": "Mot de passe",
         "passwordHelp": "Requis uniquement pour les nouveaux utilisateurs. Laisser vide pour ne pas changer.",
         "roleLabel": "Rôle",
@@ -222,10 +223,11 @@
       "phoneLabel": "Numéro de téléphone",
       "genderLabel": "Genre",
       "genderPlaceholder": "Sélectionner un genre...",
+      "birthDateLabel": "Date de naissance",
+      "birthDatePlaceholder": "Choisir une date",
       "genders": {
           "Male": "Homme",
-          "Female": "Femme",
-          "Other": "Autre"
+          "Female": "Femme"
       },
       "cancel": "Annuler",
       "save": "Enregistrer",

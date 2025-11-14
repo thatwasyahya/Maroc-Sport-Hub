@@ -7,7 +7,8 @@ export interface User {
   lastName: string;
   email: string;
   phoneNumber?: string | null;
-  gender?: 'Male' | 'Female' | 'Other' | null;
+  gender?: 'Male' | 'Female' | null;
+  birthDate?: any; // Can be a server timestamp or Date object
   avatarUrl?: string;
   role: UserRole;
   createdAt: any; // Can be a server timestamp

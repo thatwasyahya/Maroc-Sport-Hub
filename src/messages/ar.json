@@ -163,8 +163,7 @@
       },
       "genders": {
         "Male": "ذكر",
-        "Female": "أنثى",
-        "Other": "آخر"
+        "Female": "أنثى"
       },
       "deleteConfirmTitle": "هل أنت متأكد؟",
       "deleteConfirmDescription": "هذا الإجراء لا يمكن التراجع عنه. سيؤدي هذا إلى حذف حساب المستخدم بشكل دائم.",
@@ -183,6 +182,8 @@
         "phoneLabel": "رقم الهاتف",
         "genderLabel": "الجنس",
         "genderPlaceholder": "اختر الجنس",
+        "birthDateLabel": "تاريخ الميلاد",
+        "birthDatePlaceholder": "اختر تاريخًا",
         "passwordLabel": "كلمة المرور",
         "passwordHelp": "مطلوب للمستخدمين الجدد فقط. اتركه فارغًا لعدم التغيير.",
         "roleLabel": "الدور",
@@ -222,10 +223,11 @@
       "phoneLabel": "رقم الهاتف",
       "genderLabel": "الجنس",
       "genderPlaceholder": "اختر الجنس...",
+      "birthDateLabel": "تاريخ الميلاد",
+      "birthDatePlaceholder": "اختر تاريخًا",
       "genders": {
         "Male": "ذكر",
-        "Female": "أنثى",
-        "Other": "آخر"
+        "Female": "أنثى"
       },
       "cancel": "إلغاء",
       "save": "حفظ التغييرات",
