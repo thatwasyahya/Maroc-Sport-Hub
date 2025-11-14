@@ -63,7 +63,7 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
   useEffect(() => {
     if (user && open) {
       form.reset({
-        name: user.name,
+        name: user.name || '',
         avatarUrl: user.avatarUrl || '',
         phoneNumber: user.phoneNumber || '',
         gender: user.gender,
