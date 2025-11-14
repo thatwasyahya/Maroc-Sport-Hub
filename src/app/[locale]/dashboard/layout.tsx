@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { InterceptedLink } from '@/components/intercepted-link';
-import {unstable_setRequestLocale} from 'next-intl/server';
+
 
 function DashboardLayoutSkeleton() {
   return (
@@ -93,8 +93,7 @@ function NavLinks({ links, currentPathname, onLinkClick }: { links: any[], curre
   );
 }
 
-export default function DashboardLayout({ children, params: { locale } }: { children: React.ReactNode, params: { locale: string } }) {
-  unstable_setRequestLocale(locale);
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const pathname = usePathname();

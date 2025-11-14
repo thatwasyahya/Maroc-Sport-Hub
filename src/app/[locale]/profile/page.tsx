@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import EditProfileDialog from '@/components/profile/EditProfileDialog';
+import { unstable_setRequestLocale } from 'next-intl/server';
 
 function ProfilePageSkeleton() {
     const t = useTranslations('Profile');
