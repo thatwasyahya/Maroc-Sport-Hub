@@ -25,7 +25,7 @@ import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import {useTranslations} from 'next-intl';
 import { defaultData } from '@/lib/data';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
