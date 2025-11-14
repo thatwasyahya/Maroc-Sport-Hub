@@ -50,19 +50,20 @@ async function seedDatabase() {
     console.log('Seeding facilities...');
     const facilityBatch = db.batch();
     facilities.forEach(facility => {
-        const docRef = db.collection('facilities').doc(facility.id);
-        const facilityData = { ...facility };
+        // Generate a new unique ID for each facility to ensure they are added, not overwritten.
+        const docRef = db.collection('facilities').doc(); 
+        const { id, ...facilityData } = facility; // Exclude the pre-defined ID from the data file.
         
         // Firestore Admin SDK does not allow 'undefined' values.
         // If location is undefined, we remove the key entirely.
         if (facilityData.location === undefined) {
-            delete facilityData.location;
+            delete (facilityData as any).location;
         }
 
         facilityBatch.set(docRef, facilityData);
     });
     await facilityBatch.commit();
-    console.log('Facilities seeded.');
+    console.log(`${facilities.length} new facilities added.`);
 
     console.log('Database seed complete!');
     process.exit(0);
