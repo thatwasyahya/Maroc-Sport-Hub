@@ -11,6 +11,9 @@ export interface User {
   birthDate?: any; // Can be a server timestamp or Date object
   avatarUrl?: string;
   role: UserRole;
+  jobTitle?: string;
+  city?: string;
+  favoriteSports?: string[];
   createdAt: any; // Can be a server timestamp
   updatedAt: any; // Can be a server timestamp
 }

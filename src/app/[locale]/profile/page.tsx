@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Loader2, Edit, Phone, VenetianMask, Mail, Cake } from 'lucide-react';
+import { PlusCircle, Loader2, Edit, Phone, VenetianMask, Mail, Cake, Briefcase, MapPin, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import AddFacilityRequestDialog from '@/components/profile/AddFacilityRequestDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -147,6 +147,14 @@ export default function ProfilePage() {
                                             <Mail className="w-4 h-4" />
                                             <span className="break-all">{userProfile.email}</span>
                                         </div>
+                                         <div className="flex items-center gap-3">
+                                            <Briefcase className="w-4 h-4" />
+                                            <span>{userProfile.jobTitle || "Non spécifié"}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <MapPin className="w-4 h-4" />
+                                            <span>{userProfile.city || "Non spécifié"}</span>
+                                        </div>
                                         <div className="flex items-center gap-3">
                                             <Phone className="w-4 h-4" />
                                             <span>{userProfile.phoneNumber || "Non spécifié"}</span>
@@ -159,6 +167,17 @@ export default function ProfilePage() {
                                             <Cake className="w-4 h-4" />
                                             <span>{birthDate ? format(birthDate, 'dd/MM/yyyy') : "Non spécifié"}</span>
                                         </div>
+                                        {userProfile.favoriteSports && userProfile.favoriteSports.length > 0 && (
+                                            <div className="flex flex-col gap-3 pt-2">
+                                                <div className='flex items-center gap-3'>
+                                                    <Trophy className="w-4 h-4" />
+                                                    <span className='font-medium'>Sports Favoris</span>
+                                                </div>
+                                                <div className='flex flex-wrap gap-2 pl-7'>
+                                                    {userProfile.favoriteSports.map(sport => <Badge key={sport} variant="secondary">{sport}</Badge>)}
+                                                </div>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </div>

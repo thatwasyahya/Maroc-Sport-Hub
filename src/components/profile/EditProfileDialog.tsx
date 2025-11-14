@@ -33,6 +33,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
+import { sports } from '@/lib/data';
+import { MultiSelect } from '../ui/multi-select';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Le nom est requis.'),
@@ -40,6 +42,9 @@ const profileSchema = z.object({
   phoneNumber: z.string().optional(),
   gender: z.enum(['Male', 'Female']).optional(),
   birthDate: z.date().optional(),
+  jobTitle: z.string().optional(),
+  city: z.string().optional(),
+  favoriteSports: z.array(z.string()).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -55,6 +60,8 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
   const { toast } = useToast();
   const t = useTranslations('Profile.editDialog');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const sportOptions = sports.map(s => ({label: s, value: s}));
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -64,18 +71,24 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
       phoneNumber: '',
       gender: undefined,
       birthDate: undefined,
+      jobTitle: '',
+      city: '',
+      favoriteSports: [],
     },
   });
 
   useEffect(() => {
     if (user && open) {
-        const birthDate = user.birthDate ? (user.birthDate.seconds ? new Date(user.birthDate.seconds * 1000) : user.birthDate) : undefined;
+        const birthDate = user.birthDate ? (user.birthDate.seconds ? new Date(user.birthDate.seconds * 1000) : new Date(user.birthDate)) : undefined;
         form.reset({
             name: user.name || '',
             avatarUrl: user.avatarUrl || '',
             phoneNumber: user.phoneNumber || '',
             gender: user.gender as 'Male' | 'Female' | undefined,
             birthDate: birthDate,
+            jobTitle: user.jobTitle || '',
+            city: user.city || '',
+            favoriteSports: user.favoriteSports || [],
         });
     }
   }, [user, open, form]);
@@ -95,6 +108,9 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
         phoneNumber: data.phoneNumber,
         gender: data.gender || null,
         birthDate: data.birthDate || null,
+        jobTitle: data.jobTitle,
+        city: data.city,
+        favoriteSports: data.favoriteSports,
         updatedAt: serverTimestamp(),
       };
       
@@ -119,27 +135,14 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('nameLabel')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
+             <FormField
               control={form.control}
               name="avatarUrl"
               render={({ field }) => (
@@ -152,81 +155,144 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('phoneLabel')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0612345678" {...field} value={field.value || ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
                 control={form.control}
-                name="gender"
+                name="name"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('genderLabel')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('genderPlaceholder')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                          <SelectItem value="Male">{t('genders.Male')}</SelectItem>
-                          <SelectItem value="Female">{t('genders.Female')}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormItem>
+                    <FormLabel>{t('nameLabel')}</FormLabel>
+                    <FormControl>
+                        <Input {...field} />
+                    </FormControl>
                     <FormMessage />
-                  </FormItem>
+                    </FormItem>
                 )}
-              />
-              <FormField
+                />
+                <FormField
                 control={form.control}
-                name="birthDate"
+                name="phoneNumber"
                 render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                        <FormLabel>{t('birthDateLabel')}</FormLabel>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                        )}
-                                    >
-                                        {field.value ? (
-                                            format(field.value, "PPP")
-                                        ) : (
-                                            <span>{t('birthDatePlaceholder')}</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    disabled={(date) =>
-                                        date > new Date() || date < new Date("1900-01-01")
-                                    }
-                                    initialFocus
-                                    captionLayout="dropdown-buttons"
-                                    fromYear={1950}
-                                    toYear={new Date().getFullYear() - 10}
-                                />
-                            </PopoverContent>
-                        </Popover>
+                    <FormItem>
+                    <FormLabel>{t('phoneLabel')}</FormLabel>
+                    <FormControl>
+                        <Input placeholder="0612345678" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+             <div className="grid grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>{t('genderLabel')}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder={t('genderPlaceholder')} />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="Male">{t('genders.Male')}</SelectItem>
+                            <SelectItem value="Female">{t('genders.Female')}</SelectItem>
+                        </SelectContent>
+                        </Select>
                         <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="birthDate"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                            <FormLabel>{t('birthDateLabel')}</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full pl-3 text-left font-normal",
+                                                !field.value && "text-muted-foreground"
+                                            )}
+                                        >
+                                            {field.value ? (
+                                                format(field.value, "PPP")
+                                            ) : (
+                                                <span>{t('birthDatePlaceholder')}</span>
+                                            )}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) =>
+                                            date > new Date() || date < new Date("1900-01-01")
+                                        }
+                                        initialFocus
+                                        captionLayout="dropdown-buttons"
+                                        fromYear={1950}
+                                        toYear={new Date().getFullYear() - 10}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+             </div>
+             <div className="grid grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="jobTitle"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>{t('jobTitleLabel')}</FormLabel>
+                        <FormControl>
+                            <Input placeholder={t('jobTitlePlaceholder')} {...field} value={field.value || ''} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>{t('cityLabel')}</FormLabel>
+                        <FormControl>
+                            <Input placeholder={t('cityPlaceholder')} {...field} value={field.value || ''} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            <FormField
+                control={form.control}
+                name="favoriteSports"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{t('favoriteSportsLabel')}</FormLabel>
+                    <FormControl>
+                       <MultiSelect
+                            options={sportOptions}
+                            selected={field.value || []}
+                            onChange={field.onChange}
+                            placeholder={t('favoriteSportsPlaceholder')}
+                        />
+                    </FormControl>
+                    <FormMessage />
                     </FormItem>
                 )}
             />

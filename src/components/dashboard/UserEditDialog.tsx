@@ -34,6 +34,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
+import { MultiSelect } from '../ui/multi-select';
+import { sports } from '@/lib/data';
 
 const userSchema = z.object({
   name: z.string().min(2, 'Name is required.'),
@@ -43,6 +45,9 @@ const userSchema = z.object({
   phoneNumber: z.string().optional(),
   gender: z.enum(['Male', 'Female']).optional(),
   birthDate: z.date().optional(),
+  jobTitle: z.string().optional(),
+  city: z.string().optional(),
+  favoriteSports: z.array(z.string()).optional(),
 }).refine(data => !data.password || data.password.length >= 6, {
     message: "Password must be at least 6 characters long.",
     path: ["password"],
@@ -63,6 +68,8 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
   const tUsers = useTranslations('Dashboard.Users');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!user;
+  
+  const sportOptions = sports.map(s => ({label: s, value: s}));
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -74,12 +81,15 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
       phoneNumber: '',
       gender: undefined,
       birthDate: undefined,
+      jobTitle: '',
+      city: '',
+      favoriteSports: [],
     },
   });
 
   useEffect(() => {
     if (user && open) {
-      const birthDate = user.birthDate ? (user.birthDate.seconds ? new Date(user.birthDate.seconds * 1000) : user.birthDate) : undefined;
+      const birthDate = user.birthDate ? (user.birthDate.seconds ? new Date(user.birthDate.seconds * 1000) : new Date(user.birthDate)) : undefined;
       form.reset({
         name: user.name,
         email: user.email,
@@ -88,6 +98,9 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
         phoneNumber: user.phoneNumber || '',
         gender: user.gender as 'Male' | 'Female' | undefined,
         birthDate: birthDate,
+        jobTitle: user.jobTitle || '',
+        city: user.city || '',
+        favoriteSports: user.favoriteSports || [],
       });
     } else if (!user && open) {
       form.reset({
@@ -98,6 +111,9 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
         phoneNumber: '',
         gender: undefined,
         birthDate: undefined,
+        jobTitle: '',
+        city: '',
+        favoriteSports: [],
       });
     }
   }, [user, open, form]);
@@ -115,6 +131,9 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
             phoneNumber: data.phoneNumber,
             gender: data.gender || null,
             birthDate: data.birthDate || null,
+            jobTitle: data.jobTitle,
+            city: data.city,
+            favoriteSports: data.favoriteSports,
             updatedAt: serverTimestamp(),
         };
 
@@ -143,6 +162,9 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
             phoneNumber: data.phoneNumber,
             gender: data.gender || null,
             birthDate: data.birthDate || null,
+            jobTitle: data.jobTitle,
+            city: data.city,
+            favoriteSports: data.favoriteSports,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
@@ -174,32 +196,34 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('nameLabel')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('emailLabel')}</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="m@example.com" {...field} disabled={isEditing} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+             <div className="grid grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{t('nameLabel')}</FormLabel>
+                    <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{t('emailLabel')}</FormLabel>
+                    <FormControl>
+                        <Input type="email" placeholder="m@example.com" {...field} disabled={isEditing} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -277,6 +301,52 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
                             </PopoverContent>
                         </Popover>
                         <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="jobTitle"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{t('jobTitleLabel')}</FormLabel>
+                    <FormControl>
+                        <Input placeholder={t('jobTitlePlaceholder')} {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{t('cityLabel')}</FormLabel>
+                    <FormControl>
+                        <Input placeholder={t('cityPlaceholder')} {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+             <FormField
+                control={form.control}
+                name="favoriteSports"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{t('favoriteSportsLabel')}</FormLabel>
+                    <FormControl>
+                       <MultiSelect
+                            options={sportOptions}
+                            selected={field.value || []}
+                            onChange={field.onChange}
+                            placeholder={t('favoriteSportsPlaceholder')}
+                        />
+                    </FormControl>
+                    <FormMessage />
                     </FormItem>
                 )}
             />

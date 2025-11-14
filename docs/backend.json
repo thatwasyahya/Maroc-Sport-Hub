@@ -13,6 +13,9 @@
         "phoneNumber": { "type": "string", "description": "Phone number of the user." },
         "gender": { "type": "string", "enum": ["Male", "Female"], "description": "Gender of the user." },
         "birthDate": { "type": "string", "format": "date", "description": "Birth date of the user." },
+        "jobTitle": { "type": "string", "description": "The user's job title or function." },
+        "city": { "type": "string", "description": "The user's city of residence." },
+        "favoriteSports": { "type": "array", "items": { "type": "string" }, "description": "List of the user's favorite sports." },
         "createdAt": { "type": "string", "description": "Timestamp indicating when the user was created.", "format": "date-time" },
         "updatedAt": { "type": "string", "description": "Timestamp indicating when the user was last updated.", "format": "date-time" }
       },

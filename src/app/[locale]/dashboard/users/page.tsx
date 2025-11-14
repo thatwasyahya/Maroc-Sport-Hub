@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trash2, Loader2, Phone, VenetianMask } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2, Phone, VenetianMask, Briefcase } from 'lucide-react';
 import UserEditDialog from '@/components/dashboard/UserEditDialog';
 import {
   AlertDialog,
@@ -110,9 +110,9 @@ export default function UsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('tableHeaderUser')}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('tableHeaderJob')}</TableHead>
                   <TableHead>{t('tableHeaderRole')}</TableHead>
-                  <TableHead className="hidden md:table-cell">{t('tableHeaderPhone')}</TableHead>
-                  <TableHead className="hidden lg:table-cell">{t('tableHeaderGender')}</TableHead>
+                  <TableHead className="hidden lg:table-cell">{t('tableHeaderPhone')}</TableHead>
                   <TableHead className="hidden sm:table-cell">{t('tableHeaderJoined')}</TableHead>
                   {isSuperAdmin && <TableHead className="text-right">{t('tableHeaderActions')}</TableHead>}
                 </TableRow>
@@ -139,21 +139,21 @@ export default function UsersPage() {
                           </div>
                         </div>
                       </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                         <div className="flex items-center gap-2">
+                           <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+                           {userItem.jobTitle || 'N/A'}
+                         </div>
+                       </TableCell>
                       <TableCell>
                         <Badge variant={roleVariantMap[userItem.role] || 'outline'}>
                           {t(`roles.${userItem.role}`)}
                         </Badge>
                       </TableCell>
-                       <TableCell className="hidden md:table-cell">
+                       <TableCell className="hidden lg:table-cell">
                          <div className="flex items-center gap-2">
                            <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                            {userItem.phoneNumber || 'N/A'}
-                         </div>
-                       </TableCell>
-                       <TableCell className="hidden lg:table-cell">
-                         <div className="flex items-center gap-2">
-                           <VenetianMask className="h-3.5 w-3.5 text-muted-foreground" />
-                           {userItem.gender || 'N/A'}
                          </div>
                        </TableCell>
                       <TableCell className="hidden sm:table-cell">

@@ -17,6 +17,9 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
+import { getRegions } from '@/lib/maroc-api';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { sports } from '@/lib/data';
 
 
 export default function SignupPage() {
@@ -31,7 +34,14 @@ export default function SignupPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female'>();
   const [birthDate, setBirthDate] = useState<Date>();
+  const [jobTitle, setJobTitle] = useState('');
+  const [city, setCity] = useState('');
+  const [favoriteSports, setFavoriteSports] = useState<string[]>([]);
   const [isSigningUp, setIsSigningUp] = useState(false);
+  
+  const regions = getRegions();
+  const sportOptions = sports.map(s => ({label: s, value: s}));
+
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +77,9 @@ export default function SignupPage() {
         phoneNumber,
         gender,
         birthDate,
+        jobTitle,
+        city,
+        favoriteSports,
         role: role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -97,7 +110,7 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-headline">Sign Up</CardTitle>
           <CardDescription>
@@ -106,21 +119,17 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="full-name">Full Name</Label>
-              <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="full-name">Full Name</Label>
+                  <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="phone-number">Phone Number</Label>
@@ -166,6 +175,26 @@ export default function SignupPage() {
                         />
                     </PopoverContent>
                 </Popover>
+            </div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="job-title">Function/Profession</Label>
+                    <Input id="job-title" placeholder="e.g., Student, Coach" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="city">City of Residence</Label>
+                    <Input id="city" placeholder="e.g., Casablanca" value={city} onChange={(e) => setCity(e.target.value)} />
+                </div>
+            </div>
+             <div className="grid gap-2">
+                 <Label htmlFor="favorite-sports">Favorite Sports</Label>
+                 <MultiSelect
+                    options={sportOptions}
+                    selected={favoriteSports}
+                    onChange={setFavoriteSports}
+                    placeholder="Select your favorite sports..."
+                    className="w-full"
+                />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
