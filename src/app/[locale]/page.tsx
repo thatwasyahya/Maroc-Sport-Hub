@@ -292,7 +292,6 @@ export default function Home() {
       { label: t('footerHome'), url: '/' },
       { label: t('footerProfile'), url: '/profile' },
       { label: t('footerDashboard'), url: '/dashboard' },
-      { label: t('footerContact'), url: '/contact' },
   ];
 
   return (
