@@ -34,7 +34,7 @@ export const sports = [
     "Musculation", "Natation", "Natation synchronisée", "Padel", "Parachutisme", "Parkour", 
     "Patinage artistique", "Patinage de vitesse", "Pêche sportive", "Pentathlon moderne", 
     "Pétanque", "Plongée", "Racquetball", "Randonnée", "Rafting", "Roller", "Rugby", 
-    "Skateboard", "Ski", "Snowboard", "Softball", "Spéléologie", "Squash", "Sumo", d"Surf", "Taekwondo", "Tennis", "Tennis de table", "Tir à l'arc", "Triathlon", 
+    "Skateboard", "Ski", "Snowboard", "Softball", "Spéléologie", "Squash", "Sumo", "Surf", "Taekwondo", "Tennis", "Tennis de table", "Tir à l'arc", "Triathlon", 
     "Voile", "Volleyball", "VTT (Vélo tout terrain)", "Water-polo", "Yoga"
 ].sort();
 
