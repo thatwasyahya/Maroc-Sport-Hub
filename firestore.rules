@@ -49,8 +49,7 @@ function validateContactMessage(data) {
     return data.name is string && data.name.size() > 0 &&
            data.email is string && data.email.matches('.+@.+\..+') &&
            data.message is string && data.message.size() > 0 &&
-           data.status is string && data.status in ['read', 'unread'] &&
-           data.createdAt is timestamp;
+           data.status is string && data.status == 'unread';
 }
 
 
