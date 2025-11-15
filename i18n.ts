@@ -1,10 +1,7 @@
-import { getRequestConfig, requestLocale } from 'next-intl/server';
+import { getRequestConfig } from 'next-intl/server';
 
-export default getRequestConfig(async () => {
-  // Récupère la locale automatiquement depuis le contexte
-  const locale = await requestLocale();
-
-  // Charge dynamiquement les messages
+export default getRequestConfig(async ({ locale }) => {
+  // Load messages dynamically
   const messages = (await import(`./src/messages/${locale}.json`)).default;
 
   return {
