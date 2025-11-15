@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Activity, Building, Users, Home, Loader, ShieldAlert, FileText, Menu, Settings } from 'lucide-react';
+import { Activity, Building, Users, Home, Loader, ShieldAlert, FileText, Menu, Settings, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
 import { useMemo, useState } from 'react';
@@ -112,6 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       { href: '/dashboard/requests', label: t('requests'), icon: FileText },
       { href: '/dashboard/facilities', label: t('facilities'), icon: Building },
       { href: '/dashboard/users', label: t('users'), icon: Users },
+      { href: '/dashboard/messages', label: t('messages'), icon: Mail },
     ];
     if (userProfile?.role === 'super_admin') {
         links.push({ href: '/dashboard/admin', label: t('admin'), icon: Settings });

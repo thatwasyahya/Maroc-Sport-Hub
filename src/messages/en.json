@@ -91,6 +91,7 @@
       "requests": "Requests",
       "facilities": "Facilities",
       "users": "Users",
+      "messages": "Messages",
       "admin": "Admin",
       "dashboard": "Dashboard",
       "backToSite": "Back to Site"
