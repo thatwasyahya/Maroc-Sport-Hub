@@ -8,7 +8,12 @@ import ContactInfo from '@/components/contact-info';
 import type { Settings } from '@/lib/types';
 
 interface ContactPageClientProps {
-  settings: Settings | null;
+  settings: (Partial<Settings> & { 
+    appName?: string;
+    footerDescription?: string;
+    heroTitle?: string;
+    heroSubtitle?: string;
+  }) | null;
   translations: {
     heroAlt: string;
     title: string;

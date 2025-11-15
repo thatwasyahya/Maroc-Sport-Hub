@@ -11,6 +11,7 @@ import { Activity, LayoutDashboard, LogOut, User as UserIcon, LogIn, UserPlus, M
 import { useRouter, usePathname } from '@/i18n/routing';
 import { signOut } from "firebase/auth";
 import type { User, Settings } from "@/lib/types";
+import { getLocalized } from '@/lib/utils';
 import { Skeleton } from "./ui/skeleton";
 import { InterceptedLink } from "./intercepted-link";
 import { useTheme } from "next-themes";
@@ -62,7 +63,7 @@ export default function Header() {
   };
   
   const displayName = userProfile?.name || user?.email;
-  const appName = settings?.appName || "Maroc Sport Hub";
+  const appName = getLocalized(settings?.appName as any, currentLocale, "Maroc Sport Hub");
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
   
   const locales = [

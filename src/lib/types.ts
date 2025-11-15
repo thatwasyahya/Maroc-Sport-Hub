@@ -91,19 +91,19 @@ export interface FacilityRequest extends Omit<Facility, 'id' | 'adminId' | 'crea
 }
 
 export interface FooterLink {
-  label: string;
+  label: string | Record<string, string>;
   url: string;
 }
 
 export interface Settings {
-    appName: string;
-    footerDescription: string;
-    heroTitle: string;
-    heroSubtitle: string;
-    footerLinks?: FooterLink[];
-    contactEmail?: string;
-    contactPhone?: string;
-    facebookUrl?: string;
-    instagramUrl?: string;
-    twitterUrl?: string;
+  appName: string | Record<string, string>;
+  footerDescription: string | Record<string, string>;
+  heroTitle: string | Record<string, string>;
+  heroSubtitle: string | Record<string, string>;
+  footerLinks?: FooterLink[];
+  contactEmail?: string;
+  contactPhone?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
 }

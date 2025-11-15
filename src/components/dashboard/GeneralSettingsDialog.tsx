@@ -32,7 +32,7 @@ import { Skeleton } from '../ui/skeleton';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { PlusCircle, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 const linkSchema = z.object({
   label: z.string().min(1, "Le libellé est requis."),
@@ -64,6 +64,7 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = useTranslations('Dashboard.Admin.siteSettings');
+  const locale = useLocale();
 
   const settingsDocRef = useMemoFirebase(() => (
     firestore ? doc(firestore, 'settings', 'global') : null
@@ -112,7 +113,19 @@ export default function GeneralSettingsDialog({ open, onOpenChange }: GeneralSet
   const onSubmit = (data: SettingsFormValues) => {
     if (!settingsDocRef) return;
     setIsSubmitting(true);
-    setDocumentNonBlocking(settingsDocRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    
+    const payload: any = { updatedAt: serverTimestamp() };
+
+    // Localize primary fields (preserve existing locales if present)
+    payload.appName = typeof settings?.appName === 'object' ? { ...(settings?.appName as Record<string, string>), [locale]: data.appName } : { [locale]: data.appName };
+    payload.footerDescription = typeof settings?.footerDescription === 'object' ? { ...(settings?.footerDescription as Record<string, string>), [locale]: data.footerDescription } : { [locale]: data.footerDescription };
+    payload.heroTitle = typeof settings?.heroTitle === 'object' ? { ...(settings?.heroTitle as Record<string, string>), [locale]: data.heroTitle } : { [locale]: data.heroTitle };
+    payload.heroSubtitle = typeof settings?.heroSubtitle === 'object' ? { ...(settings?.heroSubtitle as Record<string, string>), [locale]: data.heroSubtitle } : { [locale]: data.heroSubtitle };
+
+    // Footer links: store labels per-locale
+    payload.footerLinks = (data.footerLinks || []).map((l) => ({ label: { [locale]: l.label }, url: l.url }));
+
+    setDocumentNonBlocking(settingsDocRef, payload, { merge: true });
     toast({
       title: 'Paramètres mis à jour',
       description: 'Les paramètres généraux du site ont été enregistrés.',

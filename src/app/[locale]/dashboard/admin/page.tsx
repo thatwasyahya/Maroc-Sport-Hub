@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import type { Settings as SettingsType } from '@/lib/types';
+import { getLocalized } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { PlusCircle, Trash2 } from 'lucide-react';
@@ -49,6 +50,7 @@ type SettingsFormValues = z.infer<typeof settingsSchema>;
 export default function AdminPage() {
   const t = useTranslations('Dashboard.Admin');
   const tSettings = useTranslations('Dashboard.Admin.siteSettings');
+  const locale = useLocale();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,10 +85,10 @@ export default function AdminPage() {
   useEffect(() => {
     if (settings) {
       form.reset({
-        appName: settings.appName || '',
-        footerDescription: settings.footerDescription || '',
-        heroTitle: settings.heroTitle || '',
-        heroSubtitle: settings.heroSubtitle || '',
+        appName: getLocalized(settings.appName as any, locale, ''),
+        footerDescription: getLocalized(settings.footerDescription as any, locale, ''),
+        heroTitle: getLocalized(settings.heroTitle as any, locale, ''),
+        heroSubtitle: getLocalized(settings.heroSubtitle as any, locale, ''),
         footerLinks: settings.footerLinks || [],
         contactEmail: settings.contactEmail || '',
         contactPhone: settings.contactPhone || '',
@@ -101,7 +103,14 @@ export default function AdminPage() {
     if (!settingsDocRef) return;
     setIsSubmitting(true);
     try {
-      await setDocumentNonBlocking(settingsDocRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+      const payload: any = { updatedAt: serverTimestamp() };
+      payload.appName = typeof settings?.appName === 'object' ? { ...(settings?.appName as Record<string, string>), [locale]: data.appName } : { [locale]: data.appName };
+      payload.footerDescription = typeof settings?.footerDescription === 'object' ? { ...(settings?.footerDescription as Record<string, string>), [locale]: data.footerDescription } : { [locale]: data.footerDescription };
+      payload.heroTitle = typeof settings?.heroTitle === 'object' ? { ...(settings?.heroTitle as Record<string, string>), [locale]: data.heroTitle } : { [locale]: data.heroTitle };
+      payload.heroSubtitle = typeof settings?.heroSubtitle === 'object' ? { ...(settings?.heroSubtitle as Record<string, string>), [locale]: data.heroSubtitle } : { [locale]: data.heroSubtitle };
+      payload.footerLinks = (data.footerLinks || []).map((l) => ({ label: { [locale]: l.label }, url: l.url }));
+
+      await setDocumentNonBlocking(settingsDocRef, payload, { merge: true });
       toast({
         title: 'Paramètres mis à jour',
         description: 'Les paramètres généraux du site ont été enregistrés.',

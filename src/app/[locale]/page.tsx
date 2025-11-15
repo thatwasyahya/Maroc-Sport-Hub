@@ -22,13 +22,13 @@ import { sportsIconsMap, equipmentIconsMap } from '@/lib/icons';
 import Image from 'next/image';
 import { getRegions } from '@/lib/maroc-api';
 import { Skeleton } from '@/components/ui/skeleton';
-import {useTranslations} from 'next-intl';
+import {useTranslations, useLocale} from 'next-intl';
 import { defaultData } from '@/lib/data';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, getLocalized } from '@/lib/utils';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { InterceptedLink } from '@/components/intercepted-link';
@@ -285,16 +285,18 @@ export default function Home() {
   
   const filterProps = { allSports, allRegions, allEquipments, selectedSports, setSelectedSports, selectedRegions, setSelectedRegions, selectedEquipment, setSelectedEquipment, isIndoor, setIsIndoor, isOutdoor, setIsOutdoor, isAccessible, setIsAccessible, clearFilters };
   
-  const appName = settings?.appName || t('appName');
-  const footerDescription = settings?.footerDescription || t('footerDescription');
-  const heroTitle = settings?.heroTitle || t('heroTitle');
-  const heroSubtitle = settings?.heroSubtitle || t('heroSubtitle');
-  const footerLinks = settings?.footerLinks || [
+    const locale = useLocale();
+
+    const appName = getLocalized(settings?.appName, locale, t('appName'));
+    const footerDescription = getLocalized(settings?.footerDescription, locale, t('footerDescription'));
+    const heroTitle = getLocalized(settings?.heroTitle, locale, t('heroTitle'));
+    const heroSubtitle = getLocalized(settings?.heroSubtitle, locale, t('heroSubtitle'));
+    const footerLinks = (settings?.footerLinks || [
       { label: t('footerHome'), url: '/' },
       { label: t('footerProfile'), url: '/profile' },
       { label: t('footerDashboard'), url: '/dashboard' },
       { label: t('footerContact'), url: '/contact' },
-  ];
+    ]).map(link => ({ url: link.url, label: getLocalized(link.label as any, locale, typeof link.label === 'string' ? link.label : '') }));
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-background">
