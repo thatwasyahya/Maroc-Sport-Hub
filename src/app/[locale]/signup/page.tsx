@@ -1,7 +1,7 @@
 "use client";
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useAuth, useFirestore, signInWithGoogle } from '@/firebase';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
