@@ -380,7 +380,7 @@ export default function Home() {
                                 {t('filtersTitle')}
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="left" className="p-0 flex flex-col w-80">
+                        <SheetContent side="left" className="p-0 flex flex-col w-[85vw] sm:w-80 max-w-sm">
                             <SheetHeader className="p-4 border-b">
                                 <SheetTitle className="flex items-center gap-2">
                                   <SlidersHorizontal className="w-5 h-5"/>
@@ -420,7 +420,7 @@ export default function Home() {
           </div>
 
           <Dialog open={!!selectedFacility} onOpenChange={(open) => !open && handleDialogClose()}>
-              <DialogContent className="max-w-3xl p-0">
+              <DialogContent className="max-w-3xl p-0 w-[95vw] sm:w-full max-h-[90vh] overflow-hidden">
                   {selectedFacility && (
                       <>
                           <DialogHeader className="p-6 pb-4">

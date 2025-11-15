@@ -175,7 +175,7 @@ export default function UsersPage() {
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </AlertDialogTrigger>
-                                  <AlertDialogContent>
+                                  <AlertDialogContent className="w-[95vw] sm:w-full max-w-md">
                                       <AlertDialogHeader>
                                           <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
                                           <AlertDialogDescription>{t('deleteConfirmDescription')}</AlertDialogDescription>

@@ -176,7 +176,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? t('editUserTitle') : t('addUserTitle')}</DialogTitle>
           <DialogDescription>{isEditing ? t('editUserDescription') : t('addUserDescription')}</DialogDescription>

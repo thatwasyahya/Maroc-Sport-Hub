@@ -382,7 +382,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) resetState(); onOpenChange(isOpen); }}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Importer des Installations depuis un CSV</DialogTitle>
           <DialogDescription>

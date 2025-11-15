@@ -269,7 +269,7 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Modifier l'installation" : 'Ajouter une nouvelle installation'}</DialogTitle>
           <DialogDescription>

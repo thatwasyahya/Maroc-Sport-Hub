@@ -226,7 +226,7 @@ export default function FacilitiesPage() {
                             {t('deleteSelected')}
                         </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="w-[95vw] sm:w-full max-w-md">
                         <AlertDialogHeader>
                             <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -320,7 +320,7 @@ export default function FacilitiesPage() {
                                                 {t('deleteAction')}
                                             </Button>
                                         </AlertDialogTrigger>
-                                        <AlertDialogContent>
+                                        <AlertDialogContent className="w-[95vw] sm:w-full max-w-md">
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
                                                 <AlertDialogDescription>{t('confirmDeleteSingleDescription')}</AlertDialogDescription>
@@ -369,7 +369,7 @@ export default function FacilitiesPage() {
       )}
 
       <Dialog open={isViewDialogOpen} onOpenChange={(open) => { if (!open) setSelectedFacility(null); setIsViewDialogOpen(open); }}>
-          <DialogContent className="max-w-3xl p-0">
+          <DialogContent className="max-w-3xl p-0 w-[95vw] sm:w-full max-h-[90vh] overflow-hidden">
               {selectedFacility && (
                   <>
                       <DialogHeader className="p-6 pb-4">

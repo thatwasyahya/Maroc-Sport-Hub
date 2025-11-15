@@ -165,11 +165,17 @@ export default function Header() {
             </DropdownMenu>
           ) : (
             <nav className="flex items-center gap-2">
-              <Button asChild variant="ghost">
-                <InterceptedLink href="/login"><LogIn className="mr-2 h-4 w-4" />Se connecter</InterceptedLink>
+              <Button asChild variant="ghost" size="icon" className="sm:w-auto sm:px-4">
+                <InterceptedLink href="/login">
+                  <LogIn className="h-4 w-4" />
+                  <span className="hidden sm:inline sm:ml-2">Se connecter</span>
+                </InterceptedLink>
               </Button>
-              <Button asChild>
-                <InterceptedLink href="/signup"><UserPlus className="mr-2 h-4 w-4"/>S'inscrire</InterceptedLink>
+              <Button asChild size="icon" className="sm:w-auto sm:px-4">
+                <InterceptedLink href="/signup">
+                  <UserPlus className="h-4 w-4"/>
+                  <span className="hidden sm:inline sm:ml-2">S'inscrire</span>
+                </InterceptedLink>
               </Button>
             </nav>
           )}
