@@ -197,6 +197,7 @@ export default function Home() {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
 
   const [viewMode, setViewMode] = useState<'map' | 'table'>('map');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const mapRef = useRef<HTMLDivElement>(null);
 
@@ -353,10 +354,10 @@ export default function Home() {
 
             <div className="relative h-[85vh] rounded-xl overflow-hidden shadow-2xl border border-border/50">
                 
-                {/* Desktop Sidebar */}
-                {!isMobile && (
+                {/* Desktop Sidebar - Only visible in map mode */}
+                {!isMobile && viewMode === 'map' && (
                    <SidebarProvider>
-                        <Sidebar collapsible="icon" variant="floating" className={cn("absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card/80 backdrop-blur-sm border-border/50 shadow-lg rounded-xl", viewMode === 'table' && "hidden")}>
+                        <Sidebar collapsible="icon" variant="floating" className="absolute top-4 left-4 z-20 w-80 max-h-[calc(100%-2rem)] bg-card/80 backdrop-blur-sm border-border/50 shadow-lg rounded-xl">
                             <SidebarHeader className="flex items-center justify-between p-4 border-b border-border/50">
                                 <h2 className="text-lg font-bold font-headline flex items-center gap-2"><SlidersHorizontal className="w-5 h-5"/> {t('filtersTitle')}</h2>
                                 <Button onClick={handleLocateMe} variant="ghost" size="icon" className="h-8 w-8">
@@ -370,16 +371,16 @@ export default function Home() {
                     </SidebarProvider>
                 )}
                 
-                {/* Mobile Filter Sheet Trigger */}
-                {isMobile && (
-                    <Sheet>
+                {/* Filter Button for Table Mode (Desktop) and All Mobile */}
+                {(viewMode === 'table' || isMobile) && (
+                    <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                         <SheetTrigger asChild>
                             <Button className="absolute top-4 left-4 z-20 shadow-lg">
-                                <Menu className="w-5 h-5 mr-2" />
+                                <SlidersHorizontal className="w-5 h-5 mr-2" />
                                 {t('filtersTitle')}
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="left" className="p-0 flex flex-col">
+                        <SheetContent side="left" className="p-0 flex flex-col w-80">
                             <SheetHeader className="p-4 border-b">
                                 <SheetTitle className="flex items-center gap-2">
                                   <SlidersHorizontal className="w-5 h-5"/>
