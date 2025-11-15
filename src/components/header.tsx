@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser, useAuth, useDoc, useMemoFirebase, useFirestore } from "@/firebase";
 import { doc } from 'firebase/firestore';
 import { Activity, LayoutDashboard, LogOut, User as UserIcon, LogIn, UserPlus, Moon, Sun, Languages } from "lucide-react";
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from '@/i18n/routing';
 import { signOut } from "firebase/auth";
 import type { User, Settings } from "@/lib/types";
 import { Skeleton } from "./ui/skeleton";
@@ -45,10 +45,10 @@ export default function Header() {
   };
   
   const handleLocaleChange = (newLocale: string) => {
-    // This will switch the locale and keep the user on the same page.
-    // The pathname is the part of the URL after the domain, without the locale.
-    // next-intl's middleware will handle the redirection.
-    router.replace(pathname, { locale: newLocale });
+    // Get the current pathname without the locale prefix
+    const currentPath = pathname || '/';
+    // Use next-intl's router to navigate with the new locale
+    router.push(currentPath, { locale: newLocale });
   };
 
 
