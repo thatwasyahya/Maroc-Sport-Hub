@@ -45,6 +45,14 @@ function validateSettings(data) {
     return data.appName is string && data.appName.size() > 0;
 }
 
+function validateContactMessage(data) {
+    return data.name is string && data.name.size() > 0 &&
+           data.email is string && data.email.matches('.+@.+\..+') &&
+           data.message is string && data.message.size() > 0 &&
+           data.status is string && data.status in ['read', 'unread'] &&
+           data.createdAt is timestamp;
+}
+
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -81,6 +89,13 @@ service cloud.firestore {
       allow read: if true;
       // Only admins can write to settings.
       allow write: if request.auth != null && isAdmin() && validateSettings(request.resource.data);
+    }
+    
+    match /contactMessages/{messageId} {
+      // Anyone can create a contact message (public contact form)
+      allow create: if validateContactMessage(request.resource.data);
+      // Only admins can read, update, or delete contact messages
+      allow read, update, delete: if request.auth != null && isAdmin();
     }
   }
 }
