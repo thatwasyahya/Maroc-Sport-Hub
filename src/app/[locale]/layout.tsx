@@ -8,10 +8,11 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import {NextIntlClientProvider} from 'next-intl';
-import {getMessages, unstable_setRequestLocale} from 'next-intl/server';
+import {getMessages, setRequestLocale} from 'next-intl/server';
 import { NavigationProvider } from '@/components/providers/navigation-provider';
 import { NavigationLoader } from '@/components/navigation-loader';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { routing } from '@/i18n/routing';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -30,20 +31,21 @@ export const metadata: Metadata = {
   description: 'Map, organize, and book sports facilities in Morocco.',
 };
 
-const locales = ['en', 'fr', 'ar'];
-
 export function generateStaticParams() {
-  return locales.map((locale) => ({locale}));
+  return routing.locales.map((locale) => ({locale}));
 }
 
 export default async function RootLayout({
   children,
-  params: { locale },
+  params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  unstable_setRequestLocale(locale);
+  const { locale } = await params;
+
+  // Enable static rendering
+  setRequestLocale(locale);
 
   const messages = await getMessages();
 

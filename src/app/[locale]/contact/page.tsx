@@ -1,4 +1,4 @@
-import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getDoc, doc } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase/config-server';
 import type { Settings } from '@/lib/types';
@@ -18,8 +18,9 @@ async function getSettings() {
   return null;
 }
 
-export default async function ContactPage({ params: { locale } }: { params: { locale: string } }) {
-  unstable_setRequestLocale(locale);
+export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations('Contact');
   const settings = await getSettings();
 
