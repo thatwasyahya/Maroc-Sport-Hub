@@ -1,8 +1,9 @@
 'use client';
 
-import Link, { LinkProps } from 'next/link';
+import { Link } from '@/i18n/routing';
+import { LinkProps } from 'next/link';
 import { useNavigation } from '@/components/providers/navigation-provider';
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/i18n/routing';
 import React from 'react';
 
 type InterceptedLinkProps = LinkProps & React.PropsWithChildren<React.HTMLAttributes<HTMLAnchorElement>>;
@@ -12,8 +13,12 @@ export function InterceptedLink({ href, children, onClick, ...props }: Intercept
   const pathname = usePathname();
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Normaliser les href pour la comparaison
+    const normalizedHref = typeof href === 'string' ? href : href.pathname || '';
+    const normalizedPathname = pathname || '';
+    
     // Si l'href est le même que la page actuelle, ne rien faire.
-    if (href.toString() === pathname) {
+    if (normalizedHref === normalizedPathname) {
        if (onClick) onClick(e); // Exécuter le onClick original s'il existe
        return;
     }

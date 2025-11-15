@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { usePathname } from '@/i18n/routing';
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 interface NavigationContextType {
