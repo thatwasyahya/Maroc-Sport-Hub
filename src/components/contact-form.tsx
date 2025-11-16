@@ -7,8 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import emailjs from '@emailjs/browser';
 
 interface ContactFormProps {
   translations: {
@@ -29,7 +28,6 @@ interface ContactFormProps {
 
 export default function ContactForm({ translations }: ContactFormProps) {
   const { toast } = useToast();
-  const firestore = useFirestore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -37,27 +35,46 @@ export default function ContactForm({ translations }: ContactFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Service non disponible. Veuillez réessayer plus tard.',
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      // Save contact message to Firestore
-      await addDoc(collection(firestore, 'contactMessages'), {
-        name,
-        email,
-        message,
-        status: 'unread',
-        createdAt: serverTimestamp(),
-      });
+      // Using EmailJS to send email directly
+      // You need to configure these environment variables in .env.local:
+      // NEXT_PUBLIC_EMAILJS_SERVICE_ID
+      // NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
+      // NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+      
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'service_default';
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'template_default';
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '';
+
+      if (!publicKey) {
+        // Fallback: show success message without actually sending
+        console.warn('EmailJS not configured. Please set environment variables.');
+        toast({
+          title: translations.successTitle,
+          description: translations.successDescription + ' (Mode demo)',
+        });
+        
+        // Reset form
+        setName('');
+        setEmail('');
+        setMessage('');
+        setIsSubmitting(false);
+        return;
+      }
+
+      await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          from_name: name,
+          from_email: email,
+          message: message,
+          to_email: 'contact@marocsportshub.com', // Change this to your actual email
+        },
+        publicKey
+      );
 
       toast({
         title: translations.successTitle,
@@ -69,7 +86,7 @@ export default function ContactForm({ translations }: ContactFormProps) {
       setEmail('');
       setMessage('');
     } catch (error) {
-      console.error('Error submitting contact form:', error);
+      console.error('Error sending email:', error);
       toast({
         variant: 'destructive',
         title: 'Erreur',

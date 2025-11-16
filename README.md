@@ -40,7 +40,21 @@ To run the project locally, follow these steps:
     ```
 
 3.  **Set up environment variables**:
-    This project uses Firebase. The necessary configuration is already included in the source code. No `.env` file is required for local development.
+    Copy `.env.local.example` to `.env.local` and fill in your Firebase and EmailJS credentials:
+    ```bash
+    cp .env.local.example .env.local
+    ```
+    
+    **Firebase Setup**:
+    - Go to [Firebase Console](https://console.firebase.google.com/)
+    - Create a new project or use an existing one
+    - Add your Firebase config values to `.env.local`
+    
+    **EmailJS Setup (for contact form)**:
+    - Sign up at [EmailJS](https://www.emailjs.com/)
+    - Create a service and email template
+    - Add your EmailJS credentials to `.env.local`
+    - Note: The contact form will work in demo mode without EmailJS, but won't send actual emails
 
 4.  **Run the development server**:
     ```bash

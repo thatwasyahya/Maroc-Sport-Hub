@@ -112,7 +112,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       { href: '/dashboard/requests', label: t('requests'), icon: FileText },
       { href: '/dashboard/facilities', label: t('facilities'), icon: Building },
       { href: '/dashboard/users', label: t('users'), icon: Users },
-      { href: '/dashboard/messages', label: t('messages'), icon: Mail },
     ];
     if (userProfile?.role === 'super_admin') {
         links.push({ href: '/dashboard/admin', label: t('admin'), icon: Settings });
