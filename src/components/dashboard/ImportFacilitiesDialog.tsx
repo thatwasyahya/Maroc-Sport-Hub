@@ -27,41 +27,61 @@ interface ImportFacilitiesDialogProps {
 }
 
 const dbFields: { key: keyof Facility | 'latitude' | 'longitude', label: string, notes?: string, required?: boolean, keywords: string[] }[] = [
-    { key: 'name', label: 'Nom de l\'établissement', keywords: ['nom_de_letablissement', 'nom_etablissement', 'name'] },
-    { key: 'latitude', label: 'Latitude', keywords: ['latitude', 'lat'] },
-    { key: 'longitude', label: 'Longitude', keywords: ['longitude', 'lon', 'lng'] },
-    { key: 'region', label: 'Région', keywords: ['region'] },
-    { key: 'province', label: 'Province', keywords: ['province'] },
-    { key: 'commune', label: 'Commune', keywords: ['commune'] },
-    { key: 'milieu', label: 'Milieu (Urbain/Rural)', keywords: ['milieu'] },
-    { key: 'installations_sportives', label: 'Type d\'installation', keywords: ['installations_sportives', 'type_installation'] },
-    { key: 'categorie_abregee', label: 'Catégorie abrégée', keywords: ['categorie_abregee'] },
-    { key: 'address', label: 'Adresse/Localisation', keywords: ['localisation', 'adresse'] },
-    { key: 'ownership', label: 'Propriété', keywords: ['propriete'] },
-    { key: 'managing_entity', label: 'Entité gestionnaire', keywords: ['entite_gestionnaire'] },
-    { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format AAAA-MM-JJ', keywords: ['date_derniere_renovation'] },
-    { key: 'surface_area', label: 'Superficie (m²)', notes: 'Numérique', keywords: ['superficie'] },
-    { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique', keywords: ['capacite_daccueil', 'capacite'] },
-    { key: 'staff_count', label: 'Effectif total', notes: 'Numérique', keywords: ['effectif'] },
-    { key: 'establishment_state', label: 'État de l\'établissement', keywords: ['etat_de_letablissement', 'etat_etablissement'] },
-    { key: 'developed_space', label: 'Espace aménagé', notes: 'Booléen (oui/non)', keywords: ['espace_amenage'] },
-    { key: 'titre_foncier_numero', label: 'N° Titre Foncier', keywords: ['titre_foncier'] },
-    { key: 'building_state', label: 'État du bâtiment', keywords: ['etat_du_batiment'] },
-    { key: 'equipment_state', label: 'État des équipements', keywords: ['etat_des_equipements'] },
-    { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique', keywords: ['nombre_du_personnel_du_secteur_sport', 'personnel_sport'] },
-    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Booléen (oui/non)', keywords: ['besoin_rh'] },
-    { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)', keywords: ['besoin_damenagement', 'besoin_amenagement'] },
-    { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)', keywords: ['besoin_dequipements', 'besoin_equipements'] },
-    { key: 'observations', label: 'Observations', keywords: ['observation', 'observations'] },
-    { key: 'beneficiaries', label: 'Bénéficiaires', keywords: ['beneficiaires', 'benificiares'] },
+    { key: 'name', label: 'Nom de l\'établissement', required: true, keywords: ['nom', 'name', 'etablissement', 'installation', 'facility'] },
+    { key: 'latitude', label: 'Latitude', required: true, keywords: ['latitude', 'lat', 'y', 'coord_y'] },
+    { key: 'longitude', label: 'Longitude', required: true, keywords: ['longitude', 'lon', 'lng', 'long', 'x', 'coord_x'] },
+    { key: 'region', label: 'Région', keywords: ['region', 'reg'] },
+    { key: 'province', label: 'Province', keywords: ['province', 'prov'] },
+    { key: 'commune', label: 'Commune', keywords: ['commune', 'com'] },
+    { key: 'milieu', label: 'Milieu (Urbain/Rural)', keywords: ['milieu', 'environnement', 'urban', 'rural'] },
+    { key: 'installations_sportives', label: 'Type d\'installation', keywords: ['installation', 'type', 'sportive', 'sport'] },
+    { key: 'categorie_abregee', label: 'Catégorie abrégée', keywords: ['categorie', 'cat', 'abreg'] },
+    { key: 'address', label: 'Adresse/Localisation', keywords: ['adresse', 'address', 'localisation', 'location', 'lieu'] },
+    { key: 'ownership', label: 'Propriété', keywords: ['propriete', 'property', 'owner', 'proprietaire'] },
+    { key: 'managing_entity', label: 'Entité gestionnaire', keywords: ['entite', 'gestionnaire', 'gestion', 'management', 'manager'] },
+    { key: 'last_renovation_date', label: 'Date dernière rénovation', notes: 'Format AAAA-MM-JJ', keywords: ['renovation', 'date', 'derniere', 'last'] },
+    { key: 'surface_area', label: 'Superficie (m²)', notes: 'Numérique', keywords: ['superficie', 'surface', 'area', 'taille', 'size'] },
+    { key: 'capacity', label: 'Capacité d\'accueil', notes: 'Numérique', keywords: ['capacite', 'capacity', 'accueil', 'places'] },
+    { key: 'staff_count', label: 'Effectif total', notes: 'Numérique', keywords: ['effectif', 'staff', 'personnel', 'employees'] },
+    { key: 'establishment_state', label: 'État de l\'établissement', keywords: ['etat', 'state', 'etablissement', 'condition'] },
+    { key: 'developed_space', label: 'Espace aménagé', notes: 'Booléen (oui/non)', keywords: ['espace', 'amenage', 'developed', 'space'] },
+    { key: 'titre_foncier_numero', label: 'N° Titre Foncier', keywords: ['titre', 'foncier', 'numero', 'number', 'land'] },
+    { key: 'building_state', label: 'État du bâtiment', keywords: ['batiment', 'building', 'etat', 'state', 'construction'] },
+    { key: 'equipment_state', label: 'État des équipements', keywords: ['equipement', 'equipment', 'etat', 'materiel'] },
+    { key: 'sports_staff_count', label: 'Personnel du secteur sport', notes: 'Numérique', keywords: ['personnel', 'sport', 'secteur', 'nombre'] },
+    { key: 'hr_needs', label: 'Besoin en RH', notes: 'Booléen (oui/non)', keywords: ['besoin', 'rh', 'ressources', 'humaines', 'hr', 'need'] },
+    { key: 'besoin_amenagement', label: 'Besoin d\'aménagement', notes: 'Booléen (oui/non)', keywords: ['besoin', 'amenagement', 'development', 'need'] },
+    { key: 'besoin_equipements', label: 'Besoin d\'équipements', notes: 'Booléen (oui/non)', keywords: ['besoin', 'equipement', 'equipment', 'need'] },
+    { key: 'observations', label: 'Observations', keywords: ['observation', 'remarque', 'comment', 'note'] },
+    { key: 'beneficiaries', label: 'Bénéficiaires', keywords: ['beneficiaire', 'beneficiary', 'users', 'utilisateurs'] },
 ];
 
 const cleanColumnName = (col: string): string => {
     if (!col) return '';
     return col.trim().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
-        .replace(/[^a-z0-9_]/g, '_') // Replace non-alphanumeric with underscore
-        .replace(/_+/g, '_'); // Replace multiple underscores with a single one
+        .replace(/['']/g, '') // Remove apostrophes
+        .replace(/[^a-z0-9]/g, '_') // Replace non-alphanumeric with underscore
+        .replace(/_+/g, '_') // Replace multiple underscores with a single one
+        .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+};
+
+const findBestMatch = (cleanedHeader: string, keywords: string[]): number => {
+    let maxScore = 0;
+    for (const keyword of keywords) {
+        const cleanedKeyword = cleanColumnName(keyword);
+        if (cleanedHeader === cleanedKeyword) {
+            return 100; // Exact match
+        }
+        if (cleanedHeader.includes(cleanedKeyword) || cleanedKeyword.includes(cleanedHeader)) {
+            const score = Math.max(
+                cleanedKeyword.length / cleanedHeader.length,
+                cleanedHeader.length / cleanedKeyword.length
+            ) * 80;
+            maxScore = Math.max(maxScore, score);
+        }
+    }
+    return maxScore;
 };
 
 
@@ -132,13 +152,21 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
                     const newColumnMap: Record<string, string> = {};
                     const cleanedFileHeaders = originalHeaders.map(h => ({ original: h, cleaned: cleanColumnName(h) }));
+                    const usedHeaders = new Set<string>();
 
+                    // Premier passage : correspondances exactes ou très fortes
                     for (const dbField of dbFields) {
-                        const foundHeader = cleanedFileHeaders.find(header => 
-                            dbField.keywords.some(kw => header.cleaned.includes(kw))
-                        );
-                        if (foundHeader) {
-                            newColumnMap[dbField.key] = foundHeader.original;
+                        let bestMatch = { header: '', score: 0 };
+                        for (const header of cleanedFileHeaders) {
+                            if (usedHeaders.has(header.original)) continue;
+                            const score = findBestMatch(header.cleaned, dbField.keywords);
+                            if (score > bestMatch.score) {
+                                bestMatch = { header: header.original, score };
+                            }
+                        }
+                        if (bestMatch.score >= 60) { // Seuil de confiance à 60%
+                            newColumnMap[dbField.key] = bestMatch.header;
+                            usedHeaders.add(bestMatch.header);
                         }
                     }
                     setColumnMap(newColumnMap);
@@ -290,29 +318,39 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     </div>
   );
 
-  const renderMappingStep = () => (
+  const renderMappingStep = () => {
+    const mappedCount = Object.values(columnMap).filter(v => v && v !== 'ignore_column').length;
+    const requiredMapped = dbFields.filter(f => f.required).every(f => columnMap[f.key] && columnMap[f.key] !== 'ignore_column');
+    
+    return (
     <>
       <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/50 p-3 mb-4">
         <div className='flex items-center gap-3'>
             <FileCheck2 className="h-6 w-6 text-green-600" />
             <div>
                 <p className="font-medium">{file?.name}</p>
-                <p className="text-sm text-muted-foreground">Fichier prêt. Veuillez mapper les colonnes ci-dessous.</p>
+                <p className="text-sm text-muted-foreground">
+                  {mappedCount} colonne(s) mappée(s) • {fileData.length} ligne(s) détectée(s)
+                  {!requiredMapped && <span className="text-destructive ml-2">⚠️ Champs requis manquants</span>}
+                </p>
             </div>
         </div>
         <Button variant="ghost" size="icon" onClick={resetState}><RefreshCw className="h-4 w-4" /></Button>
       </div>
       <ScrollArea className="h-96">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-1">
-            {dbFields.map(field => (
+            {dbFields.map(field => {
+              const isMapped = columnMap[field.key] && columnMap[field.key] !== 'ignore_column';
+              return (
                 <div key={field.key} className="space-y-1">
-                    <label className="font-medium text-sm">
+                    <label className="font-medium text-sm flex items-center gap-2">
                         {field.label}
-                        {field.required && <span className="text-destructive ml-1">*</span>}
+                        {field.required && <span className="text-destructive">*</span>}
+                        {isMapped && <span className="text-xs text-green-600">✓</span>}
                     </label>
                     {field.notes && <p className="text-xs text-muted-foreground">{field.notes}</p>}
                     <Select onValueChange={(value) => setColumnMap(prev => ({...prev, [field.key]: value}))} value={columnMap[field.key] || ''}>
-                      <SelectTrigger>
+                      <SelectTrigger className={field.required && !isMapped ? 'border-destructive' : ''}>
                         <SelectValue placeholder="Choisir une colonne..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -323,11 +361,13 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
                       </SelectContent>
                     </Select>
                 </div>
-            ))}
+              );
+            })}
         </div>
       </ScrollArea>
     </>
   );
+};
 
   const renderPreviewStep = () => (
      <>
