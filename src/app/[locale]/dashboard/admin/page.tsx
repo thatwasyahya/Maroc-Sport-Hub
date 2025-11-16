@@ -27,6 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const contactSettingsSchema = z.object({
   contactEmail: z.string().email("Format d'email invalide.").optional().or(z.literal('')),
   contactPhone: z.string().optional(),
+  contactAddress: z.string().optional(),
   facebookUrl: z.string().url("URL invalide").or(z.literal('')).optional(),
   instagramUrl: z.string().url("URL invalide").or(z.literal('')).optional(),
   twitterUrl: z.string().url("URL invalide").or(z.literal('')).optional(),
@@ -51,6 +52,7 @@ export default function AdminPage() {
     defaultValues: {
       contactEmail: '',
       contactPhone: '',
+      contactAddress: '',
       facebookUrl: '',
       instagramUrl: '',
       twitterUrl: '',
@@ -62,6 +64,7 @@ export default function AdminPage() {
       form.reset({
         contactEmail: settings.contactEmail || '',
         contactPhone: settings.contactPhone || '',
+        contactAddress: settings.contactAddress || '',
         facebookUrl: settings.facebookUrl || '',
         instagramUrl: settings.instagramUrl || '',
         twitterUrl: settings.twitterUrl || '',
@@ -156,6 +159,22 @@ export default function AdminPage() {
                       </FormControl>
                       <FormDescription>
                         Numéro de téléphone affiché sur la page de contact
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contactAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Adresse</FormLabel>
+                      <FormControl>
+                        <Input placeholder="123 Avenue Mohammed V, Rabat" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Adresse affichée sur la page de contact
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

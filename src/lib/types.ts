@@ -93,6 +93,7 @@ export interface FacilityRequest extends Omit<Facility, 'id' | 'adminId' | 'crea
 export interface Settings {
   contactEmail?: string;
   contactPhone?: string;
+  contactAddress?: string;
   facebookUrl?: string;
   instagramUrl?: string;
   twitterUrl?: string;

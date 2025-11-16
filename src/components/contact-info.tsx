@@ -22,7 +22,7 @@ export default function ContactInfo({ settings, translations }: ContactInfoProps
           <MapPin className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
           <div>
             <h4 className="font-semibold text-foreground">{translations.addressTitle}</h4>
-            <p>123 Avenue Mohammed V, Rabat, Maroc</p>
+            <p>{settings?.contactAddress || '123 Avenue Mohammed V, Rabat, Maroc'}</p>
           </div>
         </div>
         <div className="flex items-start gap-4">

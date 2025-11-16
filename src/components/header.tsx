@@ -25,17 +25,16 @@ export default function Header() {
   const pathname = usePathname();
   const currentLocale = useLocale();
 
-  const { setTheme, theme } = useTheme();
+  const { setTheme, theme, resolvedTheme } = useTheme();
 
-  // Force theme to re-apply after locale change
+  // Force theme to re-apply on mount and after locale change
   useEffect(() => {
-    if (theme) {
-      const savedTheme = localStorage.getItem('maroc-sport-hub-theme');
-      if (savedTheme && savedTheme !== theme) {
-        setTheme(savedTheme);
-      }
+    const savedTheme = localStorage.getItem('maroc-sport-hub-theme');
+    if (savedTheme && savedTheme !== 'system') {
+      // Force apply the saved theme immediately
+      setTheme(savedTheme);
     }
-  }, [currentLocale, theme, setTheme]);
+  }, [currentLocale, setTheme]);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
