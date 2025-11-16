@@ -148,12 +148,15 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
   const handleGeocode = async () => {
     const address = form.getValues("address");
     const region = form.getValues("region");
+    const city = form.getValues("city");
+    const province = form.getValues("province");
+    const commune = form.getValues("commune");
     
-    if (!address || !region) {
+    if (!address) {
       toast({
         variant: "destructive",
-        title: "Adresse incomplète",
-        description: "Veuillez remplir l'adresse et la région avant de continuer.",
+        title: "Adresse manquante",
+        description: "Veuillez remplir l'adresse avant de continuer.",
       });
       return;
     }
@@ -161,22 +164,22 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
     setIsGeocoding(true);
     setGeocodingStatus('idle');
     try {
-      const fullAddress = `${address}, ${region}, Morocco`;
-      const location = await geocodeAddress(fullAddress);
+      // Passer tous les paramètres disponibles pour une meilleure précision
+      const location = await geocodeAddress(address, city, province, commune);
       if (location) {
         setLat(location.lat);
         setLng(location.lng);
         setGeocodingStatus('success');
         toast({
           title: "Emplacement trouvé",
-          description: `Les coordonnées ont été trouvées et seront sauvegardées.`,
+          description: `Coordonnées: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`,
         });
       } else {
         setGeocodingStatus('error');
         toast({
           variant: "destructive",
           title: "Emplacement introuvable",
-          description: "Impossible de trouver les coordonnées. Veuillez vérifier l'adresse.",
+          description: "Impossible de trouver les coordonnées. Vérifiez l'adresse, la commune et la province.",
         });
       }
     } catch (error) {
