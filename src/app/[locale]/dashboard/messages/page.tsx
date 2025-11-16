@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +38,6 @@ interface ContactMessage {
 }
 
 export default function MessagesPage() {
-  const t = useTranslations('Dashboard.Messages');
   const firestore = useFirestore();
   const { toast } = useToast();
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
