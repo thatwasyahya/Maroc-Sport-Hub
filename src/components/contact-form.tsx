@@ -39,16 +39,11 @@ export default function ContactForm({ translations }: ContactFormProps) {
 
     try {
       // Using EmailJS to send email directly
-      // You need to configure these environment variables in .env.local:
-      // NEXT_PUBLIC_EMAILJS_SERVICE_ID
-      // NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
-      // NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-      
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'service_default';
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'template_default';
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || '';
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || '';
       const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '';
 
-      if (!publicKey) {
+      if (!publicKey || !serviceId || !templateId) {
         // Fallback: show success message without actually sending
         console.warn('EmailJS not configured. Please set environment variables.');
         toast({
@@ -64,6 +59,9 @@ export default function ContactForm({ translations }: ContactFormProps) {
         return;
       }
 
+      // Initialize EmailJS with private key
+      emailjs.init('O8dPpaGiPh1arbc9ua3-C');
+
       await emailjs.send(
         serviceId,
         templateId,
@@ -71,7 +69,6 @@ export default function ContactForm({ translations }: ContactFormProps) {
           from_name: name,
           from_email: email,
           message: message,
-          to_email: 'contact@marocsportshub.com', // Change this to your actual email
         },
         publicKey
       );
