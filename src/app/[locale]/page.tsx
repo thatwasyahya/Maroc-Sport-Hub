@@ -313,7 +313,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/90 to-transparent"></div>
           </div>
           <div className="relative z-10 max-w-4xl mx-auto">
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold font-headline tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold font-headline tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60 dark:from-white dark:to-white/70">
               {heroTitle}
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">

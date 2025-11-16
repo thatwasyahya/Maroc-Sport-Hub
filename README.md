@@ -74,9 +74,21 @@ This application is optimized for a seamless deployment on Vercel, which offers 
     *   Click on "Add New... > Project" from your dashboard.
     *   Import the Git repository containing your project.
 
-3.  **Deploy**:
+3.  **Configure Environment Variables**:
+    **IMPORTANT**: You need to add the following environment variables in Vercel for the contact form to work:
+    *   Go to your project settings on Vercel
+    *   Navigate to "Environment Variables"
+    *   Add these variables:
+        - `NEXT_PUBLIC_EMAILJS_SERVICE_ID`: Your EmailJS service ID (e.g., service_eupc8ii)
+        - `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID`: Your EmailJS template ID (e.g., template_vm9zi2c)
+        - `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY`: Your EmailJS public key
+    *   Click "Save"
+
+4.  **Deploy**:
     *   Vercel will automatically detect that this is a Next.js project and pre-configure all the necessary settings.
-    *   You do **not** need to set up any environment variables on Vercel, as the Firebase configuration is client-side and already included in the build.
+    *   Firebase configuration is client-side and already included in the code.
     *   Click the **"Deploy"** button.
 
 That's it! Vercel will build and deploy your application, providing you with a live URL. All future pushes to your main branch will trigger automatic redeployments.
+
+**Note**: If you don't configure the EmailJS environment variables on Vercel, the contact form will work in "demo mode" and won't send actual emails.
