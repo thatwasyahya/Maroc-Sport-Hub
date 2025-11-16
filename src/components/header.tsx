@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -25,7 +25,17 @@ export default function Header() {
   const pathname = usePathname();
   const currentLocale = useLocale();
 
-  const { setTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
+
+  // Force theme to re-apply after locale change
+  useEffect(() => {
+    if (theme) {
+      const savedTheme = localStorage.getItem('maroc-sport-hub-theme');
+      if (savedTheme && savedTheme !== theme) {
+        setTheme(savedTheme);
+      }
+    }
+  }, [currentLocale, theme, setTheme]);
 
   const userDocRef = useMemoFirebase(
     () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -109,14 +119,14 @@ export default function Header() {
                 <span className="sr-only">Changer de thème</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setTheme("light")}>
+            <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTheme("light"); }}>
                 Clair
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTheme("dark"); }}>
                 Sombre
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTheme("system"); }}>
                 Système
               </DropdownMenuItem>
             </DropdownMenuContent>

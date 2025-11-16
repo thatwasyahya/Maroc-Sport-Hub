@@ -68,8 +68,8 @@ export default function ContactForm({ translations }: ContactFormProps) {
         {
           to_name: 'Admin',
           from_name: name,
-          from_email: email,
           message: message,
+          from_email: email,
         },
         publicKey
       );
