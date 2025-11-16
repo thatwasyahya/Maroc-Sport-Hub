@@ -54,9 +54,9 @@ export default async function RootLayout({
       <body className="font-body antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
+          storageKey="maroc-sport-hub-theme"
         >
           <NextIntlClientProvider locale={locale} messages={messages}>
             <FirebaseClientProvider>
