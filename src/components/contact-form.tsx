@@ -60,12 +60,13 @@ export default function ContactForm({ translations }: ContactFormProps) {
       }
 
       // Initialize EmailJS with private key
-      emailjs.init('O8dPpaGiPh1arbc9ua3-C');
+      emailjs.init('XstucQGPy5wH8AAdFAmlH');
 
       await emailjs.send(
         serviceId,
         templateId,
         {
+          to_name: 'Admin',
           from_name: name,
           from_email: email,
           message: message,
