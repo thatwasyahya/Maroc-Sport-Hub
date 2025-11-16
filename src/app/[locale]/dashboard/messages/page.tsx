@@ -46,11 +46,24 @@ export default function MessagesPage() {
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
 
   const messagesQuery = useMemoFirebase(
-    () => firestore ? query(collection(firestore, 'contactMessages'), orderBy('createdAt', 'desc')) : null,
+    () => {
+      if (!firestore) return null;
+      try {
+        return query(collection(firestore, 'contactMessages'), orderBy('createdAt', 'desc'));
+      } catch (error) {
+        console.error('Error creating messages query:', error);
+        return null;
+      }
+    },
     [firestore]
   );
 
-  const { data: messages, isLoading } = useCollection<ContactMessage>(messagesQuery);
+  const { data: messages, isLoading, error } = useCollection<ContactMessage>(messagesQuery);
+
+  // Log any collection errors
+  if (error) {
+    console.error('Messages collection error:', error);
+  }
 
   const handleMarkAsRead = async (messageId: string) => {
     if (!firestore) return;
@@ -94,6 +107,27 @@ export default function MessagesPage() {
   };
 
   const unreadCount = messages?.filter(m => m.status === 'unread').length || 0;
+
+  // Show error state if there's a Firestore error
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Erreur</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-destructive">
+              Impossible de charger les messages. Vérifiez vos permissions.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {error.message}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>
