@@ -11,13 +11,13 @@ import { Activity, LayoutDashboard, LogOut, User as UserIcon, LogIn, UserPlus, M
 import { useRouter, usePathname } from '@/i18n/routing';
 import { signOut } from "firebase/auth";
 import type { User, Settings } from "@/lib/types";
-import { getLocalized } from '@/lib/utils';
 import { Skeleton } from "./ui/skeleton";
 import { InterceptedLink } from "./intercepted-link";
 import { useTheme } from "next-themes";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function Header() {
+  const t = useTranslations('Home');
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -36,7 +36,7 @@ export default function Header() {
   const settingsDocRef = useMemoFirebase(() => (
     firestore ? doc(firestore, 'settings', 'global') : null
   ), [firestore]);
-  const { data: settings, isLoading: isSettingsLoading } = useDoc<Settings>(settingsDocRef);
+  const { data: settings } = useDoc<Settings>(settingsDocRef);
 
 
   const handleLogout = async () => {
@@ -63,7 +63,7 @@ export default function Header() {
   };
   
   const displayName = userProfile?.name || user?.email;
-  const appName = getLocalized(settings?.appName as any, currentLocale, "Maroc Sport Hub");
+  const appName = t('appName');
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
   
   const locales = [
@@ -79,7 +79,7 @@ export default function Header() {
           <InterceptedLink href="/" className="mr-6 flex items-center space-x-2">
             <Activity className="h-6 w-6 text-primary" />
             <span className="hidden font-bold sm:inline-block font-headline text-lg">
-              {isSettingsLoading ? <Skeleton className="h-6 w-36" /> : appName}
+              {appName}
             </span>
           </InterceptedLink>
         </div>

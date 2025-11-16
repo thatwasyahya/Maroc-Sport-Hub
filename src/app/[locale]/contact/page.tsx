@@ -3,7 +3,6 @@ import { getDoc, doc } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase/config-server';
 import type { Settings } from '@/lib/types';
 import ContactPageClient from '@/components/contact-page-client';
-import { getLocalized } from '@/lib/utils';
 
 async function getSettings() {
   try {
@@ -24,15 +23,6 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
   setRequestLocale(locale);
   const t = await getTranslations('Contact');
   const settings = await getSettings();
-  const localizedSettings = settings
-    ? {
-        ...settings,
-        appName: getLocalized(settings.appName as any, locale, '') as string,
-        footerDescription: getLocalized(settings.footerDescription as any, locale, '') as string,
-        heroTitle: getLocalized(settings.heroTitle as any, locale, '') as string,
-        heroSubtitle: getLocalized(settings.heroSubtitle as any, locale, '') as string,
-      }
-    : null;
 
   const translations = {
     heroAlt: t('heroAlt'),
@@ -60,5 +50,5 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
     },
   };
 
-  return <ContactPageClient settings={localizedSettings} translations={translations} />;
+  return <ContactPageClient settings={settings} translations={translations} />;
 }

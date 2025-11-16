@@ -42,9 +42,12 @@ function validateFacilityRequest(data) {
 }
 
 function validateSettings(data) {
-    // appName can be a string (legacy) or a map of locales (new format)
-    return (data.appName is string && data.appName.size() > 0) || 
-           (data.appName is map);
+    // Settings now only contain simple strings for contact info and social URLs
+    return (!data.keys().hasAny(['contactEmail']) || data.contactEmail is string) &&
+           (!data.keys().hasAny(['contactPhone']) || data.contactPhone is string) &&
+           (!data.keys().hasAny(['facebookUrl']) || data.facebookUrl is string) &&
+           (!data.keys().hasAny(['instagramUrl']) || data.instagramUrl is string) &&
+           (!data.keys().hasAny(['twitterUrl']) || data.twitterUrl is string);
 }
 
 

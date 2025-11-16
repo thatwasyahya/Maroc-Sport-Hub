@@ -1,10 +1,10 @@
 'use client';
 
-import { useTranslations, useLocale } from 'next-intl';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Save } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Mail, Phone, Facebook, Instagram, Twitter, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -14,30 +14,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import type { Settings as SettingsType } from '@/lib/types';
-import { getLocalized } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { PlusCircle, Trash2 } from 'lucide-react';
 
-const linkSchema = z.object({
-  label: z.string().min(1, "Le libellé est requis."),
-  url: z.string().min(1, "L'URL est requise."),
-});
-
-const settingsSchema = z.object({
-  appName: z.string().min(3, 'Le nom de l\'application doit comporter au moins 3 caractères.'),
-  footerDescription: z.string().min(10, 'La description doit comporter au moins 10 caractères.'),
-  heroTitle: z.string().min(5, 'Le titre doit comporter au moins 5 caractères.'),
-  heroSubtitle: z.string().min(10, 'Le sous-titre doit comporter au moins 10 caractères.'),
-  footerLinks: z.array(linkSchema).optional(),
+const contactSettingsSchema = z.object({
   contactEmail: z.string().email("Format d'email invalide.").optional().or(z.literal('')),
   contactPhone: z.string().optional(),
   facebookUrl: z.string().url("URL invalide").or(z.literal('')).optional(),
@@ -45,12 +32,10 @@ const settingsSchema = z.object({
   twitterUrl: z.string().url("URL invalide").or(z.literal('')).optional(),
 });
 
-type SettingsFormValues = z.infer<typeof settingsSchema>;
+type ContactSettingsFormValues = z.infer<typeof contactSettingsSchema>;
 
 export default function AdminPage() {
   const t = useTranslations('Dashboard.Admin');
-  const tSettings = useTranslations('Dashboard.Admin.siteSettings');
-  const locale = useLocale();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,14 +46,9 @@ export default function AdminPage() {
 
   const { data: settings, isLoading } = useDoc<SettingsType>(settingsDocRef);
 
-  const form = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsSchema),
+  const form = useForm<ContactSettingsFormValues>({
+    resolver: zodResolver(contactSettingsSchema),
     defaultValues: {
-      appName: '',
-      footerDescription: '',
-      heroTitle: '',
-      heroSubtitle: '',
-      footerLinks: [],
       contactEmail: '',
       contactPhone: '',
       facebookUrl: '',
@@ -77,19 +57,9 @@ export default function AdminPage() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "footerLinks"
-  });
-
   useEffect(() => {
     if (settings) {
       form.reset({
-        appName: getLocalized(settings.appName as any, locale, ''),
-        footerDescription: getLocalized(settings.footerDescription as any, locale, ''),
-        heroTitle: getLocalized(settings.heroTitle as any, locale, ''),
-        heroSubtitle: getLocalized(settings.heroSubtitle as any, locale, ''),
-        footerLinks: settings.footerLinks || [],
         contactEmail: settings.contactEmail || '',
         contactPhone: settings.contactPhone || '',
         facebookUrl: settings.facebookUrl || '',
@@ -99,21 +69,18 @@ export default function AdminPage() {
     }
   }, [settings, form]);
 
-  const onSubmit = async (data: SettingsFormValues) => {
+  const onSubmit = async (data: ContactSettingsFormValues) => {
     if (!settingsDocRef) return;
     setIsSubmitting(true);
     try {
-      const payload: any = { updatedAt: serverTimestamp() };
-      payload.appName = typeof settings?.appName === 'object' ? { ...(settings?.appName as Record<string, string>), [locale]: data.appName } : { [locale]: data.appName };
-      payload.footerDescription = typeof settings?.footerDescription === 'object' ? { ...(settings?.footerDescription as Record<string, string>), [locale]: data.footerDescription } : { [locale]: data.footerDescription };
-      payload.heroTitle = typeof settings?.heroTitle === 'object' ? { ...(settings?.heroTitle as Record<string, string>), [locale]: data.heroTitle } : { [locale]: data.heroTitle };
-      payload.heroSubtitle = typeof settings?.heroSubtitle === 'object' ? { ...(settings?.heroSubtitle as Record<string, string>), [locale]: data.heroSubtitle } : { [locale]: data.heroSubtitle };
-      payload.footerLinks = (data.footerLinks || []).map((l) => ({ label: { [locale]: l.label }, url: l.url }));
-
-      await setDocumentNonBlocking(settingsDocRef, payload, { merge: true });
+      await setDocumentNonBlocking(settingsDocRef, { 
+        ...data, 
+        updatedAt: serverTimestamp() 
+      }, { merge: true });
+      
       toast({
-        title: 'Paramètres mis à jour',
-        description: 'Les paramètres généraux du site ont été enregistrés.',
+        title: 'Coordonnées mises à jour',
+        description: 'Les informations de contact ont été enregistrées.',
       });
     } catch (error) {
       toast({
@@ -125,6 +92,151 @@ export default function AdminPage() {
       setIsSubmitting(false);
     }
   };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Mail className="h-8 w-8"/>
+            Coordonnées et Réseaux Sociaux
+          </h1>
+          <p className="text-muted-foreground">
+            Gérez les informations de contact affichées sur le site
+          </p>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-1/3" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Contact Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Informations de Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="contactEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email de contact</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="contact@example.com" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Email affiché sur la page de contact
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contactPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Téléphone de contact</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+212 5 37 00 00 00" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Numéro de téléphone affiché sur la page de contact
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Social Media */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Facebook className="h-5 w-5" />
+                  Réseaux Sociaux
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="facebookUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Facebook className="h-4 w-4" />
+                        Facebook
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://facebook.com/..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="instagramUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Instagram className="h-4 w-4" />
+                        Instagram
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://instagram.com/..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="twitterUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Twitter className="h-4 w-4" />
+                        Twitter
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://twitter.com/..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Save Button */}
+            <div className="flex justify-end gap-2">
+              <Button type="submit" disabled={isSubmitting} size="lg">
+                <Save className="mr-2 h-4 w-4" />
+                {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      )}
+    </div>
+  );
+}
 
   return (
     <div className="space-y-6">
