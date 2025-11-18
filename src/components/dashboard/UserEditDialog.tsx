@@ -176,14 +176,14 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-xl max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[95vw] sm:max-w-xl max-h-[90vh] flex flex-col gap-0">
         <DialogHeader>
           <DialogTitle>{isEditing ? t('editUserTitle') : t('addUserTitle')}</DialogTitle>
           <DialogDescription>{isEditing ? t('editUserDescription') : t('addUserDescription')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto pr-4 space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto px-1 space-y-4 py-4">
              <div className="grid grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
@@ -377,7 +377,7 @@ export default function UserEditDialog({ open, onOpenChange, user }: UserEditDia
               )}
             />
             </div>
-            <DialogFooter className="border-t pt-4">
+            <DialogFooter className="border-t pt-4 flex-shrink-0">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{tUsers('cancel')}</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting 

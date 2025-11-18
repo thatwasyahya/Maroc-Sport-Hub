@@ -53,14 +53,14 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] flex flex-col gap-0">
         <DialogHeader>
           <DialogTitle className="text-2xl">{request.name}</DialogTitle>
           <DialogDescription>
             Demande d'ajout soumise par <span className="font-medium">{request.userName}</span>.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 pr-6">
+        <ScrollArea className="flex-1 min-h-0 px-1">
             <div className="space-y-6 py-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -176,7 +176,7 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
 
             </div>
         </ScrollArea>
-        <DialogFooter className="border-t pt-4">
+        <DialogFooter className="border-t pt-4 flex-shrink-0">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Fermer
           </Button>

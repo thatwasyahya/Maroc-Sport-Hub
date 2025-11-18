@@ -121,14 +121,14 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] flex flex-col gap-0">
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto pr-4 space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto px-1 space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
@@ -271,7 +271,7 @@ export default function EditProfileDialog({ open, onOpenChange, user }: EditProf
                 )}
             />
             </div>
-            <DialogFooter className='pt-4 border-t'>
+            <DialogFooter className='pt-4 border-t flex-shrink-0'>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t('cancel')}</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? t('saving') : t('save')}

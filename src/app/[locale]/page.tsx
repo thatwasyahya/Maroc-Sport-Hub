@@ -420,14 +420,14 @@ export default function Home() {
           </div>
 
           <Dialog open={!!selectedFacility} onOpenChange={(open) => !open && handleDialogClose()}>
-              <DialogContent className="max-w-3xl p-0 w-[95vw] sm:w-full max-h-[90vh] flex flex-col">
+              <DialogContent className="max-w-3xl p-0 w-[95vw] sm:w-full max-h-[90vh] flex flex-col gap-0">
                   {selectedFacility && (
                       <>
                           <DialogHeader className="p-6 pb-4">
                               <DialogTitle className="font-headline text-3xl">{selectedFacility.name}</DialogTitle>
                               <DialogDescription>{selectedFacility.address}</DialogDescription>
                           </DialogHeader>
-                          <ScrollArea className="flex-1">
+                          <ScrollArea className="flex-1 min-h-0 px-1">
                             <FacilityDetails facility={selectedFacility} />
                           </ScrollArea>
                       </>
