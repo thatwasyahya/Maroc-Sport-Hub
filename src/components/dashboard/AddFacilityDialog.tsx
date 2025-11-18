@@ -272,7 +272,7 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Modifier l'installation" : 'Ajouter une nouvelle installation'}</DialogTitle>
           <DialogDescription>
@@ -280,8 +280,8 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <ScrollArea className="h-[70vh] p-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+            <ScrollArea className="flex-1 pr-4">
               <div className="space-y-6">
                 
                 <h3 className="text-lg font-medium border-b pb-2">Informations Générales</h3>
@@ -566,7 +566,7 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
                 )}/>
               </div>
             </ScrollArea>
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 border-t">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (isEditing ? 'Mise à jour...' : 'Ajout en cours...') : (isEditing ? 'Mettre à jour' : 'Ajouter Installation')}
