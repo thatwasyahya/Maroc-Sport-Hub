@@ -272,16 +272,17 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col gap-0">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Modifier l'installation" : 'Ajouter une nouvelle installation'}</DialogTitle>
-          <DialogDescription>
-            Remplissez les détails ci-dessous.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-            <ScrollArea className="flex-1 px-1">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <div className="flex flex-col h-full max-h-[85vh]">
+          <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
+            <DialogTitle>{isEditing ? "Modifier l'installation" : 'Ajouter une nouvelle installation'}</DialogTitle>
+            <DialogDescription>
+              Remplissez les détails ci-dessous.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+              <div className="overflow-y-auto flex-1 px-6 pb-4">
               <div className="space-y-6">
                 
                 <h3 className="text-lg font-medium border-b pb-2">Informations Générales</h3>
@@ -565,15 +566,16 @@ export default function AddFacilityDialog({ open, onOpenChange, facility }: AddF
                     </FormItem>
                 )}/>
               </div>
-            </ScrollArea>
-            <DialogFooter className="pt-4 mt-4 border-t flex-shrink-0">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (isEditing ? 'Mise à jour...' : 'Ajout en cours...') : (isEditing ? 'Mettre à jour' : 'Ajouter Installation')}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              </div>
+              <DialogFooter className="px-6 py-4 border-t flex-shrink-0">
+                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (isEditing ? 'Mise à jour...' : 'Ajout en cours...') : (isEditing ? 'Mettre à jour' : 'Ajouter Installation')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

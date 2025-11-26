@@ -239,16 +239,17 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col gap-0">
-        <DialogHeader>
-          <DialogTitle>Proposer une Nouvelle Installation</DialogTitle>
-          <DialogDescription>
-            Remplissez les détails ci-dessous. Votre proposition sera examinée par un administrateur.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-             <ScrollArea className="flex-1 px-1">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <div className="flex flex-col max-h-[90vh]">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle>Proposer une Nouvelle Installation</DialogTitle>
+            <DialogDescription>
+              Remplissez les détails ci-dessous. Votre proposition sera examinée par un administrateur.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col overflow-hidden">
+              <div className="overflow-y-auto px-6 pb-4">
               <div className="space-y-6">
                 
                 <h3 className="text-lg font-medium border-b pb-2">Informations Générales</h3>
@@ -532,16 +533,17 @@ export default function AddFacilityRequestDialog({ open, onOpenChange }: AddFaci
                     </FormItem>
                 )}/>
               </div>
-            </ScrollArea>
-            <DialogFooter className="pt-4 mt-4 border-t flex-shrink-0">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {isSubmitting ? 'Envoi en cours...' : 'Soumettre la Demande'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              </div>
+              <DialogFooter className="px-6 py-4 border-t">
+                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {isSubmitting ? 'Envoi en cours...' : 'Soumettre la Demande'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -422,19 +422,20 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) resetState(); onOpenChange(isOpen); }}>
-      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col gap-0">
-        <DialogHeader>
-          <DialogTitle>Importer des Installations depuis un CSV</DialogTitle>
-          <DialogDescription>
-            Étape {step === 'upload' ? 1 : step === 'mapping' ? 2 : 3} sur 3: {
-                step === 'upload' ? 'Sélectionnez un fichier.' :
-                step === 'mapping' ? 'Mappez les colonnes.' :
-                'Prévisualisez et importez.'
-            }
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="flex-1 min-h-0 overflow-auto space-y-4 py-4 px-1">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <div className="flex flex-col max-h-[90vh]">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle>Importer des Installations depuis un CSV</DialogTitle>
+            <DialogDescription>
+              Étape {step === 'upload' ? 1 : step === 'mapping' ? 2 : 3} sur 3: {
+                  step === 'upload' ? 'Sélectionnez un fichier.' :
+                  step === 'mapping' ? 'Mappez les colonnes.' :
+                  'Prévisualisez et importez.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="overflow-y-auto px-6 pb-4">
             {error && (
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
@@ -445,7 +446,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             {renderContent()}
         </div>
 
-        <DialogFooter className="border-t pt-4 flex-shrink-0">
+        <DialogFooter className="px-6 py-4 border-t">
           <Button variant="ghost" onClick={() => { onOpenChange(false); }}>Annuler</Button>
           {step === 'upload' && !file &&
             <Button onClick={() => document.getElementById('csv-input')?.click()}>Sélectionner un fichier</Button>
@@ -468,6 +469,7 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             </>
           }
         </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
