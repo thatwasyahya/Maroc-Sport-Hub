@@ -60,7 +60,7 @@ const cleanColumnName = (col: string): string => {
     if (!col) return '';
     return col.trim().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
-        .replace(/['']/g, '') // Remove apostrophes
+        .replace(/[''`]/g, '') // Remove apostrophes and backticks
         .replace(/[^a-z0-9]/g, '_') // Replace non-alphanumeric with underscore
         .replace(/_+/g, '_') // Replace multiple underscores with a single one
         .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
@@ -68,19 +68,44 @@ const cleanColumnName = (col: string): string => {
 
 const findBestMatch = (cleanedHeader: string, keywords: string[]): number => {
     let maxScore = 0;
+    
     for (const keyword of keywords) {
         const cleanedKeyword = cleanColumnName(keyword);
+        
+        // Exact match - highest priority
         if (cleanedHeader === cleanedKeyword) {
-            return 100; // Exact match
+            return 100;
         }
-        if (cleanedHeader.includes(cleanedKeyword) || cleanedKeyword.includes(cleanedHeader)) {
-            const score = Math.max(
-                cleanedKeyword.length / cleanedHeader.length,
-                cleanedHeader.length / cleanedKeyword.length
-            ) * 80;
+        
+        // Check if one contains the other
+        if (cleanedHeader.includes(cleanedKeyword)) {
+            const score = (cleanedKeyword.length / cleanedHeader.length) * 90;
+            maxScore = Math.max(maxScore, score);
+        } else if (cleanedKeyword.includes(cleanedHeader)) {
+            const score = (cleanedHeader.length / cleanedKeyword.length) * 85;
             maxScore = Math.max(maxScore, score);
         }
+        
+        // Check for word boundaries (better for compound words)
+        const headerWords = cleanedHeader.split('_');
+        const keywordWords = cleanedKeyword.split('_');
+        
+        let matchingWords = 0;
+        for (const hw of headerWords) {
+            for (const kw of keywordWords) {
+                if (hw === kw || hw.includes(kw) || kw.includes(hw)) {
+                    matchingWords++;
+                    break;
+                }
+            }
+        }
+        
+        if (matchingWords > 0) {
+            const wordScore = (matchingWords / Math.max(headerWords.length, keywordWords.length)) * 75;
+            maxScore = Math.max(maxScore, wordScore);
+        }
     }
+    
     return maxScore;
 };
 
@@ -134,28 +159,68 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     reader.onload = (e) => {
         try {
             const text = e.target?.result as string;
+            
+            // Détection automatique de l'encodage et du délimiteur
+            const detectDelimiter = (sample: string): string => {
+                const delimiters = [',', ';', '\t', '|'];
+                const counts = delimiters.map(d => (sample.match(new RegExp(`\\${d}`, 'g')) || []).length);
+                const maxIndex = counts.indexOf(Math.max(...counts));
+                return delimiters[maxIndex];
+            };
+            
+            const firstLines = text.split('\n').slice(0, 3).join('\n');
+            const delimiter = detectDelimiter(firstLines);
+            
             Papa.parse(text, {
                 header: true,
-                skipEmptyLines: true,
+                skipEmptyLines: 'greedy', // Skip lines with all empty values
+                delimiter: delimiter,
+                transformHeader: (header: string) => header.trim(), // Clean headers
+                transform: (value: string) => value.trim(), // Clean values
                 complete: (results) => {
-                    if (results.errors.length) {
-                        setError(`Erreur lors de la lecture du CSV : ${results.errors[0].message}`);
-                        return;
+                    if (results.errors.length > 0) {
+                        // Filter out non-critical errors
+                        const criticalErrors = results.errors.filter(e => e.type !== 'Quotes');
+                        if (criticalErrors.length > 0) {
+                            setError(`Erreur lors de la lecture du CSV : ${criticalErrors[0].message}`);
+                            return;
+                        }
                     }
+                    
                     if (!results.meta.fields || results.meta.fields.length === 0) {
                         setError("Le fichier CSV est vide ou les en-têtes sont manquants.");
                         return;
                     }
-                    const originalHeaders = results.meta.fields;
+                    
+                    // Filter out empty headers
+                    const originalHeaders = results.meta.fields.filter(h => h && h.trim() !== '');
+                    
+                    // Filter out completely empty rows
+                    const validData = results.data.filter((row: any) => {
+                        return Object.values(row).some(v => v !== null && v !== undefined && String(v).trim() !== '');
+                    });
+                    
+                    if (validData.length === 0) {
+                        setError("Aucune donnée valide trouvée dans le fichier CSV.");
+                        return;
+                    }
+                    
                     setFileHeaders(originalHeaders);
-                    setFileData(results.data);
+                    setFileData(validData);
 
                     const newColumnMap: Record<string, string> = {};
                     const cleanedFileHeaders = originalHeaders.map(h => ({ original: h, cleaned: cleanColumnName(h) }));
                     const usedHeaders = new Set<string>();
 
+                    // Tri des champs par priorité (required first)
+                    const sortedDbFields = [...dbFields].sort((a, b) => {
+                        if (a.required && !b.required) return -1;
+                        if (!a.required && b.required) return 1;
+                        return 0;
+                    });
+
                     // Premier passage : correspondances exactes ou très fortes
-                    for (const dbField of dbFields) {
+                    for (const dbField of sortedDbFields) {
                         let bestMatch = { header: '', score: 0 };
                         for (const header of cleanedFileHeaders) {
                             if (usedHeaders.has(header.original)) continue;
@@ -164,11 +229,12 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
                                 bestMatch = { header: header.original, score };
                             }
                         }
-                        if (bestMatch.score >= 60) { // Seuil de confiance à 60%
+                        if (bestMatch.score >= 50) { // Seuil de confiance abaissé à 50%
                             newColumnMap[dbField.key] = bestMatch.header;
                             usedHeaders.add(bestMatch.header);
                         }
                     }
+                    
                     setColumnMap(newColumnMap);
                     setStep('mapping');
                 },
@@ -180,15 +246,69 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
             setError(`Une erreur inattendue est survenue: ${err.message}`);
         }
     };
-    reader.readAsText(file, 'ISO-8859-1');
+    
+    // Essayer plusieurs encodages
+    reader.onerror = () => {
+        setError("Erreur de lecture du fichier. Vérifiez l'encodage du fichier.");
+    };
+    
+    // Essayer UTF-8 d'abord, puis ISO-8859-1
+    reader.readAsText(file, 'UTF-8');
   }, [file]);
 
   const toBoolean = (value: any): boolean => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
     if (typeof value === 'string') {
         const lowerValue = value.trim().toLowerCase();
-        return ['oui', 'yes', 'true', '1', 'vrai'].includes(lowerValue);
+        return ['oui', 'yes', 'true', '1', 'vrai', 'o', 'y'].includes(lowerValue);
     }
     return !!value;
+  }
+  
+  const parseNumber = (value: any): number | undefined => {
+    if (value === null || value === undefined || value === '') return undefined;
+    if (typeof value === 'number') return isNaN(value) ? undefined : value;
+    
+    const str = String(value).trim()
+        .replace(/\s/g, '') // Remove spaces
+        .replace(/,/g, '.'); // Replace comma with dot
+    
+    const num = parseFloat(str);
+    return isNaN(num) ? undefined : num;
+  }
+  
+  const parseDate = (value: any): Date | undefined => {
+    if (!value) return undefined;
+    
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) return date;
+    
+    // Try parsing different date formats
+    const formats = [
+        /(\d{4})-(\d{2})-(\d{2})/, // YYYY-MM-DD
+        /(\d{2})\/(\d{2})\/(\d{4})/, // DD/MM/YYYY
+        /(\d{2})-(\d{2})-(\d{4})/, // DD-MM-YYYY
+    ];
+    
+    const str = String(value).trim();
+    for (const format of formats) {
+        const match = str.match(format);
+        if (match) {
+            if (format.toString().includes('(\\d{4})')) {
+                // YYYY-MM-DD
+                const date = new Date(match[1] + '-' + match[2] + '-' + match[3]);
+                if (!isNaN(date.getTime())) return date;
+            } else {
+                // DD/MM/YYYY or DD-MM-YYYY
+                const date = new Date(match[3] + '-' + match[2] + '-' + match[1]);
+                if (!isNaN(date.getTime())) return date;
+            }
+        }
+    }
+    
+    return undefined;
   }
   
   const processData = () => {
@@ -198,67 +318,125 @@ export default function ImportFacilitiesDialog({ open, onOpenChange }: ImportFac
     }
     
     setError(null);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
 
-    const facilities: Partial<Facility>[] = fileData.map((row) => {
-        let facilityData: Partial<any> = { adminId: user.uid, sports: [], equipments: [] };
-        
-        for (const dbField of dbFields) {
-            const fileHeader = columnMap[dbField.key];
-            if (fileHeader && columnMap[dbField.key] !== 'ignore_column' && row[fileHeader] !== undefined && row[fileHeader] !== null) {
-               let value = row[fileHeader];
-               if (typeof value === 'string' && value.trim() === '') continue;
-               
-               // Type conversion
-               switch(dbField.key) {
-                   case 'surface_area':
-                   case 'capacity':
-                   case 'staff_count':
-                   case 'sports_staff_count':
-                   case 'beneficiaries':
-                       value = parseFloat(String(value).replace(',', '.'));
-                       break;
-                   case 'hr_needs':
-                   case 'besoin_amenagement':
-                   case 'besoin_equipements':
-                   case 'developed_space':
-                       value = toBoolean(value);
-                       break;
-                   case 'last_renovation_date':
-                       const date = new Date(value);
-                       if (isNaN(date.getTime())) continue; // Skip invalid date
-                       value = date;
-                       break;
-               }
-               facilityData[dbField.key] = value;
+    const facilities: Partial<Facility>[] = fileData.map((row, index) => {
+        try {
+            let facilityData: Partial<any> = { 
+                adminId: user.uid, 
+                sports: [], 
+                equipments: [] 
+            };
+            
+            for (const dbField of dbFields) {
+                const fileHeader = columnMap[dbField.key];
+                if (!fileHeader || columnMap[dbField.key] === 'ignore_column') continue;
+                
+                let value = row[fileHeader];
+                
+                // Skip empty values
+                if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+                    continue;
+                }
+                
+                // Type conversion with better error handling
+                try {
+                    switch(dbField.key) {
+                        case 'surface_area':
+                        case 'capacity':
+                        case 'staff_count':
+                        case 'sports_staff_count':
+                        case 'beneficiaries':
+                            const numValue = parseNumber(value);
+                            if (numValue !== undefined) {
+                                facilityData[dbField.key] = numValue;
+                            }
+                            break;
+                            
+                        case 'hr_needs':
+                        case 'besoin_amenagement':
+                        case 'besoin_equipements':
+                        case 'developed_space':
+                            facilityData[dbField.key] = toBoolean(value);
+                            break;
+                            
+                        case 'last_renovation_date':
+                            const dateValue = parseDate(value);
+                            if (dateValue) {
+                                facilityData[dbField.key] = dateValue;
+                            }
+                            break;
+                            
+                        default:
+                            // String fields - trim whitespace
+                            facilityData[dbField.key] = typeof value === 'string' ? value.trim() : value;
+                            break;
+                    }
+                } catch (conversionError) {
+                    console.warn(`Erreur conversion ligne ${index + 2}, champ ${dbField.key}:`, conversionError);
+                }
             }
-        }
-        
-        const name = facilityData.name || facilityData.installations_sportives;
-  
-        const latString = String(row[columnMap['latitude']] || '').replace(',', '.').trim();
-        const lngString = String(row[columnMap['longitude']] || '').replace(',', '.').trim();
-        
-        const lat = parseFloat(latString);
-        const lng = parseFloat(lngString);
-        
-        if (name) {
+            
+            // Extract name - prioritize name field, fallback to installations_sportives
+            const name = (facilityData.name || facilityData.installations_sportives || '').trim();
+            
+            // Extract and parse coordinates with better error handling
+            let lat: number | undefined;
+            let lng: number | undefined;
+            
+            if (columnMap['latitude'] && row[columnMap['latitude']]) {
+                lat = parseNumber(row[columnMap['latitude']]);
+            }
+            
+            if (columnMap['longitude'] && row[columnMap['longitude']]) {
+                lng = parseNumber(row[columnMap['longitude']]);
+            }
+            
+            // Validate required fields
+            if (!name) {
+                errors.push(`Ligne ${index + 2}: Nom manquant`);
+                errorCount++;
+                return null;
+            }
+            
             const finalData: Partial<Facility> = { ...facilityData, name };
             
-            if (!isNaN(lat) && !isNaN(lng)) {
-                finalData.location = { lat, lng };
+            // Add location if valid coordinates
+            if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
+                // Validate coordinate ranges
+                if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    finalData.location = { lat, lng };
+                } else {
+                    errors.push(`Ligne ${index + 2}: Coordonnées invalides (lat: ${lat}, lng: ${lng})`);
+                }
             }
             
+            // Clean up temporary latitude/longitude fields
             delete (finalData as any).latitude;
             delete (finalData as any).longitude;
             
+            successCount++;
             return finalData;
+        } catch (rowError: any) {
+            errorCount++;
+            errors.push(`Ligne ${index + 2}: ${rowError.message}`);
+            return null;
         }
-        return null;
-      }).filter((f): f is Partial<Facility> => f !== null);
+    }).filter((f): f is Partial<Facility> => f !== null);
 
     if (facilities.length === 0) {
-      setError("Aucune ligne valide n'a pu être lue. Vérifiez votre mappage et le contenu du fichier.");
+      setError(`Aucune ligne valide n'a pu être traitée. ${errors.slice(0, 5).join(', ')}`);
       return;
+    }
+    
+    if (errors.length > 0 && errors.length < 10) {
+        toast({
+            title: "Avertissement",
+            description: `${successCount} lignes traitées, ${errorCount} ignorées. ${errors.slice(0, 3).join('; ')}`,
+            variant: "default",
+        });
     }
     
     setParsedData(facilities);
