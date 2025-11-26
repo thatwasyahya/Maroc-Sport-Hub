@@ -53,15 +53,16 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] flex flex-col gap-0">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">{request.name}</DialogTitle>
-          <DialogDescription>
-            Demande d'ajout soumise par <span className="font-medium">{request.userName}</span>.
-          </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="flex-1 min-h-0 px-1">
-            <div className="space-y-6 py-4">
+      <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
+        <div className="flex flex-col h-full max-h-[85vh]">
+          <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
+            <DialogTitle className="text-2xl">{request.name}</DialogTitle>
+            <DialogDescription>
+              Demande d'ajout soumise par <span className="font-medium">{request.userName}</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1 px-6">
+            <div className="space-y-6 pb-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
@@ -175,12 +176,13 @@ export default function RequestDetailsDialog({ request, open, onOpenChange }: Re
                 )}
 
             </div>
-        </ScrollArea>
-        <DialogFooter className="border-t pt-4 flex-shrink-0">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Fermer
-          </Button>
-        </DialogFooter>
+          </div>
+          <DialogFooter className="px-6 py-4 border-t flex-shrink-0">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
